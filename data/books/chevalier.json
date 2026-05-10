@@ -106,9 +106,9 @@
       "instruction": "Seulement un Bond au tour suivant"
     },
     "43": {
-      "title": "Récupère l'arme,
+      "title": "Récupères l'arme",
       "score": null,
-      "instruction": "Tu peux de nouveau utilser ton arme. Aucune restriction au tour suivant"
+      "instruction": "Tu peux de nouveau utiliser ton arme. Aucune restriction au tour suivant"
     },
     "45": {
       "title": "Parade haute",
