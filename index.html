@@ -351,6 +351,14 @@
       updateBodyDisplays();
     }
 
+    function actionLabel(action) {
+      if (action.category) {
+        return action.category + " " + action.name;
+      }
+    
+      return action.name;
+    }
+    
     function actionAllowedByRestriction(action, restriction) {
       const color = action.color;
       const category = action.category || "";
@@ -442,7 +450,7 @@
         const option = document.createElement("option");
         option.value = action.id;
         option.textContent =
-          action.name +
+          actionLabel(action) +
           " — PG " + action.pg +
           " / MOD " + action.mod +
           " / " + action.color;
@@ -615,7 +623,7 @@
 
       document.getElementById("resultText").innerHTML =
         "<p><strong>Livret utilisé :</strong> " + bookEntry.shortName + "<br>" +
-        "<strong>Ton action :</strong> " + selectedAction.name + "<br>" +
+        "<strong>Ton action :</strong> " + actionLabel(selectedAction) + "<br>" +
         "<strong>Ton PG :</strong> " + selectedAction.pg + "<br>" +
         "<strong>PG reçu :</strong> " + enemyPg + "</p>" +
 
