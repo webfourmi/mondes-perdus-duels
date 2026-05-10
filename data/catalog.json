@@ -1,0 +1,22 @@
+{
+  "appName": "Mondes Perdus - Duels",
+  "version": "0.1",
+  "fighters": [
+    {
+      "id": "chevalier",
+      "shortName": "Chevalier",
+      "fullName": "Homme en cotte de mailles avec épée et bouclier",
+      "sheetFile": "data/fighters/chevalier.json",
+      "bookFile": "data/books/chevalier.json",
+      "imageFolder": "images/chevalier/"
+    },
+    {
+      "id": "squelette",
+      "shortName": "Squelette",
+      "fullName": "Squelette avec cimeterre et bouclier",
+      "sheetFile": "data/fighters/squelette.json",
+      "bookFile": "data/books/squelette.json",
+      "imageFolder": "images/squelette/"
+    }
+  ]
+}
