@@ -140,6 +140,20 @@
       color: #b8ffbd;
       font-weight: bold;
     }
+
+    .page-image-box {
+      margin: 14px 0;
+      padding: 8px;
+      border: 1px solid #c9a45b;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.25);
+    }
+    
+    .page-image {
+      display: block;
+      width: 100%;
+      border-radius: 10px;
+    }
   </style>
 </head>
 
@@ -612,7 +626,14 @@
 
         scoreText += "Dégâts à infliger : <strong>" + damage + "</strong></p>";
       }
+      let imageHtml = "";
 
+      if (page.image) {
+        imageHtml =
+          '<div class="page-image-box">' +
+          '<img class="page-image" src="' + page.image + '?v=' + Date.now() + '" alt="Page ' + resultPageNumber + '" onerror="this.parentElement.style.display=\'none\'">' +
+          '</div>';
+      }
       let applyButton = "";
 
       if (damage !== null) {
@@ -627,9 +648,11 @@
         "<strong>Ton PG :</strong> " + selectedAction.pg + "<br>" +
         "<strong>PG reçu :</strong> " + enemyPg + "</p>" +
 
-        "<p><strong>Page résultat :</strong> " + resultPageNumber + "<br>" +
-        "<strong>" + page.title + "</strong></p>" +
-
+       "<p><strong>Page résultat :</strong> " + resultPageNumber + "<br>" +
+       "<strong>" + page.title + "</strong></p>" +
+        
+        imageHtml +
+        
         scoreText +
 
         "<p><strong>Instruction à lire à l’adversaire :</strong><br>" +
