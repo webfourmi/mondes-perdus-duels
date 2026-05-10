@@ -1,0 +1,246 @@
+{
+  "id": "chevalier",
+  "shortName": "Chevalier",
+  "fullName": "Homme en cotte de mailles avec épée et bouclier",
+  "startPage": 57,
+  "pages": {
+    "3": {
+      "title": "Coup latéral haut",
+      "score": null,
+      "instruction": "Pas d’Estoc ni de Rouge au tour suivant"
+    },
+    "5": {
+      "title": "Coup latéral bas",
+      "score": null,
+      "instruction": "Pas d’Estoc ni de Bleu au tour suivant"
+    },
+    "7": {
+      "title": "Étourdi",
+      "score": 6,
+      "instruction": "Seulement du Vert au tour suivant"
+    },
+    "9": {
+      "title": "Estoc haut",
+      "score": null,
+      "instruction": "Pas de Coup Latéral au tour suivant"
+    },
+    "11": {
+      "title": "Estoc bas",
+      "score": null,
+      "instruction": "Pas de Coup Latéral ni de Rouge au tour suivant"
+    },
+    "13": {
+      "title": "Blessure à la jambe",
+      "score": 3,
+      "instruction": "Pas de Rouge ni d’Orange au tour suivant"
+    },
+    "15": {
+      "title": "Coup plongeant",
+      "score": null,
+      "instruction": "Pas de Bleu au tour suivant"
+    },
+    
+    "17": {
+      "title": "Bouclier haut",
+      "score": -4,
+      "instruction": "Pas de Bleu au tour suivant"
+    },
+    "19": {
+      "title": "Déséquilibré",
+      "score": 0,
+      "instruction": "Seulement du Vert ou du Jaune au tour suivant"
+    },
+    "21": {
+      "title": "Pris à revers",
+      "score": 0,
+      "instruction": "Seulement du Jaune au tour suivant"
+    },
+    "23": {
+      "title": "Derrière vous",
+      "score": null,
+      "instruction": "Aucune restriction au tour suivant"
+    },
+    "25": {
+      "title": "Coup de pied",
+      "score": null,
+      "instruction": "Pas de bleu ni de jaune au tour suivant"
+    },
+    "27": {
+      "title": "Désarmé",
+      "score": null,
+      "instruction": "Seulement un coup de pied, du Jaune ou du Vert (sauf le coup latéral féroce) tant que tu n'as pas recupere ton arme"
+    },
+    "29": {
+      "title": "Esquive basse",
+      "score": null,
+      "instruction": "Pas d'Orange au tour suivant mais ajoute +2 si tu obtiens un score avec du Bleu"
+    },
+    "31": {
+      "title": "Blessure au bras",
+      "score": null,
+      "instruction": "Pas de Rouge ni d'Orange au tour suivant"
+    },
+    "33": {
+      "title": "Esquive",
+      "score": null,
+      "instruction": "Ajoute +2 si tu obtiens un Score avec un Coup Plongeant ou Latéral au tour suivant"
+    },
+    "35": {
+      "title": "Distance accrue - Blessure au corps",
+      "score": 4,
+      "instruction": "Seulement du Marron au tour suivant"
+    },
+    "37: {
+      "title": "Bond en hauteur",
+      "score": null,
+      "instruction": "Pas de Bleu au tour suivant mais ajoute +2 si tu obtiens un score avec du Orange"
+    },
+    "39": {
+      "title": "Charge",
+      "score": null,
+      "instruction": "Pas de Vert ni de Jaune au tour suivant"
+    },
+    "41": {
+      "title": "Mis à terre",
+      "score": 0,
+      "instruction": "Seulement un Bond au tour suivant"
+    },
+    "43": {
+      "title": "Récupère l'arme,
+      "score": null,
+      "instruction": "Tu peux de nouveau utilser ton arme. Aucune restriction au tour suivant"
+    },
+    "45": {
+      "title": "Parade haute",
+      "score": -4,
+      "instruction": "Aucune restriction au tour suivant"
+    },
+    "47": {
+      "title": "Distance accrue - Blessure à la jambe",
+      "score": 3,
+      "instruction": "Seulement du Marron au tour suivant"
+    },
+    "49": {
+      "title": "Parade basse",
+      "score": -4,
+      "instruction": "Aucune restriction au tour suivant"
+    },
+    "51": {
+      "title": "Déséquilibré par coup de pied",
+      "score": 0,
+      "instruction": "Seulement du Vert ou du Jaune au tour suivant"
+    },
+    "53": {
+      "title": "Blessure au corps",
+      "score": 4,
+      "instruction": "Seulement du Vert ou du Jaune au tour suivant"
+    },
+    "55": {
+      "title": "Bouclier brisé",
+      "score": 0,
+      "instruction": "Plus aucun Coup de Bouclier ni Attaque protégée jusqu’à la fin de la partie"
+    },
+    "57": {
+      "title": "Distance accrue - Blocage",
+      "score": null,
+      "instruction": "Seulement une action à Distance Accrue au tour suivant"
+    },
+    "59": {
+      "title": "Déséquilibré par poussée",
+      "score": 0,
+      "instruction": "Seulement du Vert ou du Jaune au tour suivant"
+    },
+    "61": {
+      "title": "Distance accrue - Esquive",
+      "score": null,
+      "instruction": "Seulement une action à Distance Accrue au tour suivant"
+    },
+    "63": {
+      "title": "Bouclier bas",
+      "score": -4,
+      "instruction": "Pas d’Orange au tour suivant"
+    }
+  },
+  "movementPages": {
+    "50": {
+      "50": 45,
+      "52": 23,
+      "54": 9,
+      "56": 17,
+      "58": 41,
+      "60": 11,
+      "62": 19,
+      "64": 19
+    },
+    "52": {
+      "50": 21,
+      "52": 61,
+      "54": 9,
+      "56": 57,
+      "58": 5,
+      "60": 11,
+      "62": 57,
+      "64": 57
+    },
+    "54": {
+      "50": 53,
+      "52": 33,
+      "54": 45,
+      "56": 17,
+      "58": 35,
+      "60": 11,
+      "62": 35,
+      "64": 3
+    },
+    "56": {
+      "50": 39,
+      "52": 61,
+      "54": 9,
+      "56": 17,
+      "58": 57,
+      "60": 57,
+      "62": 57,
+      "64": 3
+    },
+    "58": {
+      "50": 39,
+      "52": 33,
+      "54": 47,
+      "56": 47,
+      "58": 5,
+      "60": 11,
+      "62": 57,
+      "64": 57
+    },
+    "60": {
+      "50": 3,
+      "52": 33,
+      "54": 13,
+      "56": 57,
+      "58": 5,
+      "60": 11,
+      "62": 57,
+      "64": 47
+    },
+    "62": {
+      "50": 39,
+      "52": 61,
+      "54": 57,
+      "56": 57,
+      "58": 57,
+      "60": 57,
+      "62": 57,
+      "64": 57
+    },
+    "64": {
+      "50": 7,
+      "52": 35,
+      "54": 9,
+      "56": 17,
+      "58": 57,
+      "60": 35,
+      "62": 57,
+      "64": 3
+    }
+  }
+}
