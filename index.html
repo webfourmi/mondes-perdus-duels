@@ -227,6 +227,10 @@
       <div id="resultPanel" class="panel" style="display:none;">
         <h2>Résultat</h2>
         <div id="resultText"></div>
+      
+        <button id="nextTurnButton" onclick="nextTurn()" style="display:none;">
+          Passer au tour suivant
+        </button>
       </div>
     </section>
   </main>
@@ -515,6 +519,7 @@
         applyButton;
 
       document.getElementById("resultPanel").style.display = "block";
+      document.getElementById("nextTurnButton").style.display = "block";
     }
 
     function applyDamageToOpponent() {
@@ -545,6 +550,19 @@
       }
     }
 
+    function nextTurn() {
+      selectedAction = null;
+      lastDamage = null;
+      damageAlreadyApplied = false;
+    
+      document.getElementById("enemyPg").value = "";
+      document.getElementById("pgPanel").style.display = "none";
+      document.getElementById("resultPanel").style.display = "none";
+      document.getElementById("resultText").innerHTML = "";
+      document.getElementById("nextTurnButton").style.display = "none";
+    
+      document.getElementById("bodyStatus").textContent = "";
+    }
     initApp();
   </script>
 </body>
