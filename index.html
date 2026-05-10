@@ -197,140 +197,222 @@
   </main>
 
   <script>
-    let catalog = null;
-    let currentFighter = null;
-    let currentActions = [];
-    let selectedAction = null;
+  let catalog = null;
+  let currentFighter = null;
+  let currentOpponentFighter = null;
+  let currentBook = null;
+  let currentActions = [];
+  let selectedAction = null;
+  let sizeModifier = 0;
 
-    async function loadJson(path) {
-      const response = await fetch(path + "?v=" + Date.now());
-      if (!response.ok) {
-        throw new Error("Impossible de charger : " + path);
+  async function loadJson(path) {
+    const response = await fetch(path + "?v=" + Date.now());
+    if (!response.ok) {
+      throw new Error("Impossible de charger : " + path);
+    }
+    return await response.json();
+  }
+
+  function fighterLabel(fighter) {
+    return fighter.shortName || fighter.fullName || fighter.id;
+  }
+
+  function fillSelect(selectId, fighters) {
+    const select = document.getElementById(selectId);
+    select.innerHTML = "";
+
+    fighters.forEach(fighter => {
+      const option = document.createElement("option");
+      option.value = fighter.id;
+      option.textContent = fighterLabel(fighter);
+      select.appendChild(option);
+    });
+  }
+
+  async function initApp() {
+    const message = document.getElementById("loadMessage");
+
+    try {
+      catalog = await loadJson("data/catalog.json");
+
+      fillSelect("playerSheet", catalog.fighters);
+      fillSelect("opponentBook", catalog.fighters);
+
+      message.textContent = "Catalogue chargé : " + catalog.fighters.length + " combattants disponibles.";
+    } catch (error) {
+      message.innerHTML = '<span class="error">' + error.message + '</span>';
+    }
+  }
+
+  function findCatalogEntry(id) {
+    return catalog.fighters.find(fighter => fighter.id === id);
+  }
+
+  function fillActions(actions) {
+    const select = document.getElementById("actionChoice");
+    select.innerHTML = "";
+    currentActions = actions || [];
+
+    currentActions.forEach(action => {
+      if (!action.available) return;
+
+      const option = document.createElement("option");
+      option.value = action.id;
+      option.textContent =
+        action.name +
+        " — PG " + action.pg +
+        " / MOD " + action.mod +
+        " / " + action.color;
+      select.appendChild(option);
+    });
+  }
+
+  async function startDuel() {
+    const sheetId = document.getElementById("playerSheet").value;
+    const bookId = document.getElementById("opponentBook").value;
+
+    const sheetEntry = findCatalogEntry(sheetId);
+    const bookEntry = findCatalogEntry(bookId);
+
+    document.getElementById("pgPanel").style.display = "none";
+    document.getElementById("resultPanel").style.display = "none";
+
+    try {
+      currentFighter = await loadJson(sheetEntry.sheetFile);
+      currentOpponentFighter = await loadJson(bookEntry.sheetFile);
+      currentBook = await loadJson(bookEntry.bookFile);
+
+      sizeModifier = currentFighter.size - currentOpponentFighter.size;
+
+      document.getElementById("currentSheet").textContent = sheetEntry.fullName;
+      document.getElementById("currentBook").textContent = bookEntry.fullName;
+
+      document.getElementById("statSize").textContent = currentFighter.size;
+      document.getElementById("statBody").textContent = currentFighter.bodyPointsStart;
+      document.getElementById("statAttacks").textContent = currentFighter.attacks;
+
+      fillActions(currentFighter.distanceActions);
+
+      document.getElementById("duelPanel").style.display = "block";
+    } catch (error) {
+      alert(
+        "Erreur : " + error.message +
+        "\n\nPour l’instant, seul le livret Chevalier existe. Choisis donc Chevalier comme livret affiché pour tester."
+      );
+    }
+  }
+
+  function chooseAction() {
+    const actionId = document.getElementById("actionChoice").value;
+    selectedAction = currentActions.find(action => action.id === actionId);
+
+    if (!selectedAction) {
+      alert("Choisis une action.");
+      return;
+    }
+
+    document.getElementById("pgToAnnounce").textContent = selectedAction.pg;
+    document.getElementById("pgPanel").style.display = "block";
+    document.getElementById("resultPanel").style.display = "none";
+  }
+
+  function calculateDamage(page, action) {
+    if (page.score === null || page.score === undefined) {
+      return null;
+    }
+
+    const score = Number(page.score);
+    const mod = Number(action.mod || 0);
+    const bonus = Number(action.bonus || 0);
+
+    let total = score + mod + bonus;
+
+    if (action.color === "orange" || action.color === "rouge") {
+      total += sizeModifier;
+    }
+
+    return Math.max(0, total);
+  }
+
+  function resolveTurn() {
+    const enemyPg = document.getElementById("enemyPg").value;
+    const bookEntry = findCatalogEntry(document.getElementById("opponentBook").value);
+
+    if (!enemyPg) {
+      alert("Entre le PG donné par ton adversaire.");
+      return;
+    }
+
+    if (!currentBook) {
+      alert("Aucun livret chargé.");
+      return;
+    }
+
+    const myMovementPage = String(selectedAction.pg);
+    const enemyMovementPage = String(enemyPg);
+
+    const movementTable = currentBook.movementPages[myMovementPage];
+
+    if (!movementTable) {
+      alert("Aucune table de mouvement trouvée pour ton PG : " + myMovementPage);
+      return;
+    }
+
+    const resultPageNumber = movementTable[enemyMovementPage];
+
+    if (!resultPageNumber) {
+      alert(
+        "Aucun résultat trouvé pour :\n" +
+        "Ton PG : " + myMovementPage + "\n" +
+        "PG reçu : " + enemyMovementPage
+      );
+      return;
+    }
+
+    const page = currentBook.pages[String(resultPageNumber)];
+
+    if (!page) {
+      alert("La page résultat " + resultPageNumber + " existe dans la table, mais pas dans la liste des pages.");
+      return;
+    }
+
+    const damage = calculateDamage(page, selectedAction);
+
+    let scoreText = "";
+
+    if (page.score === null || page.score === undefined) {
+      scoreText = "Aucun SCORE sur cette page.";
+    } else {
+      scoreText =
+        "SCORE de la page : <strong>" + page.score + "</strong><br>" +
+        "MOD de ton action : <strong>" + selectedAction.mod + "</strong><br>" +
+        "Bonus d’évolution : <strong>" + (selectedAction.bonus || 0) + "</strong><br>";
+
+      if (selectedAction.color === "orange" || selectedAction.color === "rouge") {
+        scoreText += "Modificateur de Taille : <strong>" + sizeModifier + "</strong><br>";
       }
-      return await response.json();
+
+      scoreText += "Dégâts à infliger : <strong>" + damage + "</strong>";
     }
 
-    function fighterLabel(fighter) {
-      return fighter.shortName || fighter.fullName || fighter.id;
-    }
+    document.getElementById("resultText").innerHTML =
+      "<strong>Livret utilisé :</strong> " + bookEntry.shortName + "<br>" +
+      "<strong>Ton action :</strong> " + selectedAction.name + "<br>" +
+      "<strong>Ton PG :</strong> " + selectedAction.pg + "<br>" +
+      "<strong>PG reçu :</strong> " + enemyPg + "<br><br>" +
 
-    function fillSelect(selectId, fighters) {
-      const select = document.getElementById(selectId);
-      select.innerHTML = "";
+      "<strong>Page résultat :</strong> " + resultPageNumber + "<br>" +
+      "<strong>" + page.title + "</strong><br><br>" +
 
-      fighters.forEach(fighter => {
-        const option = document.createElement("option");
-        option.value = fighter.id;
-        option.textContent = fighterLabel(fighter);
-        select.appendChild(option);
-      });
-    }
+      scoreText + "<br><br>" +
 
-    async function initApp() {
-      const message = document.getElementById("loadMessage");
+      "<strong>Instruction à lire à l’adversaire :</strong><br>" +
+      page.instruction;
 
-      try {
-        catalog = await loadJson("data/catalog.json");
+    document.getElementById("resultPanel").style.display = "block";
+  }
 
-        fillSelect("playerSheet", catalog.fighters);
-        fillSelect("opponentBook", catalog.fighters);
-
-        message.textContent = "Catalogue chargé : " + catalog.fighters.length + " combattants disponibles.";
-      } catch (error) {
-        message.innerHTML = '<span class="error">' + error.message + '</span>';
-      }
-    }
-
-    function findCatalogEntry(id) {
-      return catalog.fighters.find(fighter => fighter.id === id);
-    }
-
-    function fillActions(actions) {
-      const select = document.getElementById("actionChoice");
-      select.innerHTML = "";
-      currentActions = actions || [];
-
-      currentActions.forEach(action => {
-        if (!action.available) return;
-
-        const option = document.createElement("option");
-        option.value = action.id;
-        option.textContent =
-          action.name +
-          " — PG " + action.pg +
-          " / MOD " + action.mod +
-          " / " + action.color;
-        select.appendChild(option);
-      });
-    }
-
-    async function startDuel() {
-      const sheetId = document.getElementById("playerSheet").value;
-      const bookId = document.getElementById("opponentBook").value;
-
-      const sheetEntry = findCatalogEntry(sheetId);
-      const bookEntry = findCatalogEntry(bookId);
-
-      document.getElementById("pgPanel").style.display = "none";
-      document.getElementById("resultPanel").style.display = "none";
-
-      try {
-        currentFighter = await loadJson(sheetEntry.sheetFile);
-
-        document.getElementById("currentSheet").textContent = sheetEntry.fullName;
-        document.getElementById("currentBook").textContent = bookEntry.fullName;
-
-        document.getElementById("statSize").textContent = currentFighter.size;
-        document.getElementById("statBody").textContent = currentFighter.bodyPointsStart;
-        document.getElementById("statAttacks").textContent = currentFighter.attacks;
-
-        fillActions(currentFighter.distanceActions);
-
-        document.getElementById("duelPanel").style.display = "block";
-      } catch (error) {
-        alert(
-          "Erreur : " + error.message +
-          "\n\nSi tu as choisi Squelette, c’est normal pour l’instant : sa fiche JSON n’est pas encore créée."
-        );
-      }
-    }
-
-    function chooseAction() {
-      const actionId = document.getElementById("actionChoice").value;
-      selectedAction = currentActions.find(action => action.id === actionId);
-
-      if (!selectedAction) {
-        alert("Choisis une action.");
-        return;
-      }
-
-      document.getElementById("pgToAnnounce").textContent = selectedAction.pg;
-      document.getElementById("pgPanel").style.display = "block";
-      document.getElementById("resultPanel").style.display = "none";
-    }
-
-    function resolveTurn() {
-      const enemyPg = document.getElementById("enemyPg").value;
-      const bookId = document.getElementById("opponentBook").value;
-      const bookEntry = findCatalogEntry(bookId);
-
-      if (!enemyPg) {
-        alert("Entre le PG donné par ton adversaire.");
-        return;
-      }
-
-      document.getElementById("resultText").innerHTML =
-        "Tu as choisi : <strong>" + selectedAction.name + "</strong><br>" +
-        "Ton PG annoncé : <strong>" + selectedAction.pg + "</strong><br>" +
-        "PG reçu de l’adversaire : <strong>" + enemyPg + "</strong><br><br>" +
-        "Prochaine étape : l’application cherchera le PG reçu dans le livret <strong>" +
-        bookEntry.shortName +
-        "</strong> pour afficher automatiquement le bon parchemin illustré.";
-
-      document.getElementById("resultPanel").style.display = "block";
-    }
-
-    initApp();
-  </script>
+  initApp();
+</script>
 </body>
 </html>
