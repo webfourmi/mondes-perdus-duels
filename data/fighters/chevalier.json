@@ -1,0 +1,338 @@
+{
+  "id": "chevalier",
+  "shortName": "Chevalier",
+  "fullName": "Homme en cotte de mailles avec épée et bouclier",
+  "size": 4,
+  "bodyPointsStart": 12,
+  "attacks": 1,
+  "experience": 0,
+  "actions": [
+    {
+      "id": "coup_plongeant_violent",
+      "category": "Coup plongeant",
+      "name": "Violent",
+      "color": "orange",
+      "pg": 24,
+      "da": 50,
+      "mod": 3,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "coup_lateral_puissant",
+      "category": "Coup latéral",
+      "name": "Puissant",
+      "color": "orange",
+      "pg": 28,
+      "da": 64,
+      "mod": 2,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "coup_lateral_haut",
+      "category": "Coup latéral",
+      "name": "Haut",
+      "color": "rouge",
+      "pg": 10,
+      "da": 64,
+      "mod": 1,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "coup_lateral_bas",
+      "category": "Coup latéral",
+      "name": "Bas",
+      "color": "bleu",
+      "pg": 2,
+      "da": 58,
+      "mod": 1,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "estoc_haut",
+      "category": "Estoc",
+      "name": "Haut",
+      "color": "rouge",
+      "pg": 32,
+      "da": 54,
+      "mod": 0,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "estoc_bas",
+      "category": "Estoc",
+      "name": "Bas",
+      "color": "bleu",
+      "pg": 14,
+      "da": 60,
+      "mod": 0,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "feinte_haute",
+      "category": "Feinte",
+      "name": "Haute",
+      "color": "rouge",
+      "pg": 42,
+      "da": 58,
+      "mod": 0,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "feinte_basse",
+      "category": "Feinte",
+      "name": "Basse",
+      "color": "bleu",
+      "pg": 12,
+      "da": 64,
+      "mod": 0,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "feinte_coup_lateral",
+      "category": "Feinte",
+      "name": "Coup latéral",
+      "color": "bleu",
+      "pg": 22,
+      "da": 54,
+      "mod": -1,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "feinte_estoc",
+      "category": "Feinte",
+      "name": "Estoc",
+      "color": "rouge",
+      "pg": 38,
+      "da": 58,
+      "mod": 0,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "attaque_protegee_plongeante",
+      "category": "Attaque protégée",
+      "name": "Plongeante",
+      "color": "orange",
+      "pg": 44,
+      "da": 56,
+      "mod": 2,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "attaque_protegee_laterale",
+      "category": "Attaque protégée",
+      "name": "Latérale",
+      "color": "bleu",
+      "pg": 48,
+      "da": 56,
+      "mod": 0,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "attaque_protegee_estoc",
+      "category": "Attaque protégée",
+      "name": "Estoc",
+      "color": "rouge",
+      "pg": 6,
+      "da": 56,
+      "mod": -1,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "special_coup_de_pied",
+      "category": "Spécial",
+      "name": "Coup de pied",
+      "color": "bleu",
+      "pg": 34,
+      "da": 56,
+      "mod": 0,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "special_coup_lateral_feroce",
+      "category": "Spécial",
+      "name": "Coup latéral féroce",
+      "color": "jaune",
+      "pg": 40,
+      "da": 58,
+      "mod": 2,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "special_desarmer",
+      "category": "Spécial",
+      "name": "Désarmer",
+      "color": "bleu",
+      "pg": 30,
+      "da": 58,
+      "mod": -4,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "special_recuperer_arme",
+      "category": "Spécial",
+      "name": "Récupérer arme",
+      "color": "vert",
+      "pg": 46,
+      "da": 52,
+      "mod": -6,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "coup_de_bouclier_haut",
+      "category": "Coup de bouclier",
+      "name": "Haut",
+      "color": "vert",
+      "pg": 26,
+      "da": 56,
+      "mod": 1,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "coup_de_bouclier_bas",
+      "category": "Coup de bouclier",
+      "name": "Bas",
+      "color": "vert",
+      "pg": 4,
+      "da": 56,
+      "mod": 1,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "bond_en_hauteur",
+      "category": "Bond",
+      "name": "En hauteur",
+      "color": "vert",
+      "pg": 18,
+      "da": 52,
+      "mod": -6,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "bond_esquive",
+      "category": "Bond",
+      "name": "Esquive",
+      "color": "jaune",
+      "pg": 8,
+      "da": 52,
+      "mod": -4,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "bond_esquive_basse",
+      "category": "Bond",
+      "name": "Esquive basse",
+      "color": "vert",
+      "pg": 20,
+      "da": 52,
+      "mod": -5,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "bond_en_arriere",
+      "category": "Bond",
+      "name": "En arrière",
+      "color": "jaune",
+      "pg": 16,
+      "da": 62,
+      "mod": -4,
+      "bonus": 0,
+      "available": true
+    }
+  ],
+  "distanceActions": [
+    {
+      "id": "da_charge",
+      "name": "Charge",
+      "color": "orange",
+      "pg": 50,
+      "mod": 3,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "da_coup_lateral_haut",
+      "name": "Coup latéral haut",
+      "color": "rouge",
+      "pg": 64,
+      "mod": -6,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "da_coup_lateral_bas",
+      "name": "Coup latéral bas",
+      "color": "bleu",
+      "pg": 58,
+      "mod": -6,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "da_estoc_haut",
+      "name": "Estoc haut",
+      "color": "rouge",
+      "pg": 54,
+      "mod": -5,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "da_estoc_bas",
+      "name": "Estoc bas",
+      "color": "bleu",
+      "pg": 60,
+      "mod": -5,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "da_bloque_approche",
+      "name": "Bloque & approche",
+      "color": "marron",
+      "pg": 56,
+      "mod": 0,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "da_esquive",
+      "name": "Esquive",
+      "color": "marron",
+      "pg": 52,
+      "mod": -6,
+      "bonus": 0,
+      "available": true
+    },
+    {
+      "id": "da_bond_en_arriere",
+      "name": "Bond en arrière",
+      "color": "marron",
+      "pg": 62,
+      "mod": -6,
+      "bonus": 0,
+      "available": true
+    }
+  ]
+}
