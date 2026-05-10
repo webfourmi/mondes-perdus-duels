@@ -206,11 +206,34 @@
 
       <div class="panel">
         <h2>Tour actuel</h2>
-        <p><strong>Distance :</strong> Distance Accrue</p>
-
+      
+        <label for="distanceMode">Situation du tour</label>
+        <select id="distanceMode" onchange="refreshActionList()">
+          <option value="normal">Combat rapproché</option>
+          <option value="distance">Distance Accrue</option>
+        </select>
+      
+        <label for="restrictionMode">Restriction reçue de l’adversaire</label>
+        <select id="restrictionMode" onchange="refreshActionList()">
+          <option value="none">Aucune restriction</option>
+          <option value="no_blue">Pas de Bleu</option>
+          <option value="no_red">Pas de Rouge</option>
+          <option value="no_orange">Pas d’Orange</option>
+          <option value="no_red_orange">Pas de Rouge ni d’Orange</option>
+          <option value="no_blue_yellow">Pas de Bleu ni de Jaune</option>
+          <option value="no_thrust">Pas d’Estoc</option>
+          <option value="no_lateral">Pas de Coup Latéral</option>
+          <option value="only_green">Seulement Vert</option>
+          <option value="only_yellow">Seulement Jaune</option>
+          <option value="only_green_yellow">Seulement Vert ou Jaune</option>
+          <option value="only_brown">Seulement Marron</option>
+          <option value="only_bond">Seulement Bond</option>
+          <option value="disarmed">Désarmé</option>
+        </select>
+      
         <label for="actionChoice">Action choisie</label>
         <select id="actionChoice"></select>
-
+      
         <button onclick="chooseAction()">Choisir cette action</button>
       </div>
 
@@ -328,14 +351,94 @@
       updateBodyDisplays();
     }
 
-    function fillActions(actions) {
+    function actionAllowedByRestriction(action, restriction) {
+      const color = action.color;
+      const category = action.category || "";
+      const name = action.name || "";
+    
+      if (!action.available) return false;
+    
+      switch (restriction) {
+        case "none":
+          return true;
+    
+        case "no_blue":
+          return color !== "bleu";
+    
+        case "no_red":
+          return color !== "rouge";
+    
+        case "no_orange":
+          return color !== "orange";
+    
+        case "no_red_orange":
+          return color !== "rouge" && color !== "orange";
+    
+        case "no_blue_yellow":
+          return color !== "bleu" && color !== "jaune";
+    
+        case "no_thrust":
+          return category !== "Estoc" && !name.toLowerCase().includes("estoc");
+    
+        case "no_lateral":
+          return category !== "Coup latéral" && !name.toLowerCase().includes("latéral");
+    
+        case "only_green":
+          return color === "vert";
+    
+        case "only_yellow":
+          return color === "jaune";
+    
+        case "only_green_yellow":
+          return color === "vert" || color === "jaune";
+    
+        case "only_brown":
+          return color === "marron";
+    
+        case "only_bond":
+          return category === "Bond" || name.toLowerCase().includes("bond");
+    
+        case "disarmed":
+          return (
+            name.toLowerCase().includes("coup de pied") ||
+            color === "jaune" ||
+            color === "vert"
+          ) && !name.toLowerCase().includes("coup latéral féroce");
+    
+        default:
+          return true;
+      }
+    }
+    
+    function getActionsForCurrentMode() {
+      const distanceMode = document.getElementById("distanceMode").value;
+    
+      if (distanceMode === "distance") {
+        return currentFighter.distanceActions || [];
+      }
+    
+      return currentFighter.actions || [];
+    }
+    
+    function refreshActionList() {
+      if (!currentFighter) return;
+    
+      const actions = getActionsForCurrentMode();
+      const restriction = document.getElementById("restrictionMode").value;
+    
+      fillActions(actions, restriction);
+    }
+    
+    function fillActions(actions, restriction = "none") {
       const select = document.getElementById("actionChoice");
       select.innerHTML = "";
-      currentActions = actions || [];
-
-      currentActions.forEach(action => {
-        if (!action.available) return;
-
+      currentActions = [];
+    
+      actions.forEach(action => {
+        if (!actionAllowedByRestriction(action, restriction)) return;
+    
+        currentActions.push(action);
+    
         const option = document.createElement("option");
         option.value = action.id;
         option.textContent =
@@ -345,6 +448,13 @@
           " / " + action.color;
         select.appendChild(option);
       });
+    
+      if (currentActions.length === 0) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "Aucune action disponible avec cette restriction";
+        select.appendChild(option);
+      }
     }
 
     async function startDuel() {
@@ -378,8 +488,9 @@
         document.getElementById("statAttacks").textContent = currentFighter.attacks;
 
         updateBodyDisplays();
-        fillActions(currentFighter.distanceActions);
-
+        document.getElementById("distanceMode").value = "distance";
+        document.getElementById("restrictionMode").value = "none";
+        refreshActionList();
         document.getElementById("duelPanel").style.display = "block";
       } catch (error) {
         alert(
@@ -562,6 +673,8 @@
       document.getElementById("nextTurnButton").style.display = "none";
     
       document.getElementById("bodyStatus").textContent = "";
+
+      refreshActionList();
     }
     initApp();
   </script>
