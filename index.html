@@ -225,10 +225,67 @@
       max-height: 34vh;
       object-fit: contain;
     }
+
+    .fixed-hp-bar {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto 6px auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: rgba(12, 7, 3, 0.96);
+      border: 2px solid #c9a45b;
+      border-radius: 0 0 12px 12px;
+      padding: 6px;
+      box-sizing: border-box;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+    }
+    
+    .hp-box {
+      text-align: center;
+      border: 1px solid #8d6b36;
+      border-radius: 8px;
+      padding: 5px;
+      background: rgba(255, 244, 210, 0.08);
+    }
+    
+    .hp-box span {
+      display: block;
+      font-size: 0.75rem;
+      opacity: 0.85;
+    }
+    
+    .hp-box strong {
+      display: block;
+      color: #ffd98a;
+      font-size: 1.15rem;
+    }
+    
+    body.duel-active {
+      display: block;
+    }
+    
+    body.duel-active .fixed-hp-bar {
+      display: grid !important;
+    }
   </style>
 </head>
 
 <body>
+  <div id="fixedHpBar" class="fixed-hp-bar" style="display:none;">
+    <div class="hp-box">
+      <span>Moi</span>
+      <strong id="fixedMyBody">-</strong>
+    </div>
+    <div class="hp-box">
+      <span>Adversaire</span>
+      <strong id="fixedOpponentBody">-</strong>
+    </div>
+  </div>
+
   <main class="app">
     <h1 id="appTitle">Mondes Perdus</h1>
     <p id="appSubtitle" class="small">Prototype familial de duel numérique</p>
@@ -439,6 +496,9 @@
     function updateBodyDisplays() {
       document.getElementById("myBodyDisplay").textContent = myCurrentBody + " / " + myMaxBody;
       document.getElementById("opponentBodyDisplay").textContent = opponentCurrentBody + " / " + opponentMaxBody;
+      
+      document.getElementById("fixedMyBody").textContent = myCurrentBody + " / " + myMaxBody;
+      document.getElementById("fixedOpponentBody").textContent = opponentCurrentBody + " / " + opponentMaxBody;
 
       const status = document.getElementById("bodyStatus");
 
@@ -628,7 +688,8 @@
         refreshActionList();
 
         document.getElementById("duelPanel").style.display = "block";
-        document.getElementById("turnPanel").style.display = "block";
+        document.getElementById("turnPanel").style.display = "block";        
+        document.getElementById("fixedHpBar").style.display = "grid";
         document.body.classList.add("duel-active");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
