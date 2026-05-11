@@ -271,6 +271,43 @@
     body.duel-active .fixed-hp-bar {
       display: grid !important;
     }
+
+    #duelCompactSummary {
+      display: none;
+      color: #ffd98a;
+      font-weight: bold;
+      margin: 4px 0 8px;
+    }
+    
+    body.duel-active #duelCompactSummary {
+      display: block;
+    }
+    
+    body.duel-active #duelDetails,
+    body.duel-active #bodyPanel {
+      display: none;
+    }
+    
+    .hp-mini-button {
+      grid-column: 1 / -1;
+      margin-top: 0;
+      padding: 5px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+    }
+    
+    .hp-tools {
+      grid-column: 1 / -1;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+    }
+    
+    .hp-tools input,
+    .hp-tools button {
+      margin: 0;
+      padding: 6px;
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 
@@ -280,9 +317,17 @@
       <span>Moi</span>
       <strong id="fixedMyBody">-</strong>
     </div>
+  
     <div class="hp-box">
       <span>Adversaire</span>
       <strong id="fixedOpponentBody">-</strong>
+    </div>
+  
+    <button class="hp-mini-button" onclick="toggleHpTools()">Modifier mes PV</button>
+  
+    <div id="hpTools" class="hp-tools" style="display:none;">
+      <input id="myBodyManualTop" type="number" placeholder="Mes PV actuels" />
+      <button onclick="adjustMyBodyFromTop()">OK</button>
     </div>
   </div>
 
@@ -313,10 +358,13 @@
     <section id="duelPanel" class="panel" style="display:none;">
       <h2>Duel en cours</h2>
 
-      <p><strong>Ma fiche :</strong> <span id="currentSheet"></span></p>
-      <p><strong>Livret affiché :</strong> <span id="currentBook"></span></p>
+      <p id="duelCompactSummary" class="small"></p>
 
-      <div class="stat-grid">
+      <div id="duelDetails">
+        <p><strong>Ma fiche :</strong> <span id="currentSheet"></span></p>
+        <p><strong>Livret affiché :</strong> <span id="currentBook"></span></p>
+      
+        <div class="stat-grid">
         <div class="stat">
           Taille
           <strong id="statSize">-</strong>
@@ -329,9 +377,10 @@
           Attaques
           <strong id="statAttacks">-</strong>
         </div>
+        </div>
       </div>
-
-      <div class="panel">
+      
+      <div id="bodyPanel" class="panel">
         <h2>Points de Corps</h2>
 
         <div class="stat-grid two">
@@ -536,6 +585,31 @@
       return action.name;
     }
 
+    function toggleHpTools() {
+      const tools = document.getElementById("hpTools");
+    
+      if (tools.style.display === "grid") {
+        tools.style.display = "none";
+      } else {
+        tools.style.display = "grid";
+      }
+    }
+
+    function adjustMyBodyFromTop() {
+      const value = document.getElementById("myBodyManualTop").value;
+    
+      if (value === "") {
+        alert("Entre ton nouveau total de Points de Corps.");
+        return;
+      }
+    
+      myCurrentBody = Number(value);
+      document.getElementById("myBodyManualTop").value = "";
+      document.getElementById("hpTools").style.display = "none";
+    
+      updateBodyDisplays();
+    }
+
     function actionAllowedByRestriction(action, restriction) {
       const color = action.color;
       const category = action.category || "";
@@ -676,6 +750,14 @@
 
         document.getElementById("currentSheet").textContent = sheetEntry.fullName;
         document.getElementById("currentBook").textContent = bookEntry.fullName;
+        
+        document.getElementById("duelCompactSummary").textContent =
+          sheetEntry.shortName +
+          " vs " +
+          bookEntry.shortName +
+          " | Taille " +
+          (sizeModifier >= 0 ? "+" : "") +
+          sizeModifier;
 
         document.getElementById("statSize").textContent = currentFighter.size;
         document.getElementById("statBody").textContent = currentFighter.bodyPointsStart;
