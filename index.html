@@ -366,6 +366,74 @@
     body.duel-active .resolve-row button {
       padding: 8px;
     }
+
+    .result-card {
+      display: grid;
+      gap: 8px;
+    }
+    
+    .result-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+    
+    .result-meta span {
+      border: 1px solid #8d6b36;
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: rgba(255, 244, 210, 0.08);
+    }
+    
+    .damage-pill {
+      text-align: center;
+      border: 2px solid #c9a45b;
+      border-radius: 14px;
+      padding: 8px;
+      background: rgba(255, 217, 138, 0.12);
+    }
+    
+    .damage-pill span {
+      display: block;
+      font-size: 0.8rem;
+      opacity: 0.85;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    
+    .damage-pill strong {
+      display: block;
+      color: #ffd98a;
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+    
+    .damage-pill.no-damage strong {
+      font-size: 1.1rem;
+    }
+    
+    .score-detail {
+      font-size: 0.85rem;
+      text-align: center;
+      opacity: 0.9;
+    }
+    
+    .instruction-card {
+      border: 1px solid #8d6b36;
+      border-radius: 12px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.22);
+    }
+    
+    .instruction-card strong {
+      color: #ffd98a;
+    }
+    
+    .result-actions button {
+      margin-top: 6px;
+    }
   </style>
 </head>
 
@@ -938,22 +1006,30 @@
       lastDamage = damage;
       damageAlreadyApplied = false;
 
-      let scoreText = "";
+      let damageHtml = "";
 
       if (page.score === null || page.score === undefined) {
-        scoreText = "<p>Aucun SCORE sur cette page.</p>";
+        damageHtml =
+          '<div class="damage-pill no-damage">' +
+          '<span>Résultat</span>' +
+          '<strong>Aucun SCORE</strong>' +
+          '</div>';
       } else {
-        scoreText =
-          "<p>" +
-          "SCORE de la page : <strong>" + page.score + "</strong><br>" +
-          "MOD de ton action : <strong>" + selectedAction.mod + "</strong><br>" +
-          "Bonus d’évolution : <strong>" + (selectedAction.bonus || 0) + "</strong><br>";
-
+        damageHtml =
+          '<div class="damage-pill">' +
+          '<span>Dégâts</span>' +
+          '<strong>' + damage + '</strong>' +
+          '</div>' +
+          '<div class="score-detail">' +
+          'SCORE ' + page.score +
+          ' + MOD ' + selectedAction.mod +
+          ' + bonus ' + (selectedAction.bonus || 0);
+      
         if (selectedAction.color === "orange" || selectedAction.color === "rouge") {
-          scoreText += "Modificateur de Taille : <strong>" + sizeModifier + "</strong><br>";
+          damageHtml += ' + taille ' + sizeModifier;
         }
-
-        scoreText += "Dégâts à infliger : <strong>" + damage + "</strong></p>";
+      
+        damageHtml += '</div>';
       }
 
       let imageHtml = "";
@@ -971,23 +1047,33 @@
 
       if (damage !== null) {
         applyButton =
+          '<div class="result-actions">' +
           '<button onclick="applyDamageToOpponent()">Appliquer les dégâts à l’adversaire</button>' +
-          '<p id="applyStatus" class="small"></p>';
+          '<p id="applyStatus" class="small"></p>' +
+          '</div>';
       }
 
       document.getElementById("resultText").innerHTML =
-        "<p><strong>Action :</strong> " + actionLabel(selectedAction) +
-        " | <strong>PG :</strong> " + selectedAction.pg +
-        " | <strong>PG reçu :</strong> " + enemyPg + "</p>" +
+        '<div class="result-card">' +
       
-        imageHtml +
+          '<div class="result-meta">' +
+            '<span><strong>Action</strong> : ' + actionLabel(selectedAction) + '</span>' +
+            '<span><strong>PG</strong> : ' + selectedAction.pg + '</span>' +
+            '<span><strong>Reçu</strong> : ' + enemyPg + '</span>' +
+          '</div>' +
       
-        scoreText +
+          imageHtml +
       
-        "<p><strong>Instruction à lire à l’adversaire :</strong><br>" +
-        page.instruction + "</p>" +
-
-  applyButton;
+          damageHtml +
+      
+          '<div class="instruction-card">' +
+            '<strong>Instruction à lire à l’adversaire</strong><br>' +
+            page.instruction +
+          '</div>' +
+      
+          applyButton +
+      
+        '</div>';
 
       document.getElementById("turnPanel").style.display = "none";
       document.getElementById("pgPanel").style.display = "none";
