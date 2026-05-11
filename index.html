@@ -148,7 +148,7 @@
       border-radius: 14px;
       background: rgba(0, 0, 0, 0.25);
     }
-    
+
     .page-image {
       display: block;
       width: 100%;
@@ -158,71 +158,71 @@
     body.duel-active {
       padding: 6px;
     }
-    
+
     body.duel-active .app {
       margin-top: 0;
       padding: 10px;
       border-radius: 12px;
     }
-    
+
     body.duel-active #setupPanel,
     body.duel-active #appSubtitle {
       display: none;
     }
-    
+
     body.duel-active h1 {
       font-size: 1.2rem;
       margin-bottom: 4px;
     }
-    
+
     body.duel-active h2 {
       font-size: 1rem;
       margin: 4px 0 6px;
       padding-bottom: 4px;
     }
-    
+
     body.duel-active .panel {
       margin-top: 8px;
       padding: 8px;
       border-radius: 10px;
     }
-    
+
     body.duel-active label {
       margin-top: 8px;
       margin-bottom: 3px;
     }
-    
+
     body.duel-active select,
     body.duel-active input,
     body.duel-active button {
       padding: 8px;
       font-size: 0.95rem;
     }
-    
+
     body.duel-active .stat {
       padding: 6px;
     }
-    
+
     body.duel-active .stat strong {
       font-size: 1rem;
     }
-    
+
     body.duel-active .pg-number {
       font-size: 1.7rem;
       margin: 4px 0;
     }
-    
+
     body.duel-active p {
       margin: 5px 0;
     }
-    
+
     body.duel-active .page-image-box {
       margin: 6px 0;
       padding: 4px;
     }
-    
+
     body.duel-active .page-image {
-      max-height: 38vh;
+      max-height: 34vh;
       object-fit: contain;
     }
   </style>
@@ -232,7 +232,7 @@
   <main class="app">
     <h1 id="appTitle">Mondes Perdus</h1>
     <p id="appSubtitle" class="small">Prototype familial de duel numérique</p>
-    
+
     <section id="setupPanel">
       <h2>Début de duel</h2>
 
@@ -297,13 +297,13 @@
 
       <div class="panel">
         <h2>Tour actuel</h2>
-      
+
         <label for="distanceMode">Situation du tour</label>
         <select id="distanceMode" onchange="refreshActionList()">
           <option value="normal">Combat rapproché</option>
           <option value="distance">Distance Accrue</option>
         </select>
-      
+
         <label for="restrictionMode">Restriction reçue de l’adversaire</label>
         <select id="restrictionMode" onchange="refreshActionList()">
           <option value="none">Aucune restriction</option>
@@ -321,10 +321,10 @@
           <option value="only_bond">Seulement Bond</option>
           <option value="disarmed">Désarmé</option>
         </select>
-      
+
         <label for="actionChoice">Action choisie</label>
         <select id="actionChoice"></select>
-      
+
         <button onclick="chooseAction()">Choisir cette action</button>
       </div>
 
@@ -341,7 +341,7 @@
       <div id="resultPanel" class="panel" style="display:none;">
         <h2>Résultat</h2>
         <div id="resultText"></div>
-      
+
         <button id="nextTurnButton" onclick="nextTurn()" style="display:none;">
           Passer au tour suivant
         </button>
@@ -351,6 +351,7 @@
 
   <script>
     let catalog = null;
+
     const fallbackCatalog = {
       fighters: [
         {
@@ -371,6 +372,7 @@
         }
       ]
     };
+
     let currentFighter = null;
     let currentOpponentFighter = null;
     let currentBook = null;
@@ -403,7 +405,7 @@
       const select = document.getElementById(selectId);
       select.innerHTML = "";
 
-      fighters.forEach(fighter => {
+      fighters.forEach(function(fighter) {
         const option = document.createElement("option");
         option.value = fighter.id;
         option.textContent = fighterLabel(fighter);
@@ -416,23 +418,22 @@
 
       try {
         catalog = await loadJson("data/catalog.json");
-
         fillSelect("playerSheet", catalog.fighters);
         fillSelect("opponentBook", catalog.fighters);
-
         message.textContent = "Catalogue chargé : " + catalog.fighters.length + " combattants disponibles.";
-     } catch (error) {
-      catalog = fallbackCatalog;
-      fillSelect("playerSheet", catalog.fighters);
-      fillSelect("opponentBook", catalog.fighters);
-      message.innerHTML =
-        '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé.</span>';
-    }
+      } catch (error) {
+        catalog = fallbackCatalog;
+        fillSelect("playerSheet", catalog.fighters);
+        fillSelect("opponentBook", catalog.fighters);
+        message.innerHTML = '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé.</span>';
+      }
     }
 
     function findCatalogEntry(id) {
       const activeCatalog = catalog || fallbackCatalog;
-      return activeCatalog.fighters.find(fighter => fighter.id === id);
+      return activeCatalog.fighters.find(function(fighter) {
+        return fighter.id === id;
+      });
     }
 
     function updateBodyDisplays() {
@@ -471,98 +472,101 @@
       if (action.category) {
         return action.category + " " + action.name;
       }
-    
+
       return action.name;
     }
-    
+
     function actionAllowedByRestriction(action, restriction) {
       const color = action.color;
       const category = action.category || "";
       const name = action.name || "";
-    
+      const lowerName = name.toLowerCase();
+
       if (!action.available) return false;
-    
+
       switch (restriction) {
         case "none":
           return true;
-    
+
         case "no_blue":
           return color !== "bleu";
-    
+
         case "no_red":
           return color !== "rouge";
-    
+
         case "no_orange":
           return color !== "orange";
-    
+
         case "no_red_orange":
           return color !== "rouge" && color !== "orange";
-    
+
         case "no_blue_yellow":
           return color !== "bleu" && color !== "jaune";
-    
+
         case "no_thrust":
-          return category !== "Estoc" && !name.toLowerCase().includes("estoc");
-    
+          return category !== "Estoc" && !lowerName.includes("estoc");
+
         case "no_lateral":
-          return category !== "Coup latéral" && !name.toLowerCase().includes("latéral");
-    
+          return category !== "Coup latéral" && !lowerName.includes("latéral");
+
         case "only_green":
           return color === "vert";
-    
+
         case "only_yellow":
           return color === "jaune";
-    
+
         case "only_green_yellow":
           return color === "vert" || color === "jaune";
-    
+
         case "only_brown":
           return color === "marron";
-    
+
         case "only_bond":
-          return category === "Bond" || name.toLowerCase().includes("bond");
-    
+          return category === "Bond" || lowerName.includes("bond");
+
         case "disarmed":
           return (
-            name.toLowerCase().includes("coup de pied") ||
+            lowerName.includes("coup de pied") ||
             color === "jaune" ||
             color === "vert"
-          ) && !name.toLowerCase().includes("coup latéral féroce");
-    
+          ) && !lowerName.includes("coup latéral féroce");
+
         default:
           return true;
       }
     }
-    
+
     function getActionsForCurrentMode() {
       const distanceMode = document.getElementById("distanceMode").value;
-    
+
       if (distanceMode === "distance") {
         return currentFighter.distanceActions || [];
       }
-    
+
       return currentFighter.actions || [];
     }
-    
+
     function refreshActionList() {
       if (!currentFighter) return;
-    
+
       const actions = getActionsForCurrentMode();
       const restriction = document.getElementById("restrictionMode").value;
-    
+
       fillActions(actions, restriction);
     }
-    
-    function fillActions(actions, restriction = "none") {
+
+    function fillActions(actions, restriction) {
       const select = document.getElementById("actionChoice");
       select.innerHTML = "";
       currentActions = [];
-    
-      actions.forEach(action => {
-        if (!actionAllowedByRestriction(action, restriction)) return;
-    
+
+      const activeRestriction = restriction || "none";
+
+      actions.forEach(function(action) {
+        if (!actionAllowedByRestriction(action, activeRestriction)) return;
+
         currentActions.push(action);
-    
+
         const option = document.createElement("option");
         option.value = action.id;
         option.textContent =
@@ -570,9 +574,10 @@
           " — PG " + action.pg +
           " / MOD " + action.mod +
           " / " + action.color;
+
         select.appendChild(option);
       });
-    
+
       if (currentActions.length === 0) {
         const option = document.createElement("option");
         option.value = "";
@@ -588,6 +593,11 @@
       const sheetEntry = findCatalogEntry(sheetId);
       const bookEntry = findCatalogEntry(bookId);
 
+      if (!sheetEntry || !bookEntry) {
+        alert("Impossible de trouver la fiche ou le livret sélectionné.");
+        return;
+      }
+
       document.getElementById("pgPanel").style.display = "none";
       document.getElementById("resultPanel").style.display = "none";
 
@@ -596,7 +606,7 @@
         currentOpponentFighter = await loadJson(bookEntry.sheetFile);
         currentBook = await loadJson(bookEntry.bookFile);
 
-        sizeModifier = currentFighter.size - currentOpponentFighter.size;
+        sizeModifier = Number(currentFighter.size) - Number(currentOpponentFighter.size);
 
         myMaxBody = Number(currentFighter.bodyPointsStart);
         myCurrentBody = myMaxBody;
@@ -611,24 +621,34 @@
         document.getElementById("statBody").textContent = currentFighter.bodyPointsStart;
         document.getElementById("statAttacks").textContent = currentFighter.attacks;
 
-        updateBodyDisplays();
         document.getElementById("distanceMode").value = "distance";
         document.getElementById("restrictionMode").value = "none";
+
+        updateBodyDisplays();
         refreshActionList();
+
         document.getElementById("duelPanel").style.display = "block";
         document.body.classList.add("duel-active");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
         alert(
           "Erreur : " + error.message +
-          "\n\nPour l’instant, seul le livret Chevalier existe. Choisis donc Chevalier comme livret affiché pour tester."
+          "\n\nPour l’instant, seul le livret Chevalier existe. Choisis Chevalier comme livret affiché pour tester."
         );
       }
     }
 
     function chooseAction() {
       const actionId = document.getElementById("actionChoice").value;
-      selectedAction = currentActions.find(action => action.id === actionId);
+
+      if (!actionId) {
+        alert("Aucune action disponible avec cette restriction.");
+        return;
+      }
+
+      selectedAction = currentActions.find(function(action) {
+        return action.id === actionId;
+      });
 
       if (!selectedAction) {
         alert("Choisis une action.");
@@ -730,17 +750,18 @@
 
         scoreText += "Dégâts à infliger : <strong>" + damage + "</strong></p>";
       }
+
       let imageHtml = "";
 
       const imagePath =
         page.image ||
         "images/" + currentBook.id + "/LW_" + currentBook.id + "_" + resultPageNumber + ".png";
-      
+
       imageHtml =
         '<div class="page-image-box">' +
         '<img class="page-image" src="' + imagePath + '?v=' + Date.now() + '" alt="Page ' + resultPageNumber + '" onerror="this.parentElement.style.display=\'none\'">' +
         '</div>';
-      
+
       let applyButton = "";
 
       if (damage !== null) {
@@ -755,11 +776,11 @@
         "<strong>Ton PG :</strong> " + selectedAction.pg + "<br>" +
         "<strong>PG reçu :</strong> " + enemyPg + "</p>" +
 
-       "<p><strong>Page résultat :</strong> " + resultPageNumber + "<br>" +
-       "<strong>" + page.title + "</strong></p>" +
-        
+        "<p><strong>Page résultat :</strong> " + resultPageNumber + "<br>" +
+        "<strong>" + page.title + "</strong></p>" +
+
         imageHtml +
-        
+
         scoreText +
 
         "<p><strong>Instruction à lire à l’adversaire :</strong><br>" +
@@ -773,6 +794,8 @@
 
     function applyDamageToOpponent() {
       const status = document.getElementById("applyStatus");
+
+      if (!status) return;
 
       if (lastDamage === null || lastDamage === undefined) {
         status.innerHTML = '<span class="danger">Aucun dégât à appliquer.</span>';
@@ -803,19 +826,18 @@
       selectedAction = null;
       lastDamage = null;
       damageAlreadyApplied = false;
-    
+
       document.getElementById("enemyPg").value = "";
       document.getElementById("pgPanel").style.display = "none";
       document.getElementById("resultPanel").style.display = "none";
       document.getElementById("resultText").innerHTML = "";
       document.getElementById("nextTurnButton").style.display = "none";
-    
       document.getElementById("bodyStatus").textContent = "";
 
       refreshActionList();
       window.scrollTo({ top: 0, behavior: "smooth" });
-      }
     }
+
     initApp();
   </script>
 </body>
