@@ -154,15 +154,86 @@
       width: 100%;
       border-radius: 10px;
     }
+
+    body.duel-active {
+      padding: 6px;
+    }
+    
+    body.duel-active .app {
+      margin-top: 0;
+      padding: 10px;
+      border-radius: 12px;
+    }
+    
+    body.duel-active #setupPanel,
+    body.duel-active #appSubtitle {
+      display: none;
+    }
+    
+    body.duel-active h1 {
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+    
+    body.duel-active h2 {
+      font-size: 1rem;
+      margin: 4px 0 6px;
+      padding-bottom: 4px;
+    }
+    
+    body.duel-active .panel {
+      margin-top: 8px;
+      padding: 8px;
+      border-radius: 10px;
+    }
+    
+    body.duel-active label {
+      margin-top: 8px;
+      margin-bottom: 3px;
+    }
+    
+    body.duel-active select,
+    body.duel-active input,
+    body.duel-active button {
+      padding: 8px;
+      font-size: 0.95rem;
+    }
+    
+    body.duel-active .stat {
+      padding: 6px;
+    }
+    
+    body.duel-active .stat strong {
+      font-size: 1rem;
+    }
+    
+    body.duel-active .pg-number {
+      font-size: 1.7rem;
+      margin: 4px 0;
+    }
+    
+    body.duel-active p {
+      margin: 5px 0;
+    }
+    
+    body.duel-active .page-image-box {
+      margin: 6px 0;
+      padding: 4px;
+    }
+    
+    body.duel-active .page-image {
+      max-height: 38vh;
+      object-fit: contain;
+    }
   </style>
 </head>
 
 <body>
   <main class="app">
-    <h1>Mondes Perdus</h1>
-    <p class="small">Prototype familial de duel numérique</p>
-
-    <section>
+    <h1 id="appTitle">Mondes Perdus</h1>
+    <p id="appSubtitle" class="small">Prototype familial de duel numérique</p>
+    
+    <section id="setupPanel">
       <h2>Début de duel</h2>
 
       <label for="playerSheet">Ma fiche personnage</label>
@@ -514,6 +585,8 @@
         document.getElementById("restrictionMode").value = "none";
         refreshActionList();
         document.getElementById("duelPanel").style.display = "block";
+        document.body.classList.add("duel-active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
         alert(
           "Erreur : " + error.message +
@@ -709,6 +782,8 @@
       document.getElementById("bodyStatus").textContent = "";
 
       refreshActionList();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
     initApp();
   </script>
