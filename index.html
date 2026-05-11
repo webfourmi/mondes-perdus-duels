@@ -295,7 +295,7 @@
         <p id="bodyStatus" class="small"></p>
       </div>
 
-      <div class="panel">
+      <div id="turnPanel" class="panel">
         <h2>Tour actuel</h2>
 
         <label for="distanceMode">Situation du tour</label>
@@ -628,6 +628,7 @@
         refreshActionList();
 
         document.getElementById("duelPanel").style.display = "block";
+        document.getElementById("turnPanel").style.display = "block";
         document.body.classList.add("duel-active");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
@@ -788,8 +789,15 @@
 
         applyButton;
 
+      document.getElementById("turnPanel").style.display = "none";
+      document.getElementById("pgPanel").style.display = "none";
       document.getElementById("resultPanel").style.display = "block";
       document.getElementById("nextTurnButton").style.display = "block";
+      
+      document.getElementById("resultPanel").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
     }
 
     function applyDamageToOpponent() {
@@ -832,6 +840,7 @@
       document.getElementById("resultPanel").style.display = "none";
       document.getElementById("resultText").innerHTML = "";
       document.getElementById("nextTurnButton").style.display = "none";
+      document.getElementById("turnPanel").style.display = "block";
       document.getElementById("bodyStatus").textContent = "";
 
       refreshActionList();
