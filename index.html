@@ -628,12 +628,15 @@
       }
       let imageHtml = "";
 
-      if (page.image) {
-        imageHtml =
-          '<div class="page-image-box">' +
-          '<img class="page-image" src="' + page.image + '?v=' + Date.now() + '" alt="Page ' + resultPageNumber + '" onerror="this.parentElement.style.display=\'none\'">' +
-          '</div>';
-      }
+      const imagePath =
+        page.image ||
+        "images/" + currentBook.id + "/LW_" + currentBook.id + "_" + resultPageNumber + ".png";
+      
+      imageHtml =
+        '<div class="page-image-box">' +
+        '<img class="page-image" src="' + imagePath + '?v=' + Date.now() + '" alt="Page ' + resultPageNumber + '" onerror="this.parentElement.style.display=\'none\'">' +
+        '</div>';
+      
       let applyButton = "";
 
       if (damage !== null) {
