@@ -772,22 +772,18 @@
       }
 
       document.getElementById("resultText").innerHTML =
-        "<p><strong>Livret utilisé :</strong> " + bookEntry.shortName + "<br>" +
-        "<strong>Ton action :</strong> " + actionLabel(selectedAction) + "<br>" +
-        "<strong>Ton PG :</strong> " + selectedAction.pg + "<br>" +
-        "<strong>PG reçu :</strong> " + enemyPg + "</p>" +
-
-        "<p><strong>Page résultat :</strong> " + resultPageNumber + "<br>" +
-        "<strong>" + page.title + "</strong></p>" +
-
+        "<p><strong>Action :</strong> " + actionLabel(selectedAction) +
+        " | <strong>PG :</strong> " + selectedAction.pg +
+        " | <strong>PG reçu :</strong> " + enemyPg + "</p>" +
+      
         imageHtml +
-
+      
         scoreText +
-
+      
         "<p><strong>Instruction à lire à l’adversaire :</strong><br>" +
         page.instruction + "</p>" +
 
-        applyButton;
+  applyButton;
 
       document.getElementById("turnPanel").style.display = "none";
       document.getElementById("pgPanel").style.display = "none";
