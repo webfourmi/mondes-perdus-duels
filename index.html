@@ -621,6 +621,55 @@
         font-size: 0.8rem;
       }
     }
+
+    .image-zoom-button {
+      margin-top: 5px;
+      padding: 7px;
+      font-size: 0.85rem;
+    }
+    
+    .image-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      background: rgba(5, 3, 1, 0.96);
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    
+    .image-overlay-toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1.4fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    
+    .image-overlay-toolbar button {
+      margin: 0;
+      padding: 9px;
+      font-size: 0.9rem;
+    }
+    
+    .image-overlay-scroll {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      border: 2px solid #c9a45b;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 6px;
+    }
+    
+    #overlayImage {
+      width: 100%;
+      max-width: none;
+      height: auto;
+      border-radius: 8px;
+    }
   </style>
 </head>
 
@@ -634,6 +683,19 @@
     <div class="hp-box">
       <span>Adversaire</span>
       <strong id="fixedOpponentBody">-</strong>
+    </div>
+
+    <div id="imageOverlay" class="image-overlay" style="display:none;">
+      <div class="image-overlay-toolbar">
+        <button type="button" onclick="changeOverlayZoom(-0.25)">−</button>
+        <button type="button" onclick="resetOverlayZoom()">100%</button>
+        <button type="button" onclick="changeOverlayZoom(0.25)">+</button>
+        <button type="button" onclick="closeImageOverlay()">Fermer</button>
+      </div>
+    
+      <div class="image-overlay-scroll">
+        <img id="overlayImage" src="" alt="Image agrandie" />
+      </div>
     </div>
   
     <button class="hp-mini-button" onclick="toggleHpTools()">Modifier mes PV</button>
@@ -1420,11 +1482,14 @@ function updateRestrictionBanner(restriction) {
         page.image ||
         "images/" + currentBook.id + "/LW_" + currentBook.id + "_" + resultPageNumber + ".png";
 
-      imageHtml =
-        '<div class="page-image-box image-priority-box">' +
-        '<img class="page-image priority-image" src="' + imagePath + '?v=' + Date.now() + '" alt="Page ' + resultPageNumber + '" onclick="toggleImageZoom(this)" onerror="this.parentElement.style.display=\'none\'">' +
-        '<div class="image-hint">Touchez l’image pour agrandir / réduire</div>' +
-        '</div>';
+     const imageSrc = imagePath + '?v=' + Date.now();
+
+    imageHtml =
+      '<div class="page-image-box image-priority-box">' +
+      '<img class="page-image priority-image" src="' + imageSrc + '" alt="Page ' + resultPageNumber + '" onclick="openImageOverlay(this.src)" onerror="this.parentElement.style.display=\'none\'">' +
+      '<button type="button" class="image-zoom-button" onclick="openImageOverlay(\'' + imageSrc + '\')">Agrandir l’image</button>' +
+      '</div>';
+      
       let applyButton = "";
 
       if (damage !== null) {
@@ -1516,8 +1581,40 @@ function updateRestrictionBanner(restriction) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function toggleImageZoom(imageElement) {
-      imageElement.classList.toggle("zoomed-image");
+   
+    let overlayZoom = 1;
+
+    function openImageOverlay(src) {
+      const overlay = document.getElementById("imageOverlay");
+      const image = document.getElementById("overlayImage");
+    
+      overlayZoom = 1;
+      image.src = src;
+      overlay.style.display = "flex";
+      updateOverlayZoom();
+    }
+    
+    function closeImageOverlay() {
+      const overlay = document.getElementById("imageOverlay");
+      const image = document.getElementById("overlayImage");
+    
+      overlay.style.display = "none";
+      image.src = "";
+    }
+    
+    function updateOverlayZoom() {
+      const image = document.getElementById("overlayImage");
+      image.style.width = (overlayZoom * 100) + "%";
+    }
+    
+    function changeOverlayZoom(delta) {
+      overlayZoom = Math.max(0.5, Math.min(3, overlayZoom + delta));
+      updateOverlayZoom();
+    }
+    
+    function resetOverlayZoom() {
+      overlayZoom = 1;
+      updateOverlayZoom();
     }
     initApp();
   </script>
