@@ -622,6 +622,30 @@
         <div id="restrictionBanner" class="restriction-banner restriction-none">
           Aucune restriction
         </div>
+        
+        <label for="temporaryBonus">Bonus temporaire reçu</label>
+        <select id="temporaryBonus">
+          <option value="none">Aucun bonus</option>
+          <option value="score_any">+2 si SCORE au prochain tour</option>
+          <option value="score_blue">+2 si SCORE avec Bleu</option>
+          <option value="score_orange">+2 si SCORE avec Orange</option>
+          <option value="score_plunge_or_lateral">+2 si SCORE avec Coup Plongeant ou Latéral</option>
+        </select>
+
+<label for="actionChoice">Action choisie</label><div id="restrictionBanner" class="restriction-banner restriction-none">
+  Aucune restriction
+</div>
+
+<label for="temporaryBonus">Bonus temporaire reçu</label>
+<select id="temporaryBonus">
+  <option value="none">Aucun bonus</option>
+  <option value="score_any">+2 si SCORE au prochain tour</option>
+  <option value="score_blue">+2 si SCORE avec Bleu</option>
+  <option value="score_orange">+2 si SCORE avec Orange</option>
+  <option value="score_plunge_or_lateral">+2 si SCORE avec Coup Plongeant ou Latéral</option>
+</select>
+
+<label for="actionChoice">Action choisie</label>
         <label for="actionChoice">Action choisie</label>
         <select id="actionChoice"></select>
 
@@ -1077,6 +1101,7 @@ function updateRestrictionBanner(restriction) {
 
         document.getElementById("distanceMode").value = "distance";
         document.getElementById("restrictionMode").value = "none";
+        document.getElementById("temporaryBonus").value = "none";
 
         updateBodyDisplays();
         refreshActionList();
@@ -1120,6 +1145,38 @@ function updateRestrictionBanner(restriction) {
       document.getElementById("resultPanel").style.display = "none";
     }
 
+    function calculateTemporaryBonus(page, action) {
+      const bonusMode = document.getElementById("temporaryBonus").value;
+    
+      if (page.score === null || page.score === undefined) {
+        return 0;
+      }
+    
+      const color = action.color || "";
+      const category = action.category || "";
+      const name = action.name || "";
+      const label = (category + " " + name).toLowerCase();
+    
+      switch (bonusMode) {
+        case "score_any":
+          return 2;
+    
+        case "score_blue":
+          return color === "bleu" ? 2 : 0;
+    
+        case "score_orange":
+          return color === "orange" ? 2 : 0;
+    
+        case "score_plunge_or_lateral":
+          return (
+            label.includes("coup plongeant") ||
+            label.includes("coup latéral")
+          ) ? 2 : 0;
+    
+        default:
+          return 0;
+      }
+    }
     function calculateDamage(page, action) {
       if (page.score === null || page.score === undefined) {
         return null;
@@ -1127,7 +1184,7 @@ function updateRestrictionBanner(restriction) {
 
       const score = Number(page.score);
       const mod = Number(action.mod || 0);
-      const bonus = Number(action.bonus || 0);
+      const bonus = Number(action.bonus || 0) + calculateTemporaryBonus(page, action);
 
       let total = score + mod + bonus;
 
@@ -1206,7 +1263,7 @@ function updateRestrictionBanner(restriction) {
           '<div class="score-detail">' +
           'SCORE ' + page.score +
           ' + MOD ' + selectedAction.mod +
-          ' + bonus ' + (selectedAction.bonus || 0);
+          ' + bonus ' + (Number(selectedAction.bonus || 0) + calculateTemporaryBonus(page, selectedAction));
       
         if (selectedAction.color === "orange" || selectedAction.color === "rouge") {
           damageHtml += ' + taille ' + sizeModifier;
@@ -1311,6 +1368,7 @@ function updateRestrictionBanner(restriction) {
       document.getElementById("nextTurnButton").style.display = "none";
       document.getElementById("turnPanel").style.display = "block";
       document.getElementById("bodyStatus").textContent = "";
+      document.getElementById("temporaryBonus").value = "none";
 
       refreshActionList();
       window.scrollTo({ top: 0, behavior: "smooth" });
