@@ -494,6 +494,53 @@
       background: rgba(160, 30, 80, 0.28);
       color: #ffd1df;
     }
+
+    .mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    
+    .mode-toggle button {
+      margin: 0;
+      padding: 10px 6px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      border: 2px solid #8d6b36;
+      background: rgba(255, 244, 210, 0.08);
+      color: #f5e6c8;
+    }
+    
+    .mode-toggle button.active {
+      border-color: #ffd98a;
+      background: linear-gradient(#d8aa55, #9b6827);
+      color: #120b05;
+    }
+    
+    .compact-select {
+      padding: 7px 9px;
+      min-height: 36px;
+      font-size: 0.9rem;
+    }
+    
+    .action-select {
+      padding: 8px 9px;
+      min-height: 38px;
+      font-size: 0.9rem;
+    }
+    
+    body.duel-active .mode-toggle button {
+      padding: 8px 5px;
+      font-size: 0.85rem;
+    }
+    
+    body.duel-active .compact-select,
+    body.duel-active .action-select {
+      padding: 7px 8px;
+      min-height: 34px;
+      font-size: 0.88rem;
+    }
   </style>
 </head>
 
@@ -590,14 +637,24 @@
       <div id="turnPanel" class="panel">
         <h2>Tour actuel</h2>
 
-        <label for="distanceMode">Situation du tour</label>
-        <select id="distanceMode" onchange="refreshActionList()">
+        <label>Situation du tour</label>
+
+        <select id="distanceMode" style="display:none;">
           <option value="normal">Combat rapproché</option>
           <option value="distance">Distance Accrue</option>
         </select>
+        
+        <div class="mode-toggle">
+          <button type="button" id="btnNormalMode" onclick="setDistanceMode('normal')">
+            Combat rapproché
+          </button>
+          <button type="button" id="btnDistanceMode" onclick="setDistanceMode('distance')">
+            Distance Accrue
+          </button>
+        </div>
 
         <label for="restrictionMode">Restriction reçue de l’adversaire</label>
-        <select id="restrictionMode" onchange="refreshActionList()">
+        <select id="restrictionMode" class="compact-select" onchange="refreshActionList()">
           <option value="none">Aucune restriction</option>
           <option value="no_blue">Pas de Bleu</option>
           <option value="no_red">Pas de Rouge</option>
@@ -624,7 +681,7 @@
         </div>
         
         <label for="temporaryBonus">Bonus temporaire reçu</label>
-        <select id="temporaryBonus">
+        <select id="temporaryBonus" class="compact-select">  
           <option value="none">Aucun bonus</option>
           <option value="score_any">+2 si SCORE au prochain tour</option>
           <option value="score_blue">+2 si SCORE avec Bleu</option>
@@ -647,7 +704,7 @@
 
 <label for="actionChoice">Action choisie</label>
         <label for="actionChoice">Action choisie</label>
-        <select id="actionChoice"></select>
+       <select id="actionChoice" class="action-select"></select>
 
         <button onclick="chooseAction()">Annoncer cette action</button>
       </div>
@@ -924,6 +981,24 @@
       }
     }
 
+    function updateDistanceButtons() {
+      const mode = document.getElementById("distanceMode").value;
+    
+      const normalButton = document.getElementById("btnNormalMode");
+      const distanceButton = document.getElementById("btnDistanceMode");
+    
+      if (!normalButton || !distanceButton) return;
+    
+      normalButton.classList.toggle("active", mode === "normal");
+      distanceButton.classList.toggle("active", mode === "distance");
+    }
+    
+    function setDistanceMode(mode) {
+      document.getElementById("distanceMode").value = mode;
+      updateDistanceButtons();
+      refreshActionList();
+    }
+
     function getActionsForCurrentMode() {
       const distanceMode = document.getElementById("distanceMode").value;
 
@@ -1020,7 +1095,7 @@ function updateRestrictionBanner(restriction) {
       }
     
       const actions = getActionsForCurrentMode();
-    
+      updateDistanceButtons();
       updateRestrictionBanner(restriction);
       fillActions(actions, restriction);
     }
