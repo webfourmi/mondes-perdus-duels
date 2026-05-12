@@ -612,6 +612,12 @@
           <option value="only_brown">Seulement Marron</option>
           <option value="only_bond">Seulement Bond</option>
           <option value="disarmed">Désarmé</option>
+          <option value="no_thrust_red">Pas d’Estoc ni de Rouge</option>
+          <option value="no_thrust_blue">Pas d’Estoc ni de Bleu</option>
+          <option value="no_lateral_red">Pas de Coup Latéral ni de Rouge</option>
+          <option value="no_green_yellow">Pas de Vert ni de Jaune</option>
+          <option value="only_distance">Seulement Distance Accrue</option>
+          <option value="shield_broken">Bouclier brisé</option>
         </select>
         <div id="restrictionBanner" class="restriction-banner restriction-none">
           Aucune restriction
@@ -856,6 +862,39 @@
             color === "vert"
           ) && !lowerName.includes("coup latéral féroce");
 
+          case "no_thrust_red":
+            return (
+              category !== "Estoc" &&
+              !lowerName.includes("estoc") &&
+              color !== "rouge"
+            );
+          
+          case "no_thrust_blue":
+            return (
+              category !== "Estoc" &&
+              !lowerName.includes("estoc") &&
+              color !== "bleu"
+            );
+          
+          case "no_lateral_red":
+            return (
+              category !== "Coup latéral" &&
+              !lowerName.includes("latéral") &&
+              color !== "rouge"
+            );
+          
+          case "no_green_yellow":
+            return color !== "vert" && color !== "jaune";
+          
+          case "only_distance":
+            return true;
+          
+          case "shield_broken":
+            return (
+              category !== "Coup de bouclier" &&
+              category !== "Attaque protégée"
+            );
+
         default:
           return true;
       }
@@ -914,7 +953,25 @@
     
         case "disarmed":
           return { label: "Désarmé", css: "restriction-danger" };
-    
+
+        case "no_thrust_red":
+          return { label: "Pas d’Estoc ni de Rouge", css: "restriction-red" };
+        
+        case "no_thrust_blue":
+          return { label: "Pas d’Estoc ni de Bleu", css: "restriction-blue" };
+        
+        case "no_lateral_red":
+          return { label: "Pas de Coup Latéral ni de Rouge", css: "restriction-red" };
+        
+        case "no_green_yellow":
+          return { label: "Pas de Vert ni de Jaune", css: "restriction-danger" };
+        
+        case "only_distance":
+          return { label: "Seulement Distance Accrue", css: "restriction-brown" };
+        
+        case "shield_broken":
+          return { label: "Bouclier brisé", css: "restriction-danger" };
+            
         default:
           return { label: "Aucune restriction", css: "restriction-none" };
       }
@@ -932,8 +989,13 @@ function updateRestrictionBanner(restriction) {
     function refreshActionList() {
       if (!currentFighter) return;
     
-      const actions = getActionsForCurrentMode();
       const restriction = document.getElementById("restrictionMode").value;
+    
+      if (restriction === "only_distance") {
+        document.getElementById("distanceMode").value = "distance";
+      }
+    
+      const actions = getActionsForCurrentMode();
     
       updateRestrictionBanner(restriction);
       fillActions(actions, restriction);
