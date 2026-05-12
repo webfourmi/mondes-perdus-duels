@@ -670,6 +670,35 @@
       height: auto;
       border-radius: 8px;
     }
+
+    .opponent-instruction-panel {
+      margin: 6px 0 8px;
+      padding: 8px;
+      border: 2px solid #ffd98a;
+      border-radius: 12px;
+      background: rgba(255, 217, 138, 0.12);
+      text-align: center;
+    }
+    
+    .opponent-instruction-panel span {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.85;
+      margin-bottom: 3px;
+    }
+    
+    .opponent-instruction-panel strong {
+      display: block;
+      color: #ffd98a;
+      font-size: 0.95rem;
+      line-height: 1.25;
+    }
+    
+    body.duel-active .opponent-instruction-panel {
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 
@@ -734,6 +763,10 @@
       <h2>Duel en cours</h2>
 
       <p id="duelCompactSummary" class="small"></p>
+      <div id="opponentInstructionPanel" class="opponent-instruction-panel" style="display:none;">
+        <span>Instruction à donner à l’adversaire</span>
+        <strong id="opponentInstructionText">-</strong>
+      </div>
 
       <div id="duelDetails">
         <p><strong>Ma fiche :</strong> <span id="currentSheet"></span></p>
@@ -901,6 +934,7 @@
 
     let lastDamage = null;
     let damageAlreadyApplied = false;
+    let pendingOpponentInstruction = "";
 
     async function loadJson(path) {
       const response = await fetch(path + "?v=" + Date.now());
@@ -1274,6 +1308,9 @@ function updateRestrictionBanner(restriction) {
 
       document.getElementById("pgPanel").style.display = "none";
       document.getElementById("resultPanel").style.display = "none";
+      pendingOpponentInstruction = "";
+      document.getElementById("opponentInstructionPanel").style.display = "none";
+      document.getElementById("opponentInstructionText").textContent = "-";
 
       try {
         currentFighter = await loadJson(sheetEntry.sheetFile);
@@ -1446,6 +1483,8 @@ function updateRestrictionBanner(restriction) {
         return;
       }
 
+      pendingOpponentInstruction = page.instruction || "Aucune instruction particulière.";
+
       const damage = calculateDamage(page, selectedAction);
       lastDamage = damage;
       damageAlreadyApplied = false;
@@ -1575,6 +1614,10 @@ function updateRestrictionBanner(restriction) {
       document.getElementById("nextTurnButton").style.display = "none";
       document.getElementById("turnPanel").style.display = "block";
       document.getElementById("bodyStatus").textContent = "";
+      if (pendingOpponentInstruction) {
+        document.getElementById("opponentInstructionText").textContent = pendingOpponentInstruction;
+        document.getElementById("opponentInstructionPanel").style.display = "block";
+      }
       document.getElementById("temporaryBonus").value = "none";
 
       refreshActionList();
