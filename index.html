@@ -634,67 +634,7 @@
         <p id="bodyStatus" class="small"></p>
       </div>
 
-      <div id="turnPanel" class="panel">
-        <h2>Tour actuel</h2>
-      
-        <label>Situation du tour</label>
-      
-        <select id="distanceMode" style="display:none;">
-          <option value="normal">Combat rapproché</option>
-          <option value="distance">Distance Accrue</option>
-        </select>
-      
-        <div class="mode-toggle">
-          <button type="button" id="btnNormalMode" onclick="setDistanceMode('normal')">
-            Combat rapproché
-          </button>
-          <button type="button" id="btnDistanceMode" onclick="setDistanceMode('distance')">
-            Distance Accrue
-          </button>
-        </div>
-      
-        <label for="restrictionMode">Restriction reçue de l’adversaire</label>
-        <select id="restrictionMode" class="compact-select" onchange="refreshActionList()">
-          <option value="none">Aucune restriction</option>
-          <option value="no_blue">Pas de Bleu</option>
-          <option value="no_red">Pas de Rouge</option>
-          <option value="no_orange">Pas d’Orange</option>
-          <option value="no_red_orange">Pas de Rouge ni d’Orange</option>
-          <option value="no_blue_yellow">Pas de Bleu ni de Jaune</option>
-          <option value="no_thrust">Pas d’Estoc</option>
-          <option value="no_lateral">Pas de Coup Latéral</option>
-          <option value="no_thrust_red">Pas d’Estoc ni de Rouge</option>
-          <option value="no_thrust_blue">Pas d’Estoc ni de Bleu</option>
-          <option value="no_lateral_red">Pas de Coup Latéral ni de Rouge</option>
-          <option value="no_green_yellow">Pas de Vert ni de Jaune</option>
-          <option value="only_green">Seulement Vert</option>
-          <option value="only_yellow">Seulement Jaune</option>
-          <option value="only_green_yellow">Seulement Vert ou Jaune</option>
-          <option value="only_brown">Seulement Marron</option>
-          <option value="only_bond">Seulement Bond</option>
-          <option value="only_distance">Seulement Distance Accrue</option>
-          <option value="disarmed">Désarmé</option>
-          <option value="shield_broken">Bouclier brisé</option>
-        </select>
-      
-        <div id="restrictionBanner" class="restriction-banner restriction-none">
-          Aucune restriction
-        </div>
-      
-        <label for="temporaryBonus">Bonus temporaire reçu</label>
-        <select id="temporaryBonus" class="compact-select">
-          <option value="none">Aucun bonus</option>
-          <option value="score_any">+2 si SCORE au prochain tour</option>
-          <option value="score_blue">+2 si SCORE avec Bleu</option>
-          <option value="score_orange">+2 si SCORE avec Orange</option>
-          <option value="score_plunge_or_lateral">+2 si SCORE avec Coup Plongeant ou Latéral</option>
-        </select>
-      
-        <label for="actionChoice">Action choisie</label>
-        <select id="actionChoice" class="action-select"></select>
-      
-        <button onclick="chooseAction()">Annoncer cette action</button>
-      </div><div id="turnPanel" class="panel">
+   <div id="turnPanel" class="panel">
         <h2>Tour actuel</h2>
       
         <label>Situation du tour</label>
