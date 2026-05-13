@@ -6,61 +6,61 @@
 
   <title>Mondes Perdus - Duels</title>
 
-   <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
 
-  </head>
- 
 <body>
+  <!-- Barre fixe des Points de Corps -->
   <div id="fixedHpBar" class="fixed-hp-bar" style="display:none;">
     <div class="hp-box">
       <span id="fixedMyName">Moi</span>
       <strong id="fixedMyBody">-</strong>
     </div>
-  
+
     <div class="hp-box">
       <span id="fixedOpponentName">Adversaire</span>
       <strong id="fixedOpponentBody">-</strong>
     </div>
 
-   
-    
-      <div class="image-overlay-scroll">
-        <img id="overlayImage" src="" alt="Image agrandie" />
-      </div>
-    </div>
-
-  
-  
     <button class="hp-mini-button" onclick="toggleHpTools()">Modifier mes PV</button>
+
     <button class="hp-mini-button hp-new-duel-button" onclick="newDuel()">
       Nouveau duel
     </button>
-  
+
     <div id="hpTools" class="hp-tools" style="display:none;">
       <input id="myBodyManualTop" type="number" placeholder="Mes PV actuels" />
       <button onclick="adjustMyBodyFromTop()">OK</button>
     </div>
   </div>
 
-   <div id="imageOverlay" class="image-overlay" style="display:none;">
-      <div class="image-overlay-toolbar">
-        <button type="button" onclick="changeOverlayZoom(-0.25)">−</button>
-        <button type="button" onclick="resetOverlayZoom()">100%</button>
-        <button type="button" onclick="changeOverlayZoom(0.25)">+</button>
-        <button type="button" onclick="closeImageOverlay()">Fermer</button>
-      </div>
-     
+  <!-- Fenêtre plein écran pour zoom image -->
+  <div id="imageOverlay" class="image-overlay" style="display:none;">
+    <div class="image-overlay-toolbar">
+      <button type="button" onclick="changeOverlayZoom(-0.25)">−</button>
+      <button type="button" onclick="resetOverlayZoom()">100%</button>
+      <button type="button" onclick="changeOverlayZoom(0.25)">+</button>
+      <button type="button" onclick="closeImageOverlay()">Fermer</button>
+    </div>
+
+    <div class="image-overlay-scroll">
+      <img id="overlayImage" src="" alt="Image agrandie" />
+    </div>
+  </div>
+
   <main class="app">
     <h1 id="appTitle">Mondes Perdus</h1>
     <p id="appSubtitle" class="small">Prototype familial de duel numérique</p>
 
+    <!-- Écran de départ -->
     <section id="setupPanel">
       <h2>Début de duel</h2>
+
       <label for="savedCharacterSelect">Mes PJ sauvegardés</label>
       <select id="savedCharacterSelect" onchange="loadSavedCharacterFromSelect()">
         <option value="">Nouveau PJ / aucun PJ sauvegardé</option>
       </select>
-      
+
       <label for="playerSheet">Ma fiche personnage</label>
       <select id="playerSheet" onchange="loadPlayerNameForSelectedFighter()">
         <option value="chevalier">Chevalier</option>
@@ -69,6 +69,7 @@
 
       <label for="playerName">Nom du PJ</label>
       <input id="playerName" type="text" placeholder="Exemple : Godefroy-la-Tôle" />
+
       <div class="character-buttons">
         <button type="button" onclick="saveCharacterFromSetup()">Enregistrer ce PJ</button>
         <button type="button" class="danger-button" onclick="deleteSelectedCharacter()">Supprimer ce PJ</button>
@@ -85,19 +86,22 @@
       <p id="loadMessage" class="small"></p>
     </section>
 
+    <!-- Écran de duel -->
     <section id="duelPanel" class="panel" style="display:none;">
       <h2>Duel en cours</h2>
 
       <p id="duelCompactSummary" class="small"></p>
+
       <div id="xpPanel" class="xp-panel">
         <span>Expérience</span>
         <strong id="xpDisplay">0</strong>
-      
+
         <div class="xp-buttons">
           <button type="button" onclick="changeExperience(1)">+1 XP</button>
           <button type="button" onclick="changeExperience(-1)">-1 XP</button>
         </div>
       </div>
+
       <div id="opponentInstructionPanel" class="opponent-instruction-panel" style="display:none;">
         <span>Instruction à donner à l’adversaire</span>
         <strong id="opponentInstructionText">-</strong>
@@ -106,23 +110,25 @@
       <div id="duelDetails">
         <p><strong>Ma fiche :</strong> <span id="currentSheet"></span></p>
         <p><strong>Livret affiché :</strong> <span id="currentBook"></span></p>
-      
+
         <div class="stat-grid">
-        <div class="stat">
-          Taille
-          <strong id="statSize">-</strong>
-        </div>
-        <div class="stat">
-          Corps départ
-          <strong id="statBody">-</strong>
-        </div>
-        <div class="stat">
-          Attaques
-          <strong id="statAttacks">-</strong>
-        </div>
+          <div class="stat">
+            Taille
+            <strong id="statSize">-</strong>
+          </div>
+
+          <div class="stat">
+            Corps départ
+            <strong id="statBody">-</strong>
+          </div>
+
+          <div class="stat">
+            Attaques
+            <strong id="statAttacks">-</strong>
+          </div>
         </div>
       </div>
-      
+
       <div id="bodyPanel" class="panel">
         <h2>Points de Corps</h2>
 
@@ -131,6 +137,7 @@
             Moi
             <strong id="myBodyDisplay">-</strong>
           </div>
+
           <div class="stat">
             Adversaire
             <strong id="opponentBodyDisplay">-</strong>
@@ -144,25 +151,27 @@
         <p id="bodyStatus" class="small"></p>
       </div>
 
-   <div id="turnPanel" class="panel">
+      <!-- Tour actuel -->
+      <div id="turnPanel" class="panel">
         <h2>Tour actuel</h2>
-      
+
         <label>Situation du tour</label>
-      
+
         <select id="distanceMode" style="display:none;">
           <option value="normal">Combat rapproché</option>
           <option value="distance">Distance Accrue</option>
         </select>
-      
+
         <div class="mode-toggle">
           <button type="button" id="btnNormalMode" onclick="setDistanceMode('normal')">
             Combat rapproché
           </button>
+
           <button type="button" id="btnDistanceMode" onclick="setDistanceMode('distance')">
             Distance Accrue
           </button>
         </div>
-      
+
         <label for="restrictionMode">Restriction reçue de l’adversaire</label>
         <select id="restrictionMode" class="compact-select" onchange="refreshActionList()">
           <option value="none">Aucune restriction</option>
@@ -186,11 +195,11 @@
           <option value="disarmed">Désarmé</option>
           <option value="shield_broken">Bouclier brisé</option>
         </select>
-      
+
         <div id="restrictionBanner" class="restriction-banner restriction-none">
           Aucune restriction
         </div>
-      
+
         <label for="temporaryBonus">Bonus temporaire reçu</label>
         <select id="temporaryBonus" class="compact-select">
           <option value="none">Aucun bonus</option>
@@ -199,28 +208,32 @@
           <option value="score_orange">+2 si SCORE avec Orange</option>
           <option value="score_plunge_or_lateral">+2 si SCORE avec Coup Plongeant ou Latéral</option>
         </select>
-      
+
         <label for="actionChoice">Action choisie</label>
         <select id="actionChoice" class="action-select"></select>
-      
+
         <button onclick="chooseAction()">Annoncer cette action</button>
       </div>
 
-     <div id="pgPanel" class="action-screen" style="display:none;">
-      <div class="pg-card">
-        <span>PG à annoncer</span>
-        <strong id="pgToAnnounce"></strong>
-      </div>
-    
-      <label for="enemyPg">PG reçu de l’adversaire</label>
-      <div class="resolve-row">
-        <input id="enemyPg" type="number" placeholder="Ex : 42" />
-        <button onclick="resolveTurn()">Résoudre</button>
-      </div>
-    </div>
+      <!-- PG annoncé / reçu -->
+      <div id="pgPanel" class="action-screen" style="display:none;">
+        <div class="pg-card">
+          <span>PG à annoncer</span>
+          <strong id="pgToAnnounce"></strong>
+        </div>
 
+        <label for="enemyPg">PG reçu de l’adversaire</label>
+
+        <div class="resolve-row">
+          <input id="enemyPg" type="number" placeholder="Ex : 42" />
+          <button onclick="resolveTurn()">Résoudre</button>
+        </div>
+      </div>
+
+      <!-- Résultat -->
       <div id="resultPanel" class="panel" style="display:none;">
         <h2>Résultat</h2>
+
         <div id="resultText"></div>
 
         <button id="nextTurnButton" onclick="nextTurn()" style="display:none;">
@@ -230,7 +243,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=4"></script>
-  
+  <script src="app.js?v=5"></script>
 </body>
 </html>
