@@ -1,4 +1,6 @@
-    let catalog = null;
+const APP_VERSION = "0.2.0";
+
+let catalog = null;
 
     const fallbackCatalog = {
       fighters: [
