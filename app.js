@@ -49,6 +49,172 @@
       }
       return await response.json();
     }
+    const charactersIndexKey = "lw_saved_characters_index";
+    
+    function getSavedCharacters() {
+      const raw = localStorage.getItem(charactersIndexKey);
+    
+      if (!raw) return [];
+    
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        return [];
+      }
+    }
+    
+    function saveSavedCharacters(characters) {
+      localStorage.setItem(charactersIndexKey, JSON.stringify(characters));
+    }
+    
+    function makeCharacterId(fighterId, name) {
+      return fighterId + "_" + normalizeProfileName(name);
+    }
+    
+    function refreshSavedCharactersSelect() {
+      const select = document.getElementById("savedCharacterSelect");
+      if (!select) return;
+    
+      const characters = getSavedCharacters();
+    
+      select.innerHTML = "";
+    
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = "Nouveau PJ / aucun PJ sauvegardé";
+      select.appendChild(emptyOption);
+    
+      characters.forEach(function(character) {
+        const option = document.createElement("option");
+        option.value = character.id;
+        option.textContent =
+          character.name +
+          " — " +
+          character.fighterName +
+          " — " +
+          (character.experience || 0) +
+          " XP";
+        select.appendChild(option);
+      });
+    }
+    
+    function getCurrentSetupCharacterData() {
+      const fighterId = document.getElementById("playerSheet").value;
+      const nameInput = document.getElementById("playerName");
+      const name = nameInput.value.trim();
+    
+      if (!name) {
+        alert("Donne un nom au PJ avant de l’enregistrer.");
+        return null;
+      }
+    
+      const fighterEntry = findCatalogEntry(fighterId);
+      const fighterName = fighterEntry ? fighterEntry.shortName : fighterId;
+    
+      return {
+        id: makeCharacterId(fighterId, name),
+        fighterId: fighterId,
+        fighterName: fighterName,
+        name: name,
+        experience: currentExperience || 0
+      };
+    }
+    
+    function saveCharacterToIndex(character) {
+      const characters = getSavedCharacters();
+      const existingIndex = characters.findIndex(function(item) {
+        return item.id === character.id;
+      });
+    
+      if (existingIndex >= 0) {
+        characters[existingIndex] = character;
+      } else {
+        characters.push(character);
+      }
+    
+      characters.sort(function(a, b) {
+        return a.name.localeCompare(b.name);
+      });
+    
+      saveSavedCharacters(characters);
+      refreshSavedCharactersSelect();
+    
+      const select = document.getElementById("savedCharacterSelect");
+      if (select) {
+        select.value = character.id;
+      }
+    }
+    
+    function saveCharacterFromSetup() {
+      const character = getCurrentSetupCharacterData();
+      if (!character) return;
+    
+      currentPlayerName = character.name;
+      currentProfileKey = getPlayerProfileKey(character.fighterId, character.name);
+    
+      savePlayerProfile();
+    
+      character.experience = currentExperience || 0;
+      saveCharacterToIndex(character);
+    
+      alert("PJ enregistré : " + character.name);
+    }
+    
+    function loadSavedCharacterFromSelect() {
+      const select = document.getElementById("savedCharacterSelect");
+      if (!select || !select.value) return;
+    
+      const characters = getSavedCharacters();
+      const character = characters.find(function(item) {
+        return item.id === select.value;
+      });
+    
+      if (!character) return;
+    
+      document.getElementById("playerSheet").value = character.fighterId;
+      document.getElementById("playerName").value = character.name;
+    
+      currentPlayerName = character.name;
+      loadPlayerProfile(character.fighterId, character.name);
+    }
+    
+    function deleteSelectedCharacter() {
+      const select = document.getElementById("savedCharacterSelect");
+      if (!select || !select.value) {
+        alert("Choisis d’abord un PJ sauvegardé à supprimer.");
+        return;
+      }
+    
+      const characters = getSavedCharacters();
+      const character = characters.find(function(item) {
+        return item.id === select.value;
+      });
+    
+      if (!character) return;
+    
+      const confirmed = confirm(
+        "Supprimer le PJ sauvegardé : " + character.name + " ?\n\nSon expérience sera aussi supprimée."
+      );
+    
+      if (!confirmed) return;
+    
+      const updatedCharacters = characters.filter(function(item) {
+        return item.id !== character.id;
+      });
+    
+      saveSavedCharacters(updatedCharacters);
+    
+      const profileKey = getPlayerProfileKey(character.fighterId, character.name);
+      localStorage.removeItem(profileKey);
+    
+      document.getElementById("savedCharacterSelect").value = "";
+      document.getElementById("playerName").value = "";
+      currentExperience = 0;
+      currentProfileKey = "";
+      updateExperienceDisplay();
+    
+      refreshSavedCharactersSelect();
+    }
     function normalizeProfileName(name) {
       return (name || "sans_nom")
         .trim()
@@ -95,6 +261,16 @@
       };
     
       localStorage.setItem(currentProfileKey, JSON.stringify(profile));
+     if (currentFighter && currentPlayerName) {
+      saveCharacterToIndex({
+        id: makeCharacterId(currentFighter.id, currentPlayerName),
+        fighterId: currentFighter.id,
+        fighterName: currentFighter.shortName || currentFighter.id,
+        name: currentPlayerName,
+        experience: currentExperience
+      });
+    }   
+            
     }
     
     function updateExperienceDisplay() {
@@ -168,12 +344,14 @@
         fillSelect("opponentBook", catalog.fighters);
         message.textContent = "Catalogue chargé : " + catalog.fighters.length + " combattants disponibles.";
         loadPlayerNameForSelectedFighter();
+        refreshSavedCharactersSelect();
       } catch (error) {
         catalog = fallbackCatalog;
         fillSelect("playerSheet", catalog.fighters);
         fillSelect("opponentBook", catalog.fighters);
         message.innerHTML = '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé.</span>';
         loadPlayerNameForSelectedFighter();
+        refreshSavedCharactersSelect();
       }
     }
 
@@ -546,6 +724,15 @@ function updateRestrictionBanner(restriction) {
       currentPlayerName = savedPlayerName || sheetEntry.shortName;
       
       loadPlayerProfile(sheetId, currentPlayerName);
+      if (savedPlayerName) {
+          saveCharacterToIndex({
+            id: makeCharacterId(sheetId, currentPlayerName),
+            fighterId: sheetId,
+            fighterName: sheetEntry.shortName,
+            name: currentPlayerName,
+            experience: currentExperience || 0
+          });
+        }
 
       const sheetEntry = findCatalogEntry(sheetId);
       const bookEntry = findCatalogEntry(bookId);
