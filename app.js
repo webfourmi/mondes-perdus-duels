@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.3";
+const APP_VERSION = "0.2.4";
 
 let catalog = null;
 
@@ -44,6 +44,8 @@ let currentPlayerName = "";
 let currentExperience = 0;
 let currentProfileKey = "";
 let currentDuelSaveKey = "lw_current_duel_state";
+let duelFinished = false;
+let victoryXpAwarded = false;
 
 const charactersIndexKey = "lw_saved_characters_index";
 
@@ -422,7 +424,9 @@ function saveCurrentDuelState() {
     opponentMaxBody: opponentMaxBody,
     playerName: currentPlayerName,
     fighterId: currentFighter.id,
-    opponentId: currentOpponentFighter.id
+    opponentId: currentOpponentFighter.id,
+    duelFinished: duelFinished,
+    victoryXpAwarded: victoryXpAwarded
   };
 
   localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
@@ -447,6 +451,8 @@ function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
     myMaxBody = Number(state.myMaxBody);
     opponentCurrentBody = Number(state.opponentCurrentBody);
     opponentMaxBody = Number(state.opponentMaxBody);
+    duelFinished = Boolean(state.duelFinished);
+    victoryXpAwarded = Boolean(state.victoryXpAwarded);
 
     return true;
   } catch (error) {
@@ -457,6 +463,92 @@ function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
 function clearCurrentDuelState() {
   localStorage.removeItem(currentDuelSaveKey);
 }
+
+  /* ============================================================
+     FIN DE COMBAT
+     ============================================================ */
+  
+  function showCombatEnd(title, text, cssClass) {
+    const panel = document.getElementById("combatEndPanel");
+    const titleElement = document.getElementById("combatEndTitle");
+    const textElement = document.getElementById("combatEndText");
+  
+    if (!panel || !titleElement || !textElement) return;
+  
+    panel.className = "combat-end-panel " + cssClass;
+    titleElement.textContent = title;
+    textElement.textContent = text;
+    panel.style.display = "block";
+  
+    document.getElementById("turnPanel").style.display = "none";
+    document.getElementById("pgPanel").style.display = "none";
+    document.getElementById("nextTurnButton").style.display = "none";
+  
+    saveCurrentDuelState();
+  }
+  
+  function checkCombatEnd() {
+    if (duelFinished) return;
+  
+    const playerDead = myCurrentBody <= -5;
+    const playerOut = myCurrentBody < 1;
+    const opponentOut = opponentCurrentBody < 1;
+  
+    if (playerDead) {
+      duelFinished = true;
+  
+      showCombatEnd(
+        "Mort du PJ",
+        currentPlayerName + " tombe à " + myCurrentBody + " PV. Le personnage est mort.",
+        "combat-end-death"
+      );
+  
+      return;
+    }
+  
+    if (playerOut && opponentOut) {
+      duelFinished = true;
+  
+      showCombatEnd(
+        "Match nul",
+        "Les deux combattants sont hors combat.",
+        "combat-end-draw"
+      );
+  
+      return;
+    }
+  
+    if (opponentOut && !playerOut) {
+      duelFinished = true;
+  
+      const xpGain = Math.max(0, Number(opponentMaxBody || 0));
+  
+      if (!victoryXpAwarded) {
+        currentExperience += xpGain;
+        victoryXpAwarded = true;
+        updateExperienceDisplay();
+        savePlayerProfile();
+      }
+  
+      showCombatEnd(
+        "Combat gagné",
+        "Victoire ! " + xpGain + " XP ajoutée(s) à " + currentPlayerName + ".",
+        "combat-end-victory"
+      );
+  
+      return;
+    }
+  
+    if (playerOut && !opponentOut) {
+      duelFinished = true;
+  
+      showCombatEnd(
+        "Combat perdu",
+        currentPlayerName + " est hors combat.",
+        "combat-end-defeat"
+      );
+    }
+  }
 
 /* ============================================================
    POINTS DE CORPS
@@ -506,6 +598,7 @@ function adjustMyBody() {
   document.getElementById("myBodyManual").value = "";
 
   updateBodyDisplays();
+  checkCombatEnd();
   saveCurrentDuelState();
 }
 
@@ -532,7 +625,8 @@ function adjustMyBodyFromTop() {
   document.getElementById("myBodyManualTop").value = "";
   document.getElementById("hpTools").style.display = "none";
 
-  updateBodyDisplays();
+ updateBodyDisplays();
+  checkCombatEnd();
   saveCurrentDuelState();
 }
 
@@ -833,6 +927,11 @@ async function startDuel() {
   pendingOpponentInstruction = "";
   document.getElementById("opponentInstructionPanel").style.display = "none";
   document.getElementById("opponentInstructionText").textContent = "-";
+  duelFinished = false;
+  victoryXpAwarded = false;
+  document.getElementById("combatEndPanel").style.display = "none";
+  document.getElementById("combatEndTitle").textContent = "Fin du combat";
+  document.getElementById("combatEndText").textContent = "-";
 
   try {
     currentFighter = await loadJson(sheetEntry.sheetFile);
@@ -853,6 +952,8 @@ async function startDuel() {
 
       opponentMaxBody = Number(currentOpponentFighter.bodyPointsStart);
       opponentCurrentBody = opponentMaxBody;
+      duelFinished = false;
+      victoryXpAwarded = false;
 
       saveCurrentDuelState();
     }
@@ -1163,6 +1264,7 @@ function applyDamageToOpponent() {
   damageAlreadyApplied = true;
 
   updateBodyDisplays();
+  checkCombatEnd();
   saveCurrentDuelState();
 
   if (lastDamage === 0) {
@@ -1270,6 +1372,8 @@ function newDuel() {
   lastDamage = null;
   damageAlreadyApplied = false;
   pendingOpponentInstruction = "";
+  duelFinished = false;
+  victoryXpAwarded = false;
 
   document.body.classList.remove("duel-active");
 
@@ -1287,6 +1391,9 @@ function newDuel() {
 
   document.getElementById("opponentInstructionPanel").style.display = "none";
   document.getElementById("opponentInstructionText").textContent = "-";
+  document.getElementById("combatEndPanel").style.display = "none";
+  document.getElementById("combatEndTitle").textContent = "Fin du combat";
+  document.getElementById("combatEndText").textContent = "-";
 
   document.getElementById("enemyPg").value = "";
 
