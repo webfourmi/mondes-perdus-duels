@@ -344,14 +344,21 @@ let catalog = null;
         catalog = await loadJson("data/catalog.json");
         fillSelect("playerSheet", catalog.fighters);
         fillSelect("opponentBook", catalog.fighters);
-        message.textContent = "Catalogue chargé : " + catalog.fighters.length + " combattants disponibles.";
+       message.textContent =
+          "Catalogue chargé : " +
+          catalog.fighters.length +
+          " combattants disponibles. Version " +
+          APP_VERSION;
         loadPlayerNameForSelectedFighter();
         refreshSavedCharactersSelect();
       } catch (error) {
         catalog = fallbackCatalog;
         fillSelect("playerSheet", catalog.fighters);
         fillSelect("opponentBook", catalog.fighters);
-        message.innerHTML = '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé.</span>';
+       message.innerHTML =
+          '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé. Version ' +
+          APP_VERSION +
+          '.</span>';
         loadPlayerNameForSelectedFighter();
         refreshSavedCharactersSelect();
       }
