@@ -699,6 +699,12 @@
     body.duel-active .opponent-instruction-panel {
       font-size: 0.9rem;
     }
+
+    .hp-new-duel-button {
+      background: linear-gradient(#8f5a3a, #5b2b1f);
+      color: #ffe8d0;
+      border-color: #c98a5b;
+    }
   </style>
 </head>
 
@@ -728,6 +734,9 @@
     </div>
   
     <button class="hp-mini-button" onclick="toggleHpTools()">Modifier mes PV</button>
+    <button class="hp-mini-button hp-new-duel-button" onclick="newDuel()">
+      Nouveau duel
+    </button>
   
     <div id="hpTools" class="hp-tools" style="display:none;">
       <input id="myBodyManualTop" type="number" placeholder="Mes PV actuels" />
@@ -1759,6 +1768,50 @@ function updateRestrictionBanner(restriction) {
     function resetOverlayZoom() {
       overlayZoom = 1;
       updateOverlayZoom();
+    }
+
+    function newDuel() {
+      const confirmed = confirm(
+        "Commencer un nouveau duel ?\n\nLes Points de Corps du duel en cours seront réinitialisés."
+      );
+    
+      if (!confirmed) return;
+    
+      clearCurrentDuelState();
+    
+      currentFighter = null;
+      currentOpponentFighter = null;
+      currentBook = null;
+      currentActions = [];
+      selectedAction = null;
+    
+      myMaxBody = 0;
+      myCurrentBody = 0;
+      opponentMaxBody = 0;
+      opponentCurrentBody = 0;
+    
+      lastDamage = null;
+      damageAlreadyApplied = false;
+      pendingOpponentInstruction = "";
+    
+      document.getElementById("duelPanel").style.display = "none";
+      document.getElementById("turnPanel").style.display = "block";
+      document.getElementById("pgPanel").style.display = "none";
+      document.getElementById("resultPanel").style.display = "none";
+      document.getElementById("resultText").innerHTML = "";
+      document.getElementById("nextTurnButton").style.display = "none";
+    
+      document.getElementById("fixedHpBar").style.display = "none";
+      document.getElementById("hpTools").style.display = "none";
+    
+      document.getElementById("opponentInstructionPanel").style.display = "none";
+      document.getElementById("opponentInstructionText").textContent = "-";
+    
+      document.getElementById("enemyPg").value = "";
+    
+      document.body.classList.remove("duel-active");
+    
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
     initApp();
   </script>
