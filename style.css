@@ -721,19 +721,7 @@
       line-height: 1.1;
     }
     
-    .xp-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-top: 5px;
-    }
-    
-    .xp-buttons button {
-      margin: 0;
-      padding: 6px;
-      font-size: 0.82rem;
-    }
-    
+        
     body.duel-active .xp-panel {
       margin-top: 4px;
       padding: 6px;
