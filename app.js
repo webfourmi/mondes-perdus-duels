@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.0";
+const APP_VERSION = "0.2.1";
 
 let catalog = null;
 
@@ -727,29 +727,33 @@ function updateRestrictionBanner(restriction) {
     }
 
     async function startDuel() {
-      const sheetId = document.getElementById("playerSheet").value;
-      const bookId = document.getElementById("opponentBook").value;
-      const savedPlayerName = savePlayerNameForSelectedFighter();
-      currentPlayerName = savedPlayerName || sheetEntry.shortName;
-      
-      loadPlayerProfile(sheetId, currentPlayerName);
-      if (savedPlayerName) {
-          saveCharacterToIndex({
-            id: makeCharacterId(sheetId, currentPlayerName),
-            fighterId: sheetId,
-            fighterName: sheetEntry.shortName,
-            name: currentPlayerName,
-            experience: currentExperience || 0
-          });
-        }
+          const sheetId = document.getElementById("playerSheet").value;
+          const bookId = document.getElementById("opponentBook").value;
+        
+          const sheetEntry = findCatalogEntry(sheetId);
+          const bookEntry = findCatalogEntry(bookId);
+        
+          if (!sheetEntry || !bookEntry) {
+            alert("Impossible de trouver la fiche ou le livret sélectionné.");
+            return;
+          }
+        
+          const savedPlayerName = savePlayerNameForSelectedFighter();
+          currentPlayerName = savedPlayerName || sheetEntry.shortName;
+        
+          loadPlayerProfile(sheetId, currentPlayerName);
+        
+          if (savedPlayerName) {
+            saveCharacterToIndex({
+              id: makeCharacterId(sheetId, currentPlayerName),
+              fighterId: sheetId,
+              fighterName: sheetEntry.shortName,
+              name: currentPlayerName,
+              experience: currentExperience || 0
+            });
+          }
 
-      const sheetEntry = findCatalogEntry(sheetId);
-      const bookEntry = findCatalogEntry(bookId);
-
-      if (!sheetEntry || !bookEntry) {
-        alert("Impossible de trouver la fiche ou le livret sélectionné.");
-        return;
-      }
+     
 
       document.getElementById("pgPanel").style.display = "none";
       document.getElementById("resultPanel").style.display = "none";
