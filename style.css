@@ -794,3 +794,31 @@
       border-color: #ff88aa;
       background: rgba(120, 0, 40, 0.34);
     }
+
+    .evolution-panel {
+      margin: 6px 0 8px;
+      padding: 9px;
+      border: 2px solid #72d672;
+      border-radius: 12px;
+      background: rgba(60, 150, 60, 0.18);
+      text-align: center;
+    }
+    
+    .evolution-panel span {
+      display: block;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.9;
+      margin-bottom: 4px;
+      color: #cfffca;
+    }
+    
+    .evolution-panel p {
+      margin: 4px 0 8px;
+      font-size: 0.85rem;
+    }
+    
+    .evolution-panel button {
+      margin-top: 8px;
+    }
