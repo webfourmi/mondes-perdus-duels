@@ -705,12 +705,12 @@
 <body>
   <div id="fixedHpBar" class="fixed-hp-bar" style="display:none;">
     <div class="hp-box">
-      <span>Moi</span>
+      <span id="fixedMyName">Moi</span>
       <strong id="fixedMyBody">-</strong>
     </div>
   
     <div class="hp-box">
-      <span>Adversaire</span>
+      <span id="fixedOpponentName">Adversaire</span>
       <strong id="fixedOpponentBody">-</strong>
     </div>
 
@@ -743,10 +743,13 @@
       <h2>Début de duel</h2>
 
       <label for="playerSheet">Ma fiche personnage</label>
-      <select id="playerSheet">
+      <select id="playerSheet" onchange="loadPlayerNameForSelectedFighter()">
         <option value="chevalier">Chevalier</option>
         <option value="squelette">Squelette</option>
       </select>
+
+      <label for="playerName">Nom du PJ</label>
+      <input id="playerName" type="text" placeholder="Exemple : Godefroy-la-Tôle" />
 
       <label for="opponentBook">Livret affiché, adversaire</label>
       <select id="opponentBook">
@@ -935,6 +938,7 @@
     let lastDamage = null;
     let damageAlreadyApplied = false;
     let pendingOpponentInstruction = "";
+    let currentPlayerName = "";
 
     async function loadJson(path) {
       const response = await fetch(path + "?v=" + Date.now());
@@ -944,6 +948,40 @@
       return await response.json();
     }
 
+    function getPlayerNameStorageKey(fighterId) {
+      return "lw_player_name_" + fighterId;
+    }
+    
+    function loadPlayerNameForSelectedFighter() {
+      const select = document.getElementById("playerSheet");
+      const input = document.getElementById("playerName");
+    
+      if (!select || !input) return;
+    
+      const fighterId = select.value;
+      const savedName = localStorage.getItem(getPlayerNameStorageKey(fighterId)) || "";
+    
+      input.value = savedName;
+    }
+    
+    function savePlayerNameForSelectedFighter() {
+      const select = document.getElementById("playerSheet");
+      const input = document.getElementById("playerName");
+    
+      if (!select || !input) return "";
+    
+      const fighterId = select.value;
+      const name = input.value.trim();
+    
+      if (name) {
+        localStorage.setItem(getPlayerNameStorageKey(fighterId), name);
+      } else {
+        localStorage.removeItem(getPlayerNameStorageKey(fighterId));
+      }
+    
+      return name;
+    }
+    
     function fighterLabel(fighter) {
       return fighter.shortName || fighter.fullName || fighter.id;
     }
@@ -968,11 +1006,13 @@
         fillSelect("playerSheet", catalog.fighters);
         fillSelect("opponentBook", catalog.fighters);
         message.textContent = "Catalogue chargé : " + catalog.fighters.length + " combattants disponibles.";
+        loadPlayerNameForSelectedFighter();
       } catch (error) {
         catalog = fallbackCatalog;
         fillSelect("playerSheet", catalog.fighters);
         fillSelect("opponentBook", catalog.fighters);
         message.innerHTML = '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé.</span>';
+        loadPlayerNameForSelectedFighter();
       }
     }
 
@@ -1297,6 +1337,8 @@ function updateRestrictionBanner(restriction) {
     async function startDuel() {
       const sheetId = document.getElementById("playerSheet").value;
       const bookId = document.getElementById("opponentBook").value;
+      const savedPlayerName = savePlayerNameForSelectedFighter();
+      currentPlayerName = savedPlayerName || sheetEntry.shortName;
 
       const sheetEntry = findCatalogEntry(sheetId);
       const bookEntry = findCatalogEntry(bookId);
@@ -1328,13 +1370,17 @@ function updateRestrictionBanner(restriction) {
         document.getElementById("currentSheet").textContent = sheetEntry.fullName;
         document.getElementById("currentBook").textContent = bookEntry.fullName;
         
-        document.getElementById("duelCompactSummary").textContent =
-          sheetEntry.shortName +
-          " vs " +
-          bookEntry.shortName +
-          " | Taille " +
-          (sizeModifier >= 0 ? "+" : "") +
-          sizeModifier;
+       document.getElementById("duelCompactSummary").textContent =
+        currentPlayerName +
+        " (" + sheetEntry.shortName + ")" +
+        " vs " +
+        bookEntry.shortName +
+        " | Taille " +
+        (sizeModifier >= 0 ? "+" : "") +
+        sizeModifier;
+
+document.getElementById("fixedMyName").textContent = currentPlayerName;
+document.getElementById("fixedOpponentName").textContent = bookEntry.shortName;
 
         document.getElementById("statSize").textContent = currentFighter.size;
         document.getElementById("statBody").textContent = currentFighter.bodyPointsStart;
