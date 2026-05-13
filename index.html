@@ -22,18 +22,14 @@
       <strong id="fixedOpponentBody">-</strong>
     </div>
 
-    <div id="imageOverlay" class="image-overlay" style="display:none;">
-      <div class="image-overlay-toolbar">
-        <button type="button" onclick="changeOverlayZoom(-0.25)">−</button>
-        <button type="button" onclick="resetOverlayZoom()">100%</button>
-        <button type="button" onclick="changeOverlayZoom(0.25)">+</button>
-        <button type="button" onclick="closeImageOverlay()">Fermer</button>
-      </div>
+   
     
       <div class="image-overlay-scroll">
         <img id="overlayImage" src="" alt="Image agrandie" />
       </div>
     </div>
+
+  
   
     <button class="hp-mini-button" onclick="toggleHpTools()">Modifier mes PV</button>
     <button class="hp-mini-button hp-new-duel-button" onclick="newDuel()">
@@ -46,6 +42,14 @@
     </div>
   </div>
 
+   <div id="imageOverlay" class="image-overlay" style="display:none;">
+      <div class="image-overlay-toolbar">
+        <button type="button" onclick="changeOverlayZoom(-0.25)">−</button>
+        <button type="button" onclick="resetOverlayZoom()">100%</button>
+        <button type="button" onclick="changeOverlayZoom(0.25)">+</button>
+        <button type="button" onclick="closeImageOverlay()">Fermer</button>
+      </div>
+     
   <main class="app">
     <h1 id="appTitle">Mondes Perdus</h1>
     <p id="appSubtitle" class="small">Prototype familial de duel numérique</p>
