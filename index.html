@@ -97,6 +97,18 @@
       <strong id="xpDisplay">0</strong>
     </div>
 
+      <div id="evolutionPanel" class="evolution-panel" style="display:none;">
+        <span>Évolution disponible</span>
+        <p id="evolutionInfo">-</p>
+      
+        <label for="upgradeActionChoice">Action à améliorer</label>
+        <select id="upgradeActionChoice" class="compact-select"></select>
+      
+        <button type="button" onclick="upgradeSelectedAction()">
+          Améliorer cette action
+        </button>
+      </div>
+
       <div id="opponentInstructionPanel" class="opponent-instruction-panel" style="display:none;">
         <span>Instruction à donner à l’adversaire</span>
         <strong id="opponentInstructionText">-</strong>
@@ -243,6 +255,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
