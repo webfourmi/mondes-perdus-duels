@@ -8,10 +8,8 @@
 
    <link rel="stylesheet" href="style.css?v=1">
 
-  
-</head>
+  </head>
  
-
 <body>
   <div id="fixedHpBar" class="fixed-hp-bar" style="display:none;">
     <div class="hp-box">
@@ -54,7 +52,11 @@
 
     <section id="setupPanel">
       <h2>Début de duel</h2>
-
+      <label for="savedCharacterSelect">Mes PJ sauvegardés</label>
+      <select id="savedCharacterSelect" onchange="loadSavedCharacterFromSelect()">
+        <option value="">Nouveau PJ / aucun PJ sauvegardé</option>
+      </select>
+      
       <label for="playerSheet">Ma fiche personnage</label>
       <select id="playerSheet" onchange="loadPlayerNameForSelectedFighter()">
         <option value="chevalier">Chevalier</option>
@@ -63,6 +65,10 @@
 
       <label for="playerName">Nom du PJ</label>
       <input id="playerName" type="text" placeholder="Exemple : Godefroy-la-Tôle" />
+      <div class="character-buttons">
+        <button type="button" onclick="saveCharacterFromSetup()">Enregistrer ce PJ</button>
+        <button type="button" class="danger-button" onclick="deleteSelectedCharacter()">Supprimer ce PJ</button>
+      </div>
 
       <label for="opponentBook">Livret affiché, adversaire</label>
       <select id="opponentBook">
