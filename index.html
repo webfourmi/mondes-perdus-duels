@@ -705,6 +705,52 @@
       color: #ffe8d0;
       border-color: #c98a5b;
     }
+
+    .xp-panel {
+      margin: 6px 0 8px;
+      padding: 7px;
+      border: 1px solid #c9a45b;
+      border-radius: 12px;
+      background: rgba(255, 244, 210, 0.08);
+      text-align: center;
+    }
+    
+    .xp-panel span {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.85;
+    }
+    
+    .xp-panel strong {
+      display: block;
+      color: #ffd98a;
+      font-size: 1.4rem;
+      line-height: 1.1;
+    }
+    
+    .xp-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 5px;
+    }
+    
+    .xp-buttons button {
+      margin: 0;
+      padding: 6px;
+      font-size: 0.82rem;
+    }
+    
+    body.duel-active .xp-panel {
+      margin-top: 4px;
+      padding: 6px;
+    }
+    
+    body.duel-active .xp-panel strong {
+      font-size: 1.2rem;
+    }
   </style>
 </head>
 
@@ -775,6 +821,15 @@
       <h2>Duel en cours</h2>
 
       <p id="duelCompactSummary" class="small"></p>
+      <div id="xpPanel" class="xp-panel">
+        <span>Expérience</span>
+        <strong id="xpDisplay">0</strong>
+      
+        <div class="xp-buttons">
+          <button type="button" onclick="changeExperience(1)">+1 XP</button>
+          <button type="button" onclick="changeExperience(-1)">-1 XP</button>
+        </div>
+      </div>
       <div id="opponentInstructionPanel" class="opponent-instruction-panel" style="display:none;">
         <span>Instruction à donner à l’adversaire</span>
         <strong id="opponentInstructionText">-</strong>
@@ -948,6 +1003,8 @@
     let damageAlreadyApplied = false;
     let pendingOpponentInstruction = "";
     let currentPlayerName = "";
+    let currentExperience = 0;
+    let currentProfileKey = "";
     let currentDuelSaveKey = "lw_current_duel_state";
 
     async function loadJson(path) {
@@ -957,7 +1014,66 @@
       }
       return await response.json();
     }
-
+    function normalizeProfileName(name) {
+      return (name || "sans_nom")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }
+    
+    function getPlayerProfileKey(fighterId, playerName) {
+      return "lw_profile_" + fighterId + "_" + normalizeProfileName(playerName);
+    }
+    
+    function loadPlayerProfile(fighterId, playerName) {
+      currentProfileKey = getPlayerProfileKey(fighterId, playerName);
+    
+      const raw = localStorage.getItem(currentProfileKey);
+    
+      if (!raw) {
+        currentExperience = 0;
+        updateExperienceDisplay();
+        savePlayerProfile();
+        return;
+      }
+    
+      try {
+        const profile = JSON.parse(raw);
+        currentExperience = Number(profile.experience || 0);
+      } catch (error) {
+        currentExperience = 0;
+      }
+    
+      updateExperienceDisplay();
+    }
+    
+    function savePlayerProfile() {
+      if (!currentProfileKey) return;
+    
+      const profile = {
+        fighterId: currentFighter ? currentFighter.id : "",
+        name: currentPlayerName,
+        experience: currentExperience
+      };
+    
+      localStorage.setItem(currentProfileKey, JSON.stringify(profile));
+    }
+    
+    function updateExperienceDisplay() {
+      const display = document.getElementById("xpDisplay");
+      if (!display) return;
+    
+      display.textContent = currentExperience;
+    }
+    
+    function changeExperience(delta) {
+      currentExperience = Math.max(0, currentExperience + delta);
+      updateExperienceDisplay();
+      savePlayerProfile();
+    }
     function getPlayerNameStorageKey(fighterId) {
       return "lw_player_name_" + fighterId;
     }
@@ -1393,6 +1509,8 @@ function updateRestrictionBanner(restriction) {
       const bookId = document.getElementById("opponentBook").value;
       const savedPlayerName = savePlayerNameForSelectedFighter();
       currentPlayerName = savedPlayerName || sheetEntry.shortName;
+      
+      loadPlayerProfile(sheetId, currentPlayerName);
 
       const sheetEntry = findCatalogEntry(sheetId);
       const bookEntry = findCatalogEntry(bookId);
@@ -1428,6 +1546,7 @@ function updateRestrictionBanner(restriction) {
         opponentCurrentBody = opponentMaxBody;
       
         saveCurrentDuelState();
+        savePlayerProfile();
       }
 
         document.getElementById("currentSheet").textContent = sheetEntry.fullName;
