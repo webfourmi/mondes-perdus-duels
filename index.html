@@ -939,6 +939,7 @@
     let damageAlreadyApplied = false;
     let pendingOpponentInstruction = "";
     let currentPlayerName = "";
+    let currentDuelSaveKey = "lw_current_duel_state";
 
     async function loadJson(path) {
       const response = await fetch(path + "?v=" + Date.now());
@@ -1023,6 +1024,48 @@
       });
     }
 
+
+    function saveCurrentDuelState() {
+      if (!currentFighter || !currentOpponentFighter) return;
+    
+      const state = {
+        myCurrentBody: myCurrentBody,
+        myMaxBody: myMaxBody,
+        opponentCurrentBody: opponentCurrentBody,
+        opponentMaxBody: opponentMaxBody,
+        playerName: currentPlayerName,
+        fighterId: currentFighter.id,
+        opponentId: currentOpponentFighter.id
+      };
+    
+      localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
+    }
+    
+    function loadCurrentDuelStateIfMatching(fighterId, opponentId) {
+      const raw = localStorage.getItem(currentDuelSaveKey);
+      if (!raw) return false;
+    
+      try {
+        const state = JSON.parse(raw);
+    
+        if (state.fighterId !== fighterId || state.opponentId !== opponentId) {
+          return false;
+        }
+    
+        myCurrentBody = Number(state.myCurrentBody);
+        myMaxBody = Number(state.myMaxBody);
+        opponentCurrentBody = Number(state.opponentCurrentBody);
+        opponentMaxBody = Number(state.opponentMaxBody);
+    
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+    
+    function clearCurrentDuelState() {
+      localStorage.removeItem(currentDuelSaveKey);
+    }
     function updateBodyDisplays() {
       document.getElementById("myBodyDisplay").textContent = myCurrentBody + " / " + myMaxBody;
       document.getElementById("opponentBodyDisplay").textContent = opponentCurrentBody + " / " + opponentMaxBody;
@@ -1056,6 +1099,7 @@
       myCurrentBody = Number(value);
       document.getElementById("myBodyManual").value = "";
       updateBodyDisplays();
+      saveCurrentDuelState();
     }
 
     function actionLabel(action) {
@@ -1089,6 +1133,7 @@
       document.getElementById("hpTools").style.display = "none";
     
       updateBodyDisplays();
+      saveCurrentDuelState();
     }
 
     function actionAllowedByRestriction(action, restriction) {
@@ -1361,11 +1406,20 @@ function updateRestrictionBanner(restriction) {
 
         sizeModifier = Number(currentFighter.size) - Number(currentOpponentFighter.size);
 
+       const loadedExistingDuel = loadCurrentDuelStateIfMatching(
+        currentFighter.id,
+        currentOpponentFighter.id
+      );
+      
+      if (!loadedExistingDuel) {
         myMaxBody = Number(currentFighter.bodyPointsStart);
         myCurrentBody = myMaxBody;
-
+      
         opponentMaxBody = Number(currentOpponentFighter.bodyPointsStart);
         opponentCurrentBody = opponentMaxBody;
+      
+        saveCurrentDuelState();
+      }
 
         document.getElementById("currentSheet").textContent = sheetEntry.fullName;
         document.getElementById("currentBook").textContent = bookEntry.fullName;
@@ -1379,8 +1433,8 @@ function updateRestrictionBanner(restriction) {
         (sizeModifier >= 0 ? "+" : "") +
         sizeModifier;
 
-document.getElementById("fixedMyName").textContent = currentPlayerName;
-document.getElementById("fixedOpponentName").textContent = bookEntry.shortName;
+        document.getElementById("fixedMyName").textContent = currentPlayerName;
+        document.getElementById("fixedOpponentName").textContent = bookEntry.shortName;
 
         document.getElementById("statSize").textContent = currentFighter.size;
         document.getElementById("statBody").textContent = currentFighter.bodyPointsStart;
@@ -1667,6 +1721,7 @@ document.getElementById("fixedOpponentName").textContent = bookEntry.shortName;
       document.getElementById("temporaryBonus").value = "none";
 
       refreshActionList();
+      saveCurrentDuelState();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
