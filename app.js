@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.4";
+const APP_VERSION = "0.2.5";
 
 let catalog = null;
 
@@ -43,6 +43,8 @@ let pendingOpponentInstruction = "";
 let currentPlayerName = "";
 let currentExperience = 0;
 let currentProfileKey = "";
+let currentActionBonuses = {};
+let currentBodyBonus = 0;
 let currentDuelSaveKey = "lw_current_duel_state";
 let duelFinished = false;
 let victoryXpAwarded = false;
@@ -230,6 +232,7 @@ function loadSavedCharacterFromSelect() {
 
   currentPlayerName = character.name;
   loadPlayerProfile(character.fighterId, character.name);
+  updateEvolutionPanel();
 }
 
 function deleteSelectedCharacter() {
@@ -316,16 +319,21 @@ function loadPlayerProfile(fighterId, playerName) {
 
   if (!raw) {
     currentExperience = 0;
+    currentActionBonuses = {};
+    currentBodyBonus = 0;
     updateExperienceDisplay();
-    savePlayerProfile();
     return;
   }
 
   try {
     const profile = JSON.parse(raw);
     currentExperience = Number(profile.experience || 0);
+    currentActionBonuses = profile.actionBonuses || {};
+    currentBodyBonus = Number(profile.bodyBonus || 0);
   } catch (error) {
     currentExperience = 0;
+    currentActionBonuses = {};
+    currentBodyBonus = 0;
   }
 
   updateExperienceDisplay();
@@ -337,18 +345,21 @@ function savePlayerProfile() {
   const profile = {
     fighterId: currentFighter ? currentFighter.id : "",
     name: currentPlayerName,
-    experience: currentExperience
+    experience: currentExperience,
+    actionBonuses: currentActionBonuses,
+    bodyBonus: currentBodyBonus
   };
 
   localStorage.setItem(currentProfileKey, JSON.stringify(profile));
 
-  if (currentFighter && currentPlayerName) {
-    const fighterEntry = findCatalogEntry(currentFighter.id);
+  if (currentPlayerName) {
+    const fighterId = currentFighter ? currentFighter.id : document.getElementById("playerSheet").value;
+    const fighterEntry = findCatalogEntry(fighterId);
 
     saveCharacterToIndex({
-      id: makeCharacterId(currentFighter.id, currentPlayerName),
-      fighterId: currentFighter.id,
-      fighterName: fighterEntry ? fighterEntry.shortName : currentFighter.id,
+      id: makeCharacterId(fighterId, currentPlayerName),
+      fighterId: fighterId,
+      fighterName: fighterEntry ? fighterEntry.shortName : fighterId,
       name: currentPlayerName,
       experience: currentExperience
     });
@@ -360,6 +371,8 @@ function updateExperienceDisplay() {
   if (!display) return;
 
   display.textContent = currentExperience;
+
+  updateEvolutionPanel();
 }
 
 function changeExperience(delta) {
@@ -367,6 +380,175 @@ function changeExperience(delta) {
   updateExperienceDisplay();
   savePlayerProfile();
 }
+  /* ============================================================
+     ÉVOLUTION DU PERSONNAGE
+     ============================================================ */
+  
+  function getAllUpgradeableActions() {
+    if (!currentFighter) return [];
+  
+    const allActions = []
+      .concat(currentFighter.actions || [])
+      .concat(currentFighter.distanceActions || []);
+  
+    return allActions.filter(function(action) {
+      return action && action.id && action.color;
+    });
+  }
+  
+  function getActionUpgradeBonus(actionId) {
+    return Number(currentActionBonuses[actionId] || 0);
+  }
+  
+  function getEffectiveBodyStart() {
+    if (!currentFighter) return 0;
+  
+    const baseBody = Number(currentFighter.bodyPointsStart || 0);
+    return baseBody + currentBodyBonus;
+  }
+  
+  function getNextUpgradeLevel() {
+    const actions = getAllUpgradeableActions();
+  
+    if (actions.length === 0) return 1;
+  
+    let minBonus = Infinity;
+  
+    actions.forEach(function(action) {
+      minBonus = Math.min(minBonus, getActionUpgradeBonus(action.id));
+    });
+  
+    if (minBonus === Infinity) return 1;
+  
+    return minBonus + 1;
+  }
+  
+  function getActionsAvailableForUpgrade() {
+    const actions = getAllUpgradeableActions();
+    const nextLevel = getNextUpgradeLevel();
+  
+    return actions.filter(function(action) {
+      return getActionUpgradeBonus(action.id) < nextLevel;
+    });
+  }
+  
+  function computeBodyBonusFromColors() {
+    const actions = getAllUpgradeableActions();
+    const byColor = {};
+  
+    actions.forEach(function(action) {
+      if (!byColor[action.color]) {
+        byColor[action.color] = [];
+      }
+  
+      byColor[action.color].push(action);
+    });
+  
+    let bonus = 0;
+  
+    Object.keys(byColor).forEach(function(color) {
+      const colorActions = byColor[color];
+  
+      if (colorActions.length === 0) return;
+  
+      let minColorBonus = Infinity;
+  
+      colorActions.forEach(function(action) {
+        minColorBonus = Math.min(minColorBonus, getActionUpgradeBonus(action.id));
+      });
+  
+      if (minColorBonus !== Infinity) {
+        bonus += minColorBonus;
+      }
+    });
+  
+    return bonus;
+  }
+  
+  function updateEvolutionPanel() {
+    const panel = document.getElementById("evolutionPanel");
+    const info = document.getElementById("evolutionInfo");
+    const select = document.getElementById("upgradeActionChoice");
+  
+    if (!panel || !info || !select || !currentFighter) return;
+  
+    const cost = getEffectiveBodyStart();
+  
+    if (currentExperience < cost) {
+      panel.style.display = "none";
+      return;
+    }
+  
+    const nextLevel = getNextUpgradeLevel();
+    const availableActions = getActionsAvailableForUpgrade();
+  
+    select.innerHTML = "";
+  
+    availableActions.forEach(function(action) {
+      const currentBonus = getActionUpgradeBonus(action.id);
+  
+      const option = document.createElement("option");
+      option.value = action.id;
+      option.textContent =
+        actionLabel(action) +
+        " (" +
+        action.color +
+        ") : +" +
+        currentBonus +
+        " → +" +
+        nextLevel;
+  
+      select.appendChild(option);
+    });
+  
+    info.textContent =
+      currentExperience +
+      " XP disponibles. Coût : " +
+      cost +
+      " XP. Niveau d’amélioration proposé : +" +
+      nextLevel +
+      ".";
+  
+    panel.style.display = availableActions.length > 0 ? "block" : "none";
+  }
+  
+  function upgradeSelectedAction() {
+    const select = document.getElementById("upgradeActionChoice");
+    if (!select || !select.value) return;
+  
+    const cost = getEffectiveBodyStart();
+  
+    if (currentExperience < cost) {
+      alert("Pas assez d’expérience.");
+      return;
+    }
+  
+    const actionId = select.value;
+    const nextLevel = getNextUpgradeLevel();
+  
+    currentActionBonuses[actionId] = nextLevel;
+    currentExperience -= cost;
+  
+    const oldBodyBonus = currentBodyBonus;
+    currentBodyBonus = computeBodyBonusFromColors();
+  
+    const bodyIncrease = currentBodyBonus - oldBodyBonus;
+  
+    updateExperienceDisplay();
+    savePlayerProfile();
+    updateEvolutionPanel();
+  
+    let message = "Action améliorée à +" + nextLevel + ".";
+  
+    if (bodyIncrease > 0) {
+      message +=
+        "\n\nToutes les actions d’une couleur ont progressé : +" +
+        bodyIncrease +
+        " Point(s) de Corps de départ au prochain combat.";
+    }
+  
+    alert(message);
+  }
 
 /* ============================================================
    INITIALISATION
@@ -947,7 +1129,9 @@ async function startDuel() {
     );
 
     if (!loadedExistingDuel) {
-      myMaxBody = Number(currentFighter.bodyPointsStart);
+      currentBodyBonus = computeBodyBonusFromColors();
+
+      myMaxBody = getEffectiveBodyStart();
       myCurrentBody = myMaxBody;
 
       opponentMaxBody = Number(currentOpponentFighter.bodyPointsStart);
@@ -987,6 +1171,7 @@ async function startDuel() {
     updateBodyDisplays();
     updateExperienceDisplay();
     refreshActionList();
+    updateEvolutionPanel();
 
     document.getElementById("setupPanel").style.display = "none";
     document.getElementById("duelPanel").style.display = "block";
@@ -1074,8 +1259,10 @@ function calculateDamage(page, action) {
 
   const score = Number(page.score);
   const mod = Number(action.mod || 0);
-  const bonus = Number(action.bonus || 0) + calculateTemporaryBonus(page, action);
-
+  const bonus =
+    Number(action.bonus || 0) +
+    getActionUpgradeBonus(action.id) +
+    calculateTemporaryBonus(page, action);
   let total = score + mod + bonus;
 
   if (action.color === "orange" || action.color === "rouge") {
@@ -1166,10 +1353,10 @@ function resolveTurn() {
       page.score +
       " + MOD " +
       selectedAction.mod +
-      " + bonus " +
-      (Number(selectedAction.bonus || 0) +
-        calculateTemporaryBonus(page, selectedAction));
-
+     " + bonus " +
+    (Number(selectedAction.bonus || 0) +
+      getActionUpgradeBonus(selectedAction.id) +
+      calculateTemporaryBonus(page, selectedAction));
     if (selectedAction.color === "orange" || selectedAction.color === "rouge") {
       damageHtml += " + taille " + sizeModifier;
     }
