@@ -742,3 +742,22 @@
     body.duel-active .xp-panel strong {
       font-size: 1.2rem;
     }
+
+    .character-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    
+    .character-buttons button {
+      margin-top: 0;
+      padding: 8px;
+      font-size: 0.9rem;
+    }
+    
+    .danger-button {
+      background: linear-gradient(#8f3a3a, #4f1f1f);
+      color: #ffe8e8;
+      border-color: #c95b5b;
+    }
