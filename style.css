@@ -761,3 +761,48 @@
       color: #ffe8e8;
       border-color: #c95b5b;
     }
+
+    .combat-end-panel {
+      margin: 6px 0 8px;
+      padding: 9px;
+      border: 2px solid #ffd98a;
+      border-radius: 12px;
+      background: rgba(255, 217, 138, 0.16);
+      text-align: center;
+    }
+    
+    .combat-end-panel span {
+      display: block;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    
+    .combat-end-panel strong {
+      display: block;
+      color: #ffd98a;
+      font-size: 1rem;
+      line-height: 1.25;
+    }
+    
+    .combat-end-victory {
+      border-color: #72d672;
+      background: rgba(60, 150, 60, 0.24);
+    }
+    
+    .combat-end-draw {
+      border-color: #ffe066;
+      background: rgba(190, 160, 40, 0.22);
+    }
+    
+    .combat-end-defeat {
+      border-color: #ff7777;
+      background: rgba(180, 40, 40, 0.24);
+    }
+    
+    .combat-end-death {
+      border-color: #ff88aa;
+      background: rgba(120, 0, 40, 0.34);
+    }
