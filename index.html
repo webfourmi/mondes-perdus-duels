@@ -50,6 +50,25 @@
     </div>
   </div>
 
+  <!-- Fenêtre modale pour messages et confirmations -->
+    <div id="appModal" class="app-modal" style="display:none;" role="dialog" aria-modal="true">
+      <div class="app-modal-card">
+        <h2 id="appModalTitle">Message</h2>
+    
+        <p id="appModalText">-</p>
+    
+        <div class="app-modal-actions">
+          <button type="button" id="appModalCancelButton" onclick="closeAppModal(false)">
+            Annuler
+          </button>
+    
+          <button type="button" id="appModalOkButton" onclick="closeAppModal(true)">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  
   <main class="app">
     <h1 id="appTitle">Mondes Perdus</h1>
     <p id="appSubtitle" class="small">Que le meilleur gagne !</p>
@@ -321,6 +340,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>
