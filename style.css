@@ -1000,3 +1000,59 @@
 .color-brown {
   border-color: #9b6a3c;
 }
+
+.app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(5, 3, 1, 0.82);
+  box-sizing: border-box;
+}
+
+.app-modal-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 18px;
+  border: 3px solid #c9a45b;
+  border-radius: 18px;
+  background: rgba(20, 12, 6, 0.98);
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.9);
+}
+
+.app-modal-card h2 {
+  margin-top: 0;
+  color: #ffd98a;
+  text-align: center;
+}
+
+.app-modal-card p {
+  white-space: pre-line;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.app-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.app-modal-actions button {
+  margin-top: 0;
+}
+
+#appModalCancelButton {
+  background: linear-gradient(#8f3a3a, #4f1f1f);
+  color: #ffe8e8;
+  border-color: #c95b5b;
+}
+
+#appModalOkButton {
+  background: linear-gradient(#d8aa55, #9b6827);
+  color: #120b05;
+}
