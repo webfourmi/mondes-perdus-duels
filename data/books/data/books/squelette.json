@@ -1,0 +1,20 @@
+{
+  "id": "squelette",
+  "title": "Livret Squelette",
+  "movementPages": {},
+  "pages": {}
+}
+
+"movementPages": {
+  "28": {
+    "12": 45,
+    "15": 31
+  }
+}
+"pages": {
+  "45": {
+    "title": "Parade haute",
+    "score": 3,
+    "instruction": "Pas de Rouge au tour suivant"
+  }
+}
