@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Règles - Mondes Perdus Duels</title>
+
+  <link rel="stylesheet" href="style.css?v=9">
+</head>
+
+<body>
+  <main class="app rules-page">
+    <h1>Règles de duel</h1>
+    <p class="small">Tout ce que vous avez besoin de savoir pour jouer.</p>
+
+    <div class="home-actions">
+      <a class="button-link" href="index.html">Retour au duel</a>
+    </div>
+
+    <section class="rules-card">
+      <h2>1. Préparer le duel</h2>
+      <ol>
+        <li>Choisis ton personnage dans la liste des PJ sauvegardés.</li>
+        <li>Choisis le mode de jeu : duel à deux joueurs ou solo contre l’application.</li>
+        <li>Choisis le livret de l’adversaire.</li>
+        <li>Clique sur <strong>Commencer le duel</strong>.</li>
+      </ol>
+    </section>
+
+    <section class="rules-card">
+      <h2>2. Déroulement d’un tour</h2>
+      <ol>
+        <li>Choisis la situation : <s <strong>Distance Accrue</strong>poour le 1er Round</li>
+        <li>Choisis pour les suivants : <strong>Combat rapproché</strong> ou <strong>Distance Accrue</strong>.</li>
+        <li>Applique l’éventuelle restriction reçue au tour précédent.</li>
+        <li>Choisis ton action.</li>
+        <li>L’application affiche le <strong>PG à annoncer</strong>.</li>
+        <li>Entre le <strong>PG reçu</strong> de l’adversaire, ou laisse l’application le remplir en mode solo.</li>
+        <li>Clique sur <strong>Résoudre</strong>.</li>
+        <li>Tu verras l'image de l'adversaire s'afficher .</li>
+      </ol>
+    </section>
+
+    <section class="rules-card">
+      <h2>Couleurs des actions</h2>
+    
+      <p class="rules-note">
+        Les couleurs servent surtout à repérer rapidement le type d’action, les restrictions possibles et certains bonus.
+      </p>
+    
+      <div class="color-help-grid">
+        <div class="color-help-item color-red">
+          <strong>Rouge</strong>
+          <span>Attaques violentes ou dangereuses. Elles peuvent être interdites par certaines blessures ou restrictions.</span>
+        </div>
+    
+        <div class="color-help-item color-orange">
+          <strong>Orange</strong>
+          <span>Attaques puissantes ou engagées. Elles profitent souvent de la différence de taille dans le calcul des dégâts.</span>
+        </div>
+    
+        <div class="color-help-item color-blue">
+          <strong>Bleu</strong>
+          <span>Actions techniques, mouvements particuliers ou attaques liées au placement.</span>
+        </div>
+    
+        <div class="color-help-item color-yellow">
+          <strong>Jaune</strong>
+          <span>Actions rapides, coups simples ou options utilisables dans certaines situations contraintes.</span>
+        </div>
+    
+        <div class="color-help-item color-green">
+          <strong>Vert</strong>
+          <span>Actions prudentes, défensives ou de récupération selon les livrets.</span>
+        </div>
+    
+        <div class="color-help-item color-brown">
+          <strong>Marron</strong>
+          <span>Actions de distance ou de situation spéciale, notamment liées à la Distance Accrue.</span>
+        </div>
+      </div>
+    
+      <p class="rules-note">
+        Certaines instructions indiquent par exemple : <strong>Pas de Bleu</strong>, <strong>Pas de Rouge ni d’Orange</strong>, ou <strong>Seulement Vert</strong>. Dans l’application, ces restrictions filtrent automatiquement la liste des actions disponibles.
+      </p>
+    </section>
+    
+    <section class="rules-card">
+      <h2>3. Résultat et dégâts</h2>
+      <ul>
+        <li>La page de résultat indique si l’action provoque un <strong>SCORE</strong>.</li>
+        <li>Les dégâts sont calculés automatiquement avec le SCORE, le MOD, les bonus et la taille si nécessaire.</li>
+        <li>Si des dégâts sont indiqués, clique sur <strong>Appliquer les dégâts à l’adversaire</strong>.</li>
+        <li>L’instruction à lire à l’adversaire s’affiche pour le tour suivant.</li>
+      </ul>
+    </section>
+
+    <section class="rules-card">
+      <h2>4. Fin du combat</h2>
+      <ul>
+        <li>Si l’adversaire tombe sous 1 Point de Corps et que ton PJ a encore au moins 1 Point de Corps : <strong>combat gagné</strong>.</li>
+        <li>Si les deux combattants tombent sous 1 Point de Corps : <strong>match nul</strong>.</li>
+        <li>Si ton PJ tombe sous 1 Point de Corps et que l’adversaire reste debout : <strong>combat perdu</strong>.</li>
+        <li>Si ton PJ tombe à -5 Points de Corps ou moins : <strong>mort du PJ</strong>.</li>
+      </ul>
+    </section>
+
+    <section class="rules-card">
+      <h2>5. Expérience</h2>
+      <ul>
+        <li>En cas de victoire, le PJ gagne automatiquement une quantité d’expérience liée aux Points de Corps de départ de l’adversaire.</li>
+        <li>Les XP sont affichées sous la forme : <strong>XP disponibles / XP utilisées</strong>.</li>
+        <li>Quand le PJ a assez d’XP, l’application propose une évolution.</li>
+      </ul>
+    </section>
+
+    <section class="rules-card">
+      <h2>6. Évolution du personnage</h2>
+      <ul>
+        <li>Quand l’expérience disponible atteint le coût nécessaire, tu peux améliorer une action.</li>
+        <li>Une action améliorée gagne un bonus permanent.</li>
+        <li>Quand toutes les actions d’une même couleur ont progressé, le PJ gagne un bonus de Points de Corps de départ pour les prochains combats.</li>
+      </ul>
+    </section>
+
+    <section class="rules-card">
+      <h2>7. Sauvegarde des PJ</h2>
+      <ul>
+        <li>Les PJ sont sauvegardés automatiquement sur l’appareil utilisé.</li>
+        <li>Le bouton <strong>Exporter ce PJ</strong> crée une sauvegarde JSON du personnage choisi.</li>
+        <li>Le bouton <strong>Exporter tous</strong> crée une sauvegarde de tous les PJ.</li>
+        <li>Le bouton <strong>Importer PJ</strong> permet de restaurer une sauvegarde JSON.</li>
+      </ul>
+    </section>
+
+    <p class="rules-note">
+      Ce résumé est une aide de jeu rapide. En cas de doute, les règles complètes du jeu restent prioritaires.
+    </p>
+
+    <div class="home-actions">
+      <a class="button-link" href="index.html">Retour au duel</a>
+    </div>
+  </main>
+</body>
+</html>
