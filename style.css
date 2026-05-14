@@ -951,3 +951,52 @@
   font-size: 0.9rem;
   opacity: 0.9;
 }
+.color-help-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.color-help-item {
+  padding: 9px;
+  border-radius: 12px;
+  border: 2px solid #8d7b28;
+  background: rgba(255, 244, 210, 0.06);
+}
+
+.color-help-item strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.color-help-item span {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.color-red {
+  border-color: #c84b4b;
+}
+
+.color-orange {
+  border-color: #d88a32;
+}
+
+.color-blue {
+  border-color: #4f8fd8;
+}
+
+.color-yellow {
+  border-color: #d9c14a;
+}
+
+.color-green {
+  border-color: #63b76c;
+}
+
+.color-brown {
+  border-color: #9b6a3c;
+}
