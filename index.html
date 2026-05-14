@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
 </head>
 
 <body>
@@ -70,16 +70,28 @@
     </div>
   
   <main class="app">
-    <h1 id="appTitle">Mondes Perdus</h1>
-    <p id="appSubtitle" class="small">Que le meilleur gagne !</p>
+    <header class="home-hero">
+      <div class="home-badge">Livret-jeu de combat fantastique</div>
+      <h1 id="appTitle">Mondes Perdus</h1>
+      <p id="appSubtitle">
+        Choisis ton combattant, prépare ton duel, entre dans l’arène.
+      </p>
+    
+      <div class="home-actions">
+        <a class="button-link" href="regles.html">Consulter les règles</a>
+      </div>
+    </header>
     <div class="home-actions">
       <a class="button-link" href="regles.html">Règles</a>
     </div>
 
     <!-- Écran de départ -->
     <section id="setupPanel">
-      <h2>Début de duel</h2>
-
+      <h2>Préparer le duel</h2>
+      
+      <div class="home-card">
+        <h3>1. Choisir le combattant</h3>
+        
       <div class="character-title-row">
         <label for="savedCharacterSelect">Ma fiche personnage</label>
 
@@ -146,21 +158,32 @@
           </button>
         </div>
       </div>
+      </div>
 
+      <div class="home-card">
+        <h3>2. Choisir le mode de jeu</h3>
+        
       <label for="gameMode">Mode de jeu</label>
       <select id="gameMode">
         <option value="duel">Duel à deux joueurs</option>
         <option value="solo">Solo contre l’appli</option>
       </select>
 
+      </div>
+
+      <div class="home-card">
+        <h3>3. Choisir l’adversaire</h3>  
+        
       <label for="opponentBook">Livret affiché, adversaire</label>
       <select id="opponentBook">
         <option value="chevalier">Chevalier</option>
         <option value="squelette">Squelette</option>
       </select>
+      </div>
 
-      <button type="button" onclick="startDuel()">Commencer le duel</button>
-
+      <div class="home-start-card">
+        <button type="button" onclick="startDuel()">Commencer le duel</button>
+      </div>
       <p id="loadMessage" class="small"></p>
     </section>
 
@@ -340,6 +363,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>
