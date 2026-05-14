@@ -28,6 +28,8 @@ let currentOpponentFighter = null;
 let currentBook = null;
 let currentActions = [];
 let selectedAction = null;
+let gameMode = "duel";
+let soloOpponentAction = null;
 
 let sizeModifier = 0;
 
@@ -1091,6 +1093,8 @@ function fillActions(actions, restriction) {
 async function startDuel() {
   const sheetId = document.getElementById("playerSheet").value;
   const bookId = document.getElementById("opponentBook").value;
+  gameMode = document.getElementById("gameMode").value || "duel";
+  soloOpponentAction = null;
 
   const sheetEntry = findCatalogEntry(sheetId);
   const bookEntry = findCatalogEntry(bookId);
@@ -1117,6 +1121,8 @@ async function startDuel() {
 
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("resultPanel").style.display = "none";
+  document.getElementById("soloOpponentPanel").style.display = "none";
+  document.getElementById("soloOpponentActionText").textContent = "-";
 
   pendingOpponentInstruction = "";
   document.getElementById("opponentInstructionPanel").style.display = "none";
@@ -1203,6 +1209,64 @@ async function startDuel() {
 }
 
 /* ============================================================
+   MODE SOLO
+   ============================================================ */
+  
+  function getSoloOpponentActions() {
+    if (!currentOpponentFighter) return [];
+  
+    const distanceMode = document.getElementById("distanceMode").value;
+  
+    let actions = [];
+  
+    if (distanceMode === "distance") {
+      actions = currentOpponentFighter.distanceActions || [];
+    } else {
+      actions = currentOpponentFighter.actions || [];
+    }
+  
+    return actions.filter(function(action) {
+      return action && action.available && action.pg !== undefined && action.pg !== null;
+    });
+  }
+  
+  function pickSoloOpponentAction() {
+    const actions = getSoloOpponentActions();
+  
+    if (actions.length === 0) {
+      soloOpponentAction = null;
+      return null;
+    }
+  
+    const index = Math.floor(Math.random() * actions.length);
+    soloOpponentAction = actions[index];
+  
+    return soloOpponentAction;
+  }
+  
+  function updateSoloOpponentDisplay(action) {
+    const panel = document.getElementById("soloOpponentPanel");
+    const text = document.getElementById("soloOpponentActionText");
+  
+    if (!panel || !text) return;
+  
+    if (gameMode !== "solo" || !action) {
+      panel.style.display = "none";
+      text.textContent = "-";
+      return;
+    }
+  
+    text.textContent =
+      actionLabel(action) +
+      " | PG " +
+      action.pg +
+      " | " +
+      action.color;
+  
+    panel.style.display = "block";
+  }
+
+/* ============================================================
    TOUR / RÉSOLUTION
    ============================================================ */
 
@@ -1228,9 +1292,24 @@ function chooseAction() {
 
   document.getElementById("enemyPg").value = "";
   document.getElementById("pgToAnnounce").textContent = selectedAction.pg;
+  
+  if (gameMode === "solo") {
+    const opponentAction = pickSoloOpponentAction();
+  
+    if (!opponentAction) {
+      alert("Aucune action adverse disponible pour le mode solo.");
+      return;
+    }
+  
+    document.getElementById("enemyPg").value = opponentAction.pg;
+    updateSoloOpponentDisplay(opponentAction);
+  } else {
+    updateSoloOpponentDisplay(null);
+  }
+  
   document.getElementById("pgPanel").style.display = "block";
   document.getElementById("resultPanel").style.display = "none";
-}
+  }
 
 function calculateTemporaryBonus(page, action) {
   const bonusMode = document.getElementById("temporaryBonus").value;
@@ -1483,6 +1562,8 @@ function nextTurn() {
   damageAlreadyApplied = false;
 
   document.getElementById("enemyPg").value = "";
+  soloOpponentAction = null;
+  updateSoloOpponentDisplay(null);
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("resultPanel").style.display = "none";
   document.getElementById("resultText").innerHTML = "";
@@ -1562,6 +1643,8 @@ function newDuel() {
   currentBook = null;
   currentActions = [];
   selectedAction = null;
+  gameMode = "duel";
+  soloOpponentAction = null;
 
   myMaxBody = 0;
   myCurrentBody = 0;
@@ -1595,6 +1678,8 @@ function newDuel() {
   document.getElementById("combatEndText").textContent = "-";
 
   document.getElementById("enemyPg").value = "";
+  document.getElementById("soloOpponentPanel").style.display = "none";
+  document.getElementById("soloOpponentActionText").textContent = "-";
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
