@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.2";
+const APP_VERSION = "0.3.3";
 
 let catalog = null;
 
@@ -252,7 +252,7 @@ function getCurrentSetupCharacterData() {
   const name = nameInput.value.trim();
 
   if (!name) {
-    alert("Donne un nom au PJ avant de l’enregistrer.");
+    appAlert("Donne un nom au PJ avant de l’enregistrer.", "Nom manquant");
     return null;
   }
 
@@ -306,7 +306,7 @@ function saveCharacterFromSetup() {
 
   savePlayerProfile();
 
-  alert("PJ enregistré : " + character.name);
+  appAlert("PJ enregistré : " + character.name, "PJ sauvegardé");
 }
 
 function loadSavedCharacterFromSelect() {
@@ -375,7 +375,7 @@ async function deleteSelectedCharacter() {
   const select = document.getElementById("savedCharacterSelect");
 
   if (!select || !select.value) {
-    alert("Choisis d’abord un PJ sauvegardé à supprimer.");
+    appAlert("Choisis d’abord un PJ sauvegardé à supprimer.","PJ à supprimer");
     return;
   }
 
@@ -386,7 +386,7 @@ async function deleteSelectedCharacter() {
   });
 
   if (!character) {
-    alert("PJ introuvable.");
+    appAlert("PJ introuvable.","Pj Introuvable");
     return;
   }
 
@@ -509,7 +509,7 @@ function exportSelectedCharacter() {
   const select = document.getElementById("savedCharacterSelect");
 
   if (!select || !select.value) {
-    alert("Choisis d’abord un PJ à exporter.");
+    appAlert("Choisis d’abord un PJ à exporter.", "Aucun PJ sélectionné");
     return;
   }
 
@@ -520,7 +520,7 @@ function exportSelectedCharacter() {
   });
 
   if (!character) {
-    alert("PJ introuvable.");
+    appAlert("PJ introuvable.", "Export impossible");
     return;
   }
 
@@ -536,7 +536,7 @@ function exportAllCharacters() {
   const characters = getSavedCharacters();
 
   if (characters.length === 0) {
-    alert("Aucun PJ sauvegardé à exporter.");
+    appAlert("Aucun PJ sauvegardé à exporter.", "Export impossible");
     return;
   }
 
@@ -549,7 +549,7 @@ function openImportCharactersFile() {
   const input = document.getElementById("importCharactersInput");
 
   if (!input) {
-    alert("Champ d’import introuvable.");
+    appAlert("Champ d’import introuvable.", "Import impossible");
     return;
   }
 
@@ -571,7 +571,7 @@ function importCharactersFromFile(event) {
 
       importCharactersData(data);
     } catch (error) {
-      alert("Impossible de lire ce fichier JSON.");
+      appAlert("Impossible de lire ce fichier JSON.", "Import impossible");
     }
   };
 
@@ -596,7 +596,7 @@ function importCharactersData(data) {
   const importedEntries = normalizeImportedCharactersData(data);
 
   if (importedEntries.length === 0) {
-    alert("Ce fichier ne contient pas de PJ compatible.");
+    appAlert("Ce fichier ne contient pas de PJ compatible.", "Import impossible");
     return;
   }
 
@@ -657,7 +657,7 @@ function importCharactersData(data) {
   });
 
   if (importedCount === 0) {
-    alert("Aucun PJ valide n’a été importé.");
+    appAlert("Aucun PJ valide n’a été importé.", "Import impossible");
     return;
   }
 
@@ -673,7 +673,7 @@ function importCharactersData(data) {
 
   refreshSavedCharactersSelect();
 
-  alert(importedCount + " PJ importé(s).");
+  appAlert(importedCount + " PJ importé(s).", "Import terminé");
 }
 
 function getPlayerNameStorageKey(fighterId) {
@@ -921,7 +921,7 @@ function upgradeSelectedAction() {
   const cost = getEffectiveBodyStart();
 
   if (currentExperience < cost) {
-    alert("Pas assez d’expérience.");
+    appAlert("Pas assez d’expérience.", "Évolution impossible");
     return;
   }
 
@@ -950,7 +950,7 @@ function upgradeSelectedAction() {
       " Point(s) de Corps de départ au prochain combat.";
   }
 
-  alert(message);
+  appAlert(message, "Évolution du PJ");
 }
 
 /* ============================================================
@@ -1173,7 +1173,7 @@ function adjustMyBody() {
   const value = document.getElementById("myBodyManual").value;
 
   if (value === "") {
-    alert("Entre ton nouveau total de Points de Corps.");
+    appAlert("Entre ton nouveau total de Points de Corps.", "Points de Corps");
     return;
   }
 
@@ -1199,7 +1199,7 @@ function adjustMyBodyFromTop() {
   const value = document.getElementById("myBodyManualTop").value;
 
   if (value === "") {
-    alert("Entre ton nouveau total de Points de Corps.");
+    appAlert("Entre ton nouveau total de Points de Corps.", "Points de Corps");
     return;
   }
 
@@ -1492,7 +1492,7 @@ async function startDuel() {
   const bookEntry = findCatalogEntry(bookId);
 
   if (!sheetEntry || !bookEntry) {
-    alert("Impossible de trouver la fiche ou le livret sélectionné.");
+    appAlert("Impossible de trouver la fiche ou le livret sélectionné.", "Erreur de duel");
     return;
   }
 
@@ -1595,10 +1595,11 @@ async function startDuel() {
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (error) {
-    alert(
+    appAlert(
       "Erreur : " +
         error.message +
-        "\n\nPour l’instant, seul le livret Chevalier existe. Choisis Chevalier comme livret affiché pour tester."
+        "\n\nPour l’instant, seul le livret Chevalier existe. Choisis Chevalier comme livret affiché pour tester.",
+      "Erreur de chargement"
     );
   }
 }
@@ -1669,7 +1670,7 @@ function chooseAction() {
   const actionId = document.getElementById("actionChoice").value;
 
   if (!actionId) {
-    alert("Aucune action disponible avec cette restriction.");
+    appAlert("Aucune action disponible avec cette restriction.", "Action impossible");
     return;
   }
 
@@ -1678,7 +1679,7 @@ function chooseAction() {
   });
 
   if (!selectedAction) {
-    alert("Choisis une action.");
+    appAlert("Choisis une action.", "Action manquante");
     return;
   }
 
@@ -1692,7 +1693,7 @@ function chooseAction() {
     const opponentAction = pickSoloOpponentAction();
 
     if (!opponentAction) {
-      alert("Aucune action adverse disponible pour le mode solo.");
+      appAlert("Aucune action adverse disponible pour le mode solo.", "Mode solo");
       return;
     }
 
@@ -1763,17 +1764,17 @@ function resolveTurn() {
   const enemyPg = document.getElementById("enemyPg").value;
 
   if (!selectedAction) {
-    alert("Choisis d’abord une action.");
+    appAlert("Entre le PG donné par ton adversaire.", "PG manquant");
     return;
   }
 
   if (!enemyPg) {
-    alert("Entre le PG donné par ton adversaire.");
+    appAlert("Entre le PG donné par ton adversaire.", "PG manquant");
     return;
   }
 
   if (!currentBook) {
-    alert("Aucun livret chargé.");
+    appAlert("Aucun livret chargé.", "Livret manquant");
     return;
   }
 
@@ -1783,19 +1784,23 @@ function resolveTurn() {
   const movementTable = currentBook.movementPages[myMovementPage];
 
   if (!movementTable) {
-    alert("Aucune table de mouvement trouvée pour ton PG : " + myMovementPage);
+    appAlert(
+      "Aucune table de mouvement trouvée pour ton PG : " + myMovementPage,
+      "Table introuvable"
+    );
     return;
   }
 
   const resultPageNumber = movementTable[enemyMovementPage];
 
   if (resultPageNumber === undefined || resultPageNumber === null) {
-    alert(
+    appAlert(
       "Aucun résultat trouvé pour :\n" +
         "Ton PG : " +
         myMovementPage +
         "\nPG reçu : " +
-        enemyMovementPage
+        enemyMovementPage,
+      "Résultat introuvable"
     );
     return;
   }
@@ -1803,11 +1808,12 @@ function resolveTurn() {
   const page = currentBook.pages[String(resultPageNumber)];
 
   if (!page) {
-    alert(
-      "La page résultat " +
-        resultPageNumber +
-        " existe dans la table, mais pas dans la liste des pages."
-    );
+   appAlert(
+    "La page résultat " +
+      resultPageNumber +
+      " existe dans la table, mais pas dans la liste des pages.",
+    "Page manquante"
+  );
     return;
   }
 
