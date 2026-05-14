@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.5";
+const APP_VERSION = "0.3.6";
 
 let catalog = null;
 
@@ -32,6 +32,7 @@ let selectedAction = null;
 
 let gameMode = "duel";
 let soloOpponentAction = null;
+let soloOpponentRestriction = "none";
 
 let sizeModifier = 0;
 
@@ -1247,6 +1248,9 @@ function actionAllowedByRestriction(action, restriction) {
     case "no_orange":
       return color !== "orange";
 
+    case "no_yellow":
+      return color !== "jaune";
+
     case "no_red_orange":
       return color !== "rouge" && color !== "orange";
 
@@ -1361,6 +1365,9 @@ function getRestrictionInfo(restriction) {
     case "no_orange":
       return { label: "Pas d’Orange", css: "restriction-orange" };
 
+    case "no_yellow":
+      return { label: "Pas de Jaune", css: "restriction-yellow" };
+
     case "no_red_orange":
       return { label: "Pas de Rouge ni d’Orange", css: "restriction-orange" };
 
@@ -1412,6 +1419,94 @@ function getRestrictionInfo(restriction) {
     default:
       return { label: "Aucune restriction", css: "restriction-none" };
   }
+}
+function restrictionFromInstructionText(instruction) {
+  const text = (instruction || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (text.includes("aucune restriction")) {
+    return "none";
+  }
+
+  if (text.includes("pas de rouge ni d'orange") || text.includes("pas de rouge ni d orange")) {
+    return "no_red_orange";
+  }
+
+  if (text.includes("pas de bleu ni de jaune")) {
+    return "no_blue_yellow";
+  }
+
+  if (text.includes("pas de vert ni de jaune")) {
+    return "no_green_yellow";
+  }
+
+  if (text.includes("pas d'estoc ni de rouge") || text.includes("pas d estoc ni de rouge")) {
+    return "no_thrust_red";
+  }
+
+  if (text.includes("pas d'estoc ni de bleu") || text.includes("pas d estoc ni de bleu")) {
+    return "no_thrust_blue";
+  }
+
+  if (text.includes("pas de coup lateral ni de rouge")) {
+    return "no_lateral_red";
+  }
+
+  if (text.includes("pas de rouge")) {
+    return "no_red";
+  }
+
+  if (text.includes("pas de bleu")) {
+    return "no_blue";
+  }
+
+  if (text.includes("pas d'orange") || text.includes("pas d orange")) {
+    return "no_orange";
+  }
+
+  if (text.includes("pas de jaune")) {
+    return "no_yellow";
+  }
+
+  if (text.includes("pas d'estoc") || text.includes("pas d estoc")) {
+    return "no_thrust";
+  }
+
+  if (text.includes("pas de coup lateral")) {
+    return "no_lateral";
+  }
+
+  if (text.includes("seulement du vert ou du jaune") || text.includes("seulement vert ou jaune")) {
+    return "only_green_yellow";
+  }
+
+  if (text.includes("seulement du vert") || text.includes("seulement vert")) {
+    return "only_green";
+  }
+
+  if (text.includes("seulement du jaune") || text.includes("seulement jaune")) {
+    return "only_yellow";
+  }
+
+  if (text.includes("seulement du marron") || text.includes("seulement marron")) {
+    return "only_brown";
+  }
+
+  if (text.includes("distance accrue") || text.includes("marron")) {
+    return "only_distance";
+  }
+
+  if (text.includes("desarme") || text.includes("desarmé")) {
+    return "disarmed";
+  }
+
+  if (text.includes("bouclier brise") || text.includes("bouclier brisé")) {
+    return "shield_broken";
+  }
+
+  return "none";
 }
 
 function updateRestrictionBanner(restriction) {
@@ -1488,6 +1583,7 @@ async function startDuel() {
 
   gameMode = document.getElementById("gameMode").value || "duel";
   soloOpponentAction = null;
+  soloOpponentRestriction = "none";
 
   const sheetEntry = findCatalogEntry(sheetId);
   const bookEntry = findCatalogEntry(bookId);
@@ -1618,14 +1714,24 @@ function getSoloOpponentActions() {
 
   let actions = [];
 
-  if (distanceMode === "distance") {
+  if (
+    distanceMode === "distance" ||
+    soloOpponentRestriction === "only_distance" ||
+    soloOpponentRestriction === "only_brown"
+  ) {
     actions = currentOpponentFighter.distanceActions || [];
   } else {
     actions = currentOpponentFighter.actions || [];
   }
 
   return actions.filter(function(action) {
-    return action && action.available && action.pg !== undefined && action.pg !== null;
+    return (
+      action &&
+      action.available &&
+      action.pg !== undefined &&
+      action.pg !== null &&
+      actionAllowedByRestriction(action, soloOpponentRestriction)
+    );
   });
 }
 
@@ -1762,6 +1868,9 @@ function buildSoloOpponentResultHtml(soloResult) {
     "<strong>Riposte adverse</strong><br>" +
     "Action adverse : " +
     actionLabel(soloOpponentAction) +
+    "<br>" +
+    "Restriction appliquée : " +
+    getRestrictionInfo(soloOpponentRestriction).label +
     "<br>" +
     "Page résultat : " +
     soloResult.pageNumber +
@@ -2101,8 +2210,18 @@ function nextTurn() {
   document.getElementById("bodyStatus").textContent = "";
 
   if (pendingOpponentInstruction) {
-    document.getElementById("opponentInstructionText").textContent =
-      pendingOpponentInstruction;
+    if (gameMode === "solo") {
+      soloOpponentRestriction = restrictionFromInstructionText(pendingOpponentInstruction);
+  
+      const restrictionInfo = getRestrictionInfo(soloOpponentRestriction);
+  
+      document.getElementById("opponentInstructionText").textContent =
+        "Adversaire solo : " + restrictionInfo.label;
+    } else {
+      document.getElementById("opponentInstructionText").textContent =
+        pendingOpponentInstruction;
+    }
+  
     document.getElementById("opponentInstructionPanel").style.display = "block";
   }
 
@@ -2176,6 +2295,7 @@ async function newDuel() {
   selectedAction = null;
   gameMode = "duel";
   soloOpponentAction = null;
+  soloOpponentRestriction = "none";
 
   myMaxBody = 0;
   myCurrentBody = 0;
