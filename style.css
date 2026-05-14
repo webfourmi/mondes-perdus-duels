@@ -899,3 +899,55 @@
     grid-template-columns: 1fr;
   }
 }
+.home-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.button-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 12px;
+  border: 2px solid #c9a45b;
+  background: linear-gradient(#3c2f1e, #1f1810);
+  color: #ffe7a6;
+  font-weight: bold;
+}
+
+.button-link:hover {
+  filter: brightness(1.15);
+}
+
+.rules-page {
+  max-width: 760px;
+}
+
+.rules-card {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #8d7b28;
+  border-radius: 14px;
+  background: rgba(255, 244, 210, 0.06);
+}
+
+.rules-card h2 {
+  margin-top: 0;
+}
+
+.rules-card ul,
+.rules-card ol {
+  padding-left: 22px;
+}
+
+.rules-card li {
+  margin: 6px 0;
+}
+
+.rules-note {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
