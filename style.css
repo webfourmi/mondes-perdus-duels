@@ -884,3 +884,18 @@
   padding: 7px;
   font-size: 0.85rem;
 }
+.import-export-buttons {
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-top: 6px;
+}
+
+.import-export-buttons button {
+  padding: 7px;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 520px) {
+  .import-export-buttons {
+    grid-template-columns: 1fr;
+  }
+}
