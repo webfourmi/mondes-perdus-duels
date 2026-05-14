@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.8";
+const APP_VERSION = "0.2.9";
 
 let catalog = null;
 
@@ -28,6 +28,7 @@ let currentOpponentFighter = null;
 let currentBook = null;
 let currentActions = [];
 let selectedAction = null;
+
 let gameMode = "duel";
 let soloOpponentAction = null;
 
@@ -43,11 +44,12 @@ let damageAlreadyApplied = false;
 let pendingOpponentInstruction = "";
 
 let currentPlayerName = "";
-let currentExperience = 0; // XP disponibles, non dépensées
-let currentSpentExperience = 0; // XP déjà utilisées pour évoluer
+let currentExperience = 0;
+let currentSpentExperience = 0;
 let currentProfileKey = "";
 let currentActionBonuses = {};
 let currentBodyBonus = 0;
+
 let currentDuelSaveKey = "lw_current_duel_state";
 let duelFinished = false;
 let victoryXpAwarded = false;
@@ -151,7 +153,8 @@ function refreshSavedCharactersSelect() {
     if (deleteButton) deleteButton.style.display = "none";
     if (creationFields) creationFields.style.display = "block";
 
-    document.getElementById("playerName").value = "";
+    const playerNameInput = document.getElementById("playerName");
+    if (playerNameInput) playerNameInput.value = "";
 
     return;
   }
@@ -209,7 +212,7 @@ function getCurrentSetupCharacterData() {
     fighterName: fighterName,
     name: name,
     experience: currentExperience || 0,
-    spentExperience: currentSpentExperience
+    spentExperience: currentSpentExperience || 0
   };
 }
 
@@ -250,10 +253,6 @@ function saveCharacterFromSetup() {
 
   savePlayerProfile();
 
-  character.experience = currentExperience || 0;
-  character.spentExperience = currentSpentExperience || 0;
-  saveCharacterToIndex(character);
-
   alert("PJ enregistré : " + character.name);
 }
 
@@ -271,8 +270,11 @@ function loadSavedCharacterFromSelect() {
 
   localStorage.setItem(lastCharacterKey, character.id);
 
-  document.getElementById("playerSheet").value = character.fighterId;
-  document.getElementById("playerName").value = character.name;
+  const playerSheetSelect = document.getElementById("playerSheet");
+  const playerNameInput = document.getElementById("playerName");
+
+  if (playerSheetSelect) playerSheetSelect.value = character.fighterId;
+  if (playerNameInput) playerNameInput.value = character.name;
 
   const creationFields = document.getElementById("characterCreationFields");
   if (creationFields) {
@@ -287,6 +289,8 @@ function loadSavedCharacterFromSelect() {
 function showNewCharacterForm() {
   const creationFields = document.getElementById("characterCreationFields");
   const select = document.getElementById("savedCharacterSelect");
+  const playerNameInput = document.getElementById("playerName");
+  const playerSheetSelect = document.getElementById("playerSheet");
 
   if (creationFields) {
     creationFields.style.display = "block";
@@ -296,7 +300,13 @@ function showNewCharacterForm() {
     select.value = "";
   }
 
-  document.getElementById("playerName").value = "";
+  if (playerNameInput) {
+    playerNameInput.value = "";
+  }
+
+  if (playerSheetSelect) {
+    playerSheetSelect.value = "chevalier";
+  }
 
   currentPlayerName = "";
   currentExperience = 0;
@@ -341,15 +351,19 @@ function deleteSelectedCharacter() {
 
   const profileKey = getPlayerProfileKey(character.fighterId, character.name);
   localStorage.removeItem(profileKey);
+
   if (localStorage.getItem(lastCharacterKey) === character.id) {
     localStorage.removeItem(lastCharacterKey);
   }
 
-  document.getElementById("savedCharacterSelect").value = "";
-  document.getElementById("playerName").value = "";
+  const playerNameInput = document.getElementById("playerName");
+  if (playerNameInput) playerNameInput.value = "";
 
+  currentPlayerName = "";
   currentExperience = 0;
   currentSpentExperience = 0;
+  currentActionBonuses = {};
+  currentBodyBonus = 0;
   currentProfileKey = "";
 
   updateExperienceDisplay();
@@ -410,7 +424,7 @@ function loadPlayerProfile(fighterId, playerName) {
     currentSpentExperience = Number(profile.spentExperience || 0);
     currentActionBonuses = profile.actionBonuses || {};
     currentBodyBonus = Number(profile.bodyBonus || 0);
-      } catch (error) {
+  } catch (error) {
     currentExperience = 0;
     currentSpentExperience = 0;
     currentActionBonuses = {};
@@ -423,8 +437,14 @@ function loadPlayerProfile(fighterId, playerName) {
 function savePlayerProfile() {
   if (!currentProfileKey) return;
 
+  const fighterId = currentFighter
+    ? currentFighter.id
+    : document.getElementById("playerSheet").value;
+
+  const fighterEntry = findCatalogEntry(fighterId);
+
   const profile = {
-    fighterId: currentFighter ? currentFighter.id : document.getElementById("playerSheet").value,
+    fighterId: fighterId,
     name: currentPlayerName,
     experience: currentExperience,
     spentExperience: currentSpentExperience,
@@ -435,9 +455,6 @@ function savePlayerProfile() {
   localStorage.setItem(currentProfileKey, JSON.stringify(profile));
 
   if (currentPlayerName) {
-    const fighterId = currentFighter ? currentFighter.id : document.getElementById("playerSheet").value;
-    const fighterEntry = findCatalogEntry(fighterId);
-
     saveCharacterToIndex({
       id: makeCharacterId(fighterId, currentPlayerName),
       fighterId: fighterId,
@@ -454,186 +471,181 @@ function updateExperienceDisplay() {
   if (!display) return;
 
   display.textContent =
-  currentExperience + " dispo / " + currentSpentExperience + " utilisées";
+    currentExperience + " dispo / " + currentSpentExperience + " utilisées";
 
   updateEvolutionPanel();
 }
 
-function changeExperience(delta) {
-  currentExperience = Math.max(0, currentExperience + delta);
+/* ============================================================
+   ÉVOLUTION DU PERSONNAGE
+   ============================================================ */
+
+function getAllUpgradeableActions() {
+  if (!currentFighter) return [];
+
+  const allActions = []
+    .concat(currentFighter.actions || [])
+    .concat(currentFighter.distanceActions || []);
+
+  return allActions.filter(function(action) {
+    return action && action.id && action.color;
+  });
+}
+
+function getActionUpgradeBonus(actionId) {
+  return Number(currentActionBonuses[actionId] || 0);
+}
+
+function getEffectiveBodyStart() {
+  if (!currentFighter) return 0;
+
+  const baseBody = Number(currentFighter.bodyPointsStart || 0);
+  return baseBody + currentBodyBonus;
+}
+
+function getNextUpgradeLevel() {
+  const actions = getAllUpgradeableActions();
+
+  if (actions.length === 0) return 1;
+
+  let minBonus = Infinity;
+
+  actions.forEach(function(action) {
+    minBonus = Math.min(minBonus, getActionUpgradeBonus(action.id));
+  });
+
+  if (minBonus === Infinity) return 1;
+
+  return minBonus + 1;
+}
+
+function getActionsAvailableForUpgrade() {
+  const actions = getAllUpgradeableActions();
+  const nextLevel = getNextUpgradeLevel();
+
+  return actions.filter(function(action) {
+    return getActionUpgradeBonus(action.id) < nextLevel;
+  });
+}
+
+function computeBodyBonusFromColors() {
+  const actions = getAllUpgradeableActions();
+  const byColor = {};
+
+  actions.forEach(function(action) {
+    if (!byColor[action.color]) {
+      byColor[action.color] = [];
+    }
+
+    byColor[action.color].push(action);
+  });
+
+  let bonus = 0;
+
+  Object.keys(byColor).forEach(function(color) {
+    const colorActions = byColor[color];
+
+    if (colorActions.length === 0) return;
+
+    let minColorBonus = Infinity;
+
+    colorActions.forEach(function(action) {
+      minColorBonus = Math.min(minColorBonus, getActionUpgradeBonus(action.id));
+    });
+
+    if (minColorBonus !== Infinity) {
+      bonus += minColorBonus;
+    }
+  });
+
+  return bonus;
+}
+
+function updateEvolutionPanel() {
+  const panel = document.getElementById("evolutionPanel");
+  const info = document.getElementById("evolutionInfo");
+  const select = document.getElementById("upgradeActionChoice");
+
+  if (!panel || !info || !select || !currentFighter) return;
+
+  const cost = getEffectiveBodyStart();
+
+  if (currentExperience < cost) {
+    panel.style.display = "none";
+    return;
+  }
+
+  const nextLevel = getNextUpgradeLevel();
+  const availableActions = getActionsAvailableForUpgrade();
+
+  select.innerHTML = "";
+
+  availableActions.forEach(function(action) {
+    const currentBonus = getActionUpgradeBonus(action.id);
+
+    const option = document.createElement("option");
+    option.value = action.id;
+    option.textContent =
+      actionLabel(action) +
+      " (" +
+      action.color +
+      ") : +" +
+      currentBonus +
+      " → +" +
+      nextLevel;
+
+    select.appendChild(option);
+  });
+
+  info.textContent =
+    currentExperience +
+    " XP disponibles. Coût : " +
+    cost +
+    " XP. Niveau d’amélioration proposé : +" +
+    nextLevel +
+    ".";
+
+  panel.style.display = availableActions.length > 0 ? "block" : "none";
+}
+
+function upgradeSelectedAction() {
+  const select = document.getElementById("upgradeActionChoice");
+  if (!select || !select.value) return;
+
+  const cost = getEffectiveBodyStart();
+
+  if (currentExperience < cost) {
+    alert("Pas assez d’expérience.");
+    return;
+  }
+
+  const actionId = select.value;
+  const nextLevel = getNextUpgradeLevel();
+
+  currentActionBonuses[actionId] = nextLevel;
+  currentExperience -= cost;
+  currentSpentExperience += cost;
+
+  const oldBodyBonus = currentBodyBonus;
+  currentBodyBonus = computeBodyBonusFromColors();
+
+  const bodyIncrease = currentBodyBonus - oldBodyBonus;
+
   updateExperienceDisplay();
   savePlayerProfile();
+  updateEvolutionPanel();
+
+  let message = "Action améliorée à +" + nextLevel + ".";
+
+  if (bodyIncrease > 0) {
+    message +=
+      "\n\nToutes les actions d’une couleur ont progressé : +" +
+      bodyIncrease +
+      " Point(s) de Corps de départ au prochain combat.";
+  }
+
+  alert(message);
 }
-  /* ============================================================
-     ÉVOLUTION DU PERSONNAGE
-     ============================================================ */
-  
-  function getAllUpgradeableActions() {
-    if (!currentFighter) return [];
-  
-    const allActions = []
-      .concat(currentFighter.actions || [])
-      .concat(currentFighter.distanceActions || []);
-  
-    return allActions.filter(function(action) {
-      return action && action.id && action.color;
-    });
-  }
-  
-  function getActionUpgradeBonus(actionId) {
-    return Number(currentActionBonuses[actionId] || 0);
-  }
-  
-  function getEffectiveBodyStart() {
-    if (!currentFighter) return 0;
-  
-    const baseBody = Number(currentFighter.bodyPointsStart || 0);
-    return baseBody + currentBodyBonus;
-  }
-  
-  function getNextUpgradeLevel() {
-    const actions = getAllUpgradeableActions();
-  
-    if (actions.length === 0) return 1;
-  
-    let minBonus = Infinity;
-  
-    actions.forEach(function(action) {
-      minBonus = Math.min(minBonus, getActionUpgradeBonus(action.id));
-    });
-  
-    if (minBonus === Infinity) return 1;
-  
-    return minBonus + 1;
-  }
-  
-  function getActionsAvailableForUpgrade() {
-    const actions = getAllUpgradeableActions();
-    const nextLevel = getNextUpgradeLevel();
-  
-    return actions.filter(function(action) {
-      return getActionUpgradeBonus(action.id) < nextLevel;
-    });
-  }
-  
-  function computeBodyBonusFromColors() {
-    const actions = getAllUpgradeableActions();
-    const byColor = {};
-  
-    actions.forEach(function(action) {
-      if (!byColor[action.color]) {
-        byColor[action.color] = [];
-      }
-  
-      byColor[action.color].push(action);
-    });
-  
-    let bonus = 0;
-  
-    Object.keys(byColor).forEach(function(color) {
-      const colorActions = byColor[color];
-  
-      if (colorActions.length === 0) return;
-  
-      let minColorBonus = Infinity;
-  
-      colorActions.forEach(function(action) {
-        minColorBonus = Math.min(minColorBonus, getActionUpgradeBonus(action.id));
-      });
-  
-      if (minColorBonus !== Infinity) {
-        bonus += minColorBonus;
-      }
-    });
-  
-    return bonus;
-  }
-  
-  function updateEvolutionPanel() {
-    const panel = document.getElementById("evolutionPanel");
-    const info = document.getElementById("evolutionInfo");
-    const select = document.getElementById("upgradeActionChoice");
-  
-    if (!panel || !info || !select || !currentFighter) return;
-  
-    const cost = getEffectiveBodyStart();
-  
-    if (currentExperience < cost) {
-      panel.style.display = "none";
-      return;
-    }
-  
-    const nextLevel = getNextUpgradeLevel();
-    const availableActions = getActionsAvailableForUpgrade();
-  
-    select.innerHTML = "";
-  
-    availableActions.forEach(function(action) {
-      const currentBonus = getActionUpgradeBonus(action.id);
-  
-      const option = document.createElement("option");
-      option.value = action.id;
-      option.textContent =
-        actionLabel(action) +
-        " (" +
-        action.color +
-        ") : +" +
-        currentBonus +
-        " → +" +
-        nextLevel;
-  
-      select.appendChild(option);
-    });
-  
-    info.textContent =
-      currentExperience +
-      " XP disponibles. Coût : " +
-      cost +
-      " XP. Niveau d’amélioration proposé : +" +
-      nextLevel +
-      ".";
-  
-    panel.style.display = availableActions.length > 0 ? "block" : "none";
-  }
-  
-  function upgradeSelectedAction() {
-    const select = document.getElementById("upgradeActionChoice");
-    if (!select || !select.value) return;
-  
-    const cost = getEffectiveBodyStart();
-  
-    if (currentExperience < cost) {
-      alert("Pas assez d’expérience.");
-      return;
-    }
-  
-    const actionId = select.value;
-    const nextLevel = getNextUpgradeLevel();
-  
-    currentActionBonuses[actionId] = nextLevel;
-    currentExperience -= cost;
-    currentSpentExperience += cost;
-  
-    const oldBodyBonus = currentBodyBonus;
-    currentBodyBonus = computeBodyBonusFromColors();
-  
-    const bodyIncrease = currentBodyBonus - oldBodyBonus;
-  
-    updateExperienceDisplay();
-    savePlayerProfile();
-    updateEvolutionPanel();
-  
-    let message = "Action améliorée à +" + nextLevel + ".";
-  
-    if (bodyIncrease > 0) {
-      message +=
-        "\n\nToutes les actions d’une couleur ont progressé : +" +
-        bodyIncrease +
-        " Point(s) de Corps de départ au prochain combat.";
-    }
-  
-    alert(message);
-  }
 
 /* ============================================================
    INITIALISATION
@@ -659,7 +671,6 @@ async function initApp() {
       " combattants disponibles. Version " +
       APP_VERSION;
 
-    loadPlayerNameForSelectedFighter();
     refreshSavedCharactersSelect();
   } catch (error) {
     catalog = fallbackCatalog;
@@ -672,7 +683,6 @@ async function initApp() {
       APP_VERSION +
       ".</span>";
 
-    loadPlayerNameForSelectedFighter();
     refreshSavedCharactersSelect();
   }
 }
@@ -731,91 +741,91 @@ function clearCurrentDuelState() {
   localStorage.removeItem(currentDuelSaveKey);
 }
 
-  /* ============================================================
-     FIN DE COMBAT
-     ============================================================ */
-  
-  function showCombatEnd(title, text, cssClass) {
-    const panel = document.getElementById("combatEndPanel");
-    const titleElement = document.getElementById("combatEndTitle");
-    const textElement = document.getElementById("combatEndText");
-  
-    if (!panel || !titleElement || !textElement) return;
-  
-    panel.className = "combat-end-panel " + cssClass;
-    titleElement.textContent = title;
-    textElement.textContent = text;
-    panel.style.display = "block";
-  
-    document.getElementById("turnPanel").style.display = "none";
-    document.getElementById("pgPanel").style.display = "none";
-    document.getElementById("nextTurnButton").style.display = "none";
-  
-    saveCurrentDuelState();
+/* ============================================================
+   FIN DE COMBAT
+   ============================================================ */
+
+function showCombatEnd(title, text, cssClass) {
+  const panel = document.getElementById("combatEndPanel");
+  const titleElement = document.getElementById("combatEndTitle");
+  const textElement = document.getElementById("combatEndText");
+
+  if (!panel || !titleElement || !textElement) return;
+
+  panel.className = "combat-end-panel " + cssClass;
+  titleElement.textContent = title;
+  textElement.textContent = text;
+  panel.style.display = "block";
+
+  document.getElementById("turnPanel").style.display = "none";
+  document.getElementById("pgPanel").style.display = "none";
+  document.getElementById("nextTurnButton").style.display = "none";
+
+  saveCurrentDuelState();
+}
+
+function checkCombatEnd() {
+  if (duelFinished) return;
+
+  const playerDead = myCurrentBody <= -5;
+  const playerOut = myCurrentBody < 1;
+  const opponentOut = opponentCurrentBody < 1;
+
+  if (playerDead) {
+    duelFinished = true;
+
+    showCombatEnd(
+      "Mort du PJ",
+      currentPlayerName + " tombe à " + myCurrentBody + " PV. Le personnage est mort.",
+      "combat-end-death"
+    );
+
+    return;
   }
-  
-  function checkCombatEnd() {
-    if (duelFinished) return;
-  
-    const playerDead = myCurrentBody <= -5;
-    const playerOut = myCurrentBody < 1;
-    const opponentOut = opponentCurrentBody < 1;
-  
-    if (playerDead) {
-      duelFinished = true;
-  
-      showCombatEnd(
-        "Mort du PJ",
-        currentPlayerName + " tombe à " + myCurrentBody + " PV. Le personnage est mort.",
-        "combat-end-death"
-      );
-  
-      return;
-    }
-  
-    if (playerOut && opponentOut) {
-      duelFinished = true;
-  
-      showCombatEnd(
-        "Match nul",
-        "Les deux combattants sont hors combat.",
-        "combat-end-draw"
-      );
-  
-      return;
-    }
-  
-    if (opponentOut && !playerOut) {
-      duelFinished = true;
-  
-      const xpGain = Math.max(0, Number(opponentMaxBody || 0));
-  
-      if (!victoryXpAwarded) {
-        currentExperience += xpGain;
-        victoryXpAwarded = true;
-        updateExperienceDisplay();
-        savePlayerProfile();
-      }
-  
-      showCombatEnd(
-        "Combat gagné",
-        "Victoire ! " + xpGain + " XP ajoutée(s) à " + currentPlayerName + ".",
-        "combat-end-victory"
-      );
-  
-      return;
-    }
-  
-    if (playerOut && !opponentOut) {
-      duelFinished = true;
-  
-      showCombatEnd(
-        "Combat perdu",
-        currentPlayerName + " est hors combat.",
-        "combat-end-defeat"
-      );
-    }
+
+  if (playerOut && opponentOut) {
+    duelFinished = true;
+
+    showCombatEnd(
+      "Match nul",
+      "Les deux combattants sont hors combat.",
+      "combat-end-draw"
+    );
+
+    return;
   }
+
+  if (opponentOut && !playerOut) {
+    duelFinished = true;
+
+    const xpGain = Math.max(0, Number(opponentMaxBody || 0));
+
+    if (!victoryXpAwarded) {
+      currentExperience += xpGain;
+      victoryXpAwarded = true;
+      updateExperienceDisplay();
+      savePlayerProfile();
+    }
+
+    showCombatEnd(
+      "Combat gagné",
+      "Victoire ! " + xpGain + " XP ajoutée(s) à " + currentPlayerName + ".",
+      "combat-end-victory"
+    );
+
+    return;
+  }
+
+  if (playerOut && !opponentOut) {
+    duelFinished = true;
+
+    showCombatEnd(
+      "Combat perdu",
+      currentPlayerName + " est hors combat.",
+      "combat-end-defeat"
+    );
+  }
+}
 
 /* ============================================================
    POINTS DE CORPS
@@ -892,7 +902,7 @@ function adjustMyBodyFromTop() {
   document.getElementById("myBodyManualTop").value = "";
   document.getElementById("hpTools").style.display = "none";
 
- updateBodyDisplays();
+  updateBodyDisplays();
   checkCombatEnd();
   saveCurrentDuelState();
 }
@@ -1135,6 +1145,9 @@ function fillActions(actions, restriction) {
 
     currentActions.push(action);
 
+    const upgradeBonus = getActionUpgradeBonus(action.id);
+    const upgradeText = upgradeBonus > 0 ? " / EVO +" + upgradeBonus : "";
+
     const option = document.createElement("option");
     option.value = action.id;
     option.textContent =
@@ -1143,6 +1156,7 @@ function fillActions(actions, restriction) {
       action.pg +
       " / MOD " +
       action.mod +
+      upgradeText +
       " / " +
       action.color;
 
@@ -1212,6 +1226,8 @@ async function startDuel() {
     currentOpponentFighter = await loadJson(bookEntry.sheetFile);
     currentBook = await loadJson(bookEntry.bookFile);
 
+    currentBodyBonus = computeBodyBonusFromColors();
+
     sizeModifier = Number(currentFighter.size) - Number(currentOpponentFighter.size);
 
     const loadedExistingDuel = loadCurrentDuelStateIfMatching(
@@ -1221,8 +1237,6 @@ async function startDuel() {
     );
 
     if (!loadedExistingDuel) {
-      currentBodyBonus = computeBodyBonusFromColors();
-
       myMaxBody = getEffectiveBodyStart();
       myCurrentBody = myMaxBody;
 
@@ -1286,60 +1300,60 @@ async function startDuel() {
 /* ============================================================
    MODE SOLO
    ============================================================ */
-  
-  function getSoloOpponentActions() {
-    if (!currentOpponentFighter) return [];
-  
-    const distanceMode = document.getElementById("distanceMode").value;
-  
-    let actions = [];
-  
-    if (distanceMode === "distance") {
-      actions = currentOpponentFighter.distanceActions || [];
-    } else {
-      actions = currentOpponentFighter.actions || [];
-    }
-  
-    return actions.filter(function(action) {
-      return action && action.available && action.pg !== undefined && action.pg !== null;
-    });
+
+function getSoloOpponentActions() {
+  if (!currentOpponentFighter) return [];
+
+  const distanceMode = document.getElementById("distanceMode").value;
+
+  let actions = [];
+
+  if (distanceMode === "distance") {
+    actions = currentOpponentFighter.distanceActions || [];
+  } else {
+    actions = currentOpponentFighter.actions || [];
   }
-  
-  function pickSoloOpponentAction() {
-    const actions = getSoloOpponentActions();
-  
-    if (actions.length === 0) {
-      soloOpponentAction = null;
-      return null;
-    }
-  
-    const index = Math.floor(Math.random() * actions.length);
-    soloOpponentAction = actions[index];
-  
-    return soloOpponentAction;
+
+  return actions.filter(function(action) {
+    return action && action.available && action.pg !== undefined && action.pg !== null;
+  });
+}
+
+function pickSoloOpponentAction() {
+  const actions = getSoloOpponentActions();
+
+  if (actions.length === 0) {
+    soloOpponentAction = null;
+    return null;
   }
-  
-  function updateSoloOpponentDisplay(action) {
-    const panel = document.getElementById("soloOpponentPanel");
-    const text = document.getElementById("soloOpponentActionText");
-  
-    if (!panel || !text) return;
-  
-    if (gameMode !== "solo" || !action) {
-      panel.style.display = "none";
-      text.textContent = "-";
-      return;
-    }
-  
-    text.textContent =
-      actionLabel(action) +
-      " | PG " +
-      action.pg +
-      " | " +
-      action.color;
-  
-    panel.style.display = "block";
+
+  const index = Math.floor(Math.random() * actions.length);
+  soloOpponentAction = actions[index];
+
+  return soloOpponentAction;
+}
+
+function updateSoloOpponentDisplay(action) {
+  const panel = document.getElementById("soloOpponentPanel");
+  const text = document.getElementById("soloOpponentActionText");
+
+  if (!panel || !text) return;
+
+  if (gameMode !== "solo" || !action) {
+    panel.style.display = "none";
+    text.textContent = "-";
+    return;
   }
+
+  text.textContent =
+    actionLabel(action) +
+    " | PG " +
+    action.pg +
+    " | " +
+    action.color;
+
+  panel.style.display = "block";
+}
 
 /* ============================================================
    TOUR / RÉSOLUTION
@@ -1367,24 +1381,24 @@ function chooseAction() {
 
   document.getElementById("enemyPg").value = "";
   document.getElementById("pgToAnnounce").textContent = selectedAction.pg;
-  
+
   if (gameMode === "solo") {
     const opponentAction = pickSoloOpponentAction();
-  
+
     if (!opponentAction) {
       alert("Aucune action adverse disponible pour le mode solo.");
       return;
     }
-  
+
     document.getElementById("enemyPg").value = opponentAction.pg;
     updateSoloOpponentDisplay(opponentAction);
   } else {
     updateSoloOpponentDisplay(null);
   }
-  
+
   document.getElementById("pgPanel").style.display = "block";
   document.getElementById("resultPanel").style.display = "none";
-  }
+}
 
 function calculateTemporaryBonus(page, action) {
   const bonusMode = document.getElementById("temporaryBonus").value;
@@ -1429,6 +1443,7 @@ function calculateDamage(page, action) {
     Number(action.bonus || 0) +
     getActionUpgradeBonus(action.id) +
     calculateTemporaryBonus(page, action);
+
   let total = score + mod + bonus;
 
   if (action.color === "orange" || action.color === "rouge") {
@@ -1440,7 +1455,6 @@ function calculateDamage(page, action) {
 
 function resolveTurn() {
   const enemyPg = document.getElementById("enemyPg").value;
-  const bookEntry = findCatalogEntry(document.getElementById("opponentBook").value);
 
   if (!selectedAction) {
     alert("Choisis d’abord une action.");
@@ -1507,6 +1521,11 @@ function resolveTurn() {
       "<strong>Aucun SCORE</strong>" +
       "</div>";
   } else {
+    const totalBonus =
+      Number(selectedAction.bonus || 0) +
+      getActionUpgradeBonus(selectedAction.id) +
+      calculateTemporaryBonus(page, selectedAction);
+
     damageHtml =
       '<div class="damage-pill">' +
       "<span>Dégâts</span>" +
@@ -1519,10 +1538,9 @@ function resolveTurn() {
       page.score +
       " + MOD " +
       selectedAction.mod +
-     " + bonus " +
-    (Number(selectedAction.bonus || 0) +
-      getActionUpgradeBonus(selectedAction.id) +
-      calculateTemporaryBonus(page, selectedAction));
+      " + bonus " +
+      totalBonus;
+
     if (selectedAction.color === "orange" || selectedAction.color === "rouge") {
       damageHtml += " + taille " + sizeModifier;
     }
@@ -1559,7 +1577,7 @@ function resolveTurn() {
   if (damage !== null) {
     applyButton =
       '<div class="result-actions">' +
-      '<button onclick="applyDamageToOpponent()">Appliquer les dégâts à l’adversaire</button>' +
+      '<button type="button" onclick="applyDamageToOpponent()">Appliquer les dégâts à l’adversaire</button>' +
       '<p id="applyStatus" class="small"></p>' +
       "</div>";
   }
@@ -1639,6 +1657,7 @@ function nextTurn() {
   document.getElementById("enemyPg").value = "";
   soloOpponentAction = null;
   updateSoloOpponentDisplay(null);
+
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("resultPanel").style.display = "none";
   document.getElementById("resultText").innerHTML = "";
@@ -1755,6 +1774,8 @@ function newDuel() {
   document.getElementById("enemyPg").value = "";
   document.getElementById("soloOpponentPanel").style.display = "none";
   document.getElementById("soloOpponentActionText").textContent = "-";
+
+  refreshSavedCharactersSelect();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
