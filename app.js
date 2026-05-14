@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.4";
+const APP_VERSION = "0.3.5";
 
 let catalog = null;
 
@@ -26,6 +26,7 @@ const fallbackCatalog = {
 let currentFighter = null;
 let currentOpponentFighter = null;
 let currentBook = null;
+let currentPlayerBook = null;
 let currentActions = [];
 let selectedAction = null;
 
@@ -1530,7 +1531,9 @@ async function startDuel() {
   try {
     currentFighter = await loadJson(sheetEntry.sheetFile);
     currentOpponentFighter = await loadJson(bookEntry.sheetFile);
+    
     currentBook = await loadJson(bookEntry.bookFile);
+    currentPlayerBook = await loadJson(sheetEntry.bookFile);
 
     currentBodyBonus = computeBodyBonusFromColors();
 
@@ -1660,6 +1663,112 @@ function updateSoloOpponentDisplay(action) {
     action.color;
 
   panel.style.display = "block";
+}
+
+function calculateOpponentDamage(page, action) {
+  if (page.score === null || page.score === undefined) {
+    return null;
+  }
+
+  const score = Number(page.score);
+  const mod = Number(action.mod || 0);
+  const bonus = Number(action.bonus || 0);
+
+  let total = score + mod + bonus;
+
+  const opponentSizeModifier = -sizeModifier;
+
+  if (action.color === "orange" || action.color === "rouge") {
+    total += opponentSizeModifier;
+  }
+
+  return Math.max(0, total);
+}
+
+function resolveSoloOpponentAttack() {
+  if (gameMode !== "solo") return null;
+  if (!soloOpponentAction) return null;
+  if (!currentPlayerBook) return null;
+  if (!selectedAction) return null;
+
+  const opponentMovementPage = String(soloOpponentAction.pg);
+  const myMovementPage = String(selectedAction.pg);
+
+  const movementTable = currentPlayerBook.movementPages[opponentMovementPage];
+
+  if (!movementTable) {
+    return {
+      error: "Aucune table trouvée pour le PG adverse : " + opponentMovementPage
+    };
+  }
+
+  const resultPageNumber = movementTable[myMovementPage];
+
+  if (resultPageNumber === undefined || resultPageNumber === null) {
+    return {
+      error:
+        "Aucun résultat adverse trouvé pour :\n" +
+        "PG adverse : " +
+        opponentMovementPage +
+        "\nTon PG : " +
+        myMovementPage
+    };
+  }
+
+  const page = currentPlayerBook.pages[String(resultPageNumber)];
+
+  if (!page) {
+    return {
+      error: "Page adverse manquante : " + resultPageNumber
+    };
+  }
+
+  const damage = calculateOpponentDamage(page, soloOpponentAction);
+
+  return {
+    pageNumber: resultPageNumber,
+    page: page,
+    damage: damage
+  };
+}
+
+function buildSoloOpponentResultHtml(soloResult) {
+  if (!soloResult) return "";
+
+  if (soloResult.error) {
+    return (
+      '<div class="instruction-card solo-result-card">' +
+      "<strong>Riposte adverse</strong><br>" +
+      soloResult.error +
+      "</div>"
+    );
+  }
+
+  let damageText = "";
+
+  if (soloResult.damage === null) {
+    damageText = "Aucun SCORE contre toi.";
+  } else if (soloResult.damage <= 0) {
+    damageText = "L’adversaire obtient un SCORE, mais ne te fait aucun dégât.";
+  } else {
+    damageText =
+      "L’adversaire te fait " +
+      soloResult.damage +
+      " dégât(s).";
+  }
+
+  return (
+    '<div class="instruction-card solo-result-card">' +
+    "<strong>Riposte adverse</strong><br>" +
+    "Action adverse : " +
+    actionLabel(soloOpponentAction) +
+    "<br>" +
+    "Page résultat : " +
+    soloResult.pageNumber +
+    "<br>" +
+    damageText +
+    "</div>"
+  );
 }
 
 /* ============================================================
@@ -1821,6 +1930,18 @@ function resolveTurn() {
     page.instruction || "Aucune instruction particulière.";
 
   const damage = calculateDamage(page, selectedAction);
+  const soloOpponentResult = resolveSoloOpponentAttack();
+
+  if (
+    soloOpponentResult &&
+    !soloOpponentResult.error &&
+    soloOpponentResult.damage !== null &&
+    soloOpponentResult.damage > 0
+  ) {
+    myCurrentBody -= Number(soloOpponentResult.damage);
+    updateBodyDisplays();
+    saveCurrentDuelState();
+}
   lastDamage = damage;
   damageAlreadyApplied = false;
 
@@ -1907,9 +2028,10 @@ function resolveTurn() {
     enemyPg +
     "</span>" +
     "</div>" +
-    imageHtml +
-    damageHtml +
-    '<div class="instruction-card">' +
+   imageHtml +
+   damageHtml +
+   buildSoloOpponentResultHtml(soloOpponentResult) +
+   '<div class="instruction-card">' +
     "<strong>Instruction à lire à l’adversaire</strong><br>" +
     pendingOpponentInstruction +
     "</div>" +
@@ -1920,6 +2042,7 @@ function resolveTurn() {
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("resultPanel").style.display = "block";
   document.getElementById("nextTurnButton").style.display = "block";
+  checkCombatEnd();
 
   document.getElementById("resultPanel").scrollIntoView({
     behavior: "smooth",
@@ -2048,6 +2171,7 @@ async function newDuel() {
   currentFighter = null;
   currentOpponentFighter = null;
   currentBook = null;
+  currentPlayerBook = null;
   currentActions = [];
   selectedAction = null;
   gameMode = "duel";
