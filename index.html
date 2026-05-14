@@ -22,15 +22,17 @@
       <strong id="fixedOpponentBody">-</strong>
     </div>
 
-    <button class="hp-mini-button" onclick="toggleHpTools()">Modifier mes PV</button>
+    <button class="hp-mini-button" type="button" onclick="toggleHpTools()">
+      Modifier mes PV
+    </button>
 
-    <button class="hp-mini-button hp-new-duel-button" onclick="newDuel()">
+    <button class="hp-mini-button hp-new-duel-button" type="button" onclick="newDuel()">
       Nouveau duel
     </button>
 
     <div id="hpTools" class="hp-tools" style="display:none;">
       <input id="myBodyManualTop" type="number" placeholder="Mes PV actuels" />
-      <button onclick="adjustMyBodyFromTop()">OK</button>
+      <button type="button" onclick="adjustMyBodyFromTop()">OK</button>
     </div>
   </div>
 
@@ -56,61 +58,64 @@
     <section id="setupPanel">
       <h2>Début de duel</h2>
 
-      <<div class="character-title-row">
-  <label for="savedCharacterSelect">Ma fiche personnage</label>
-  <button
-    type="button"
-    id="newCharacterButton"
-    class="small-inline-button"
-    onclick="showNewCharacterForm()"
-      >
-        Nouveau PJ
-      </button>
-    </div>
-    
-    <select id="savedCharacterSelect" onchange="loadSavedCharacterFromSelect()">
-      <option value="">Nouveau PJ / aucun PJ sauvegardé</option>
-    </select>
-    
-    <div class="character-buttons character-management-buttons">
-      <button
-        type="button"
-        id="deleteCharacterButton"
-        class="danger-button"
-        onclick="deleteSelectedCharacter()"
-      >
-        Supprimer ce PJ
-      </button>
-    </div>
-    
-    <div id="characterCreationFields" class="character-creation-fields" style="display:none;">
-      <label for="playerSheet">Type de fiche</label>
-      <select id="playerSheet">
-        <option value="chevalier">Chevalier</option>
-        <option value="squelette">Squelette</option>
-      </select>
-    
-      <label for="playerName">Nom du PJ</label>
-      <input id="playerName" type="text" placeholder="Exemple : Godefroy-la-Tôle" />
-    
-      <div class="character-buttons">
-        <button type="button" onclick="saveCharacterFromSetup()">Enregistrer ce PJ</button>
+      <div class="character-title-row">
+        <label for="savedCharacterSelect">Ma fiche personnage</label>
+
+        <button
+          type="button"
+          id="newCharacterButton"
+          class="small-inline-button"
+          onclick="showNewCharacterForm()"
+        >
+          Nouveau PJ
+        </button>
       </div>
-    </div>
+
+      <select id="savedCharacterSelect" onchange="loadSavedCharacterFromSelect()">
+        <option value="">Nouveau PJ / aucun PJ sauvegardé</option>
+      </select>
+
+      <div class="character-buttons character-management-buttons">
+        <button
+          type="button"
+          id="deleteCharacterButton"
+          class="danger-button"
+          onclick="deleteSelectedCharacter()"
+        >
+          Supprimer ce PJ
+        </button>
+      </div>
+
+      <div id="characterCreationFields" class="character-creation-fields" style="display:none;">
+        <label for="playerSheet">Type de fiche</label>
+        <select id="playerSheet">
+          <option value="chevalier">Chevalier</option>
+          <option value="squelette">Squelette</option>
+        </select>
+
+        <label for="playerName">Nom du PJ</label>
+        <input id="playerName" type="text" placeholder="Exemple : Godefroy-la-Tôle" />
+
+        <div class="character-buttons">
+          <button type="button" onclick="saveCharacterFromSetup()">
+            Enregistrer ce PJ
+          </button>
+        </div>
+      </div>
 
       <label for="gameMode">Mode de jeu</label>
       <select id="gameMode">
         <option value="duel">Duel à deux joueurs</option>
         <option value="solo">Solo contre l’appli</option>
       </select>
-      
+
       <label for="opponentBook">Livret affiché, adversaire</label>
       <select id="opponentBook">
         <option value="chevalier">Chevalier</option>
         <option value="squelette">Squelette</option>
       </select>
 
-      <button onclick="startDuel()">Commencer le duel</button>
+      <button type="button" onclick="startDuel()">Commencer le duel</button>
 
       <p id="loadMessage" class="small"></p>
     </section>
@@ -121,18 +126,18 @@
 
       <p id="duelCompactSummary" class="small"></p>
 
-     <div id="xpPanel" class="xp-panel">
-      <span>Expérience dispo / utilisée</span>
-      <strong id="xpDisplay">0</strong>
-    </div>
+      <div id="xpPanel" class="xp-panel">
+        <span>Expérience dispo / utilisée</span>
+        <strong id="xpDisplay">0</strong>
+      </div>
 
       <div id="evolutionPanel" class="evolution-panel" style="display:none;">
         <span>Évolution disponible</span>
         <p id="evolutionInfo">-</p>
-      
+
         <label for="upgradeActionChoice">Action à améliorer</label>
         <select id="upgradeActionChoice" class="compact-select"></select>
-      
+
         <button type="button" onclick="upgradeSelectedAction()">
           Améliorer cette action
         </button>
@@ -142,12 +147,12 @@
         <span>Instruction à donner à l’adversaire</span>
         <strong id="opponentInstructionText">-</strong>
       </div>
-      
+
       <div id="combatEndPanel" class="combat-end-panel" style="display:none;">
         <span id="combatEndTitle">Fin du combat</span>
         <strong id="combatEndText">-</strong>
       </div>
-      
+
       <div id="duelDetails">
         <p><strong>Ma fiche :</strong> <span id="currentSheet"></span></p>
         <p><strong>Livret affiché :</strong> <span id="currentBook"></span></p>
@@ -187,7 +192,9 @@
 
         <label for="myBodyManual">Corriger mes Points de Corps</label>
         <input id="myBodyManual" type="number" placeholder="Exemple : 9" />
-        <button onclick="adjustMyBody()">Mettre à jour mes Points de Corps</button>
+        <button type="button" onclick="adjustMyBody()">
+          Mettre à jour mes Points de Corps
+        </button>
 
         <p id="bodyStatus" class="small"></p>
       </div>
@@ -253,7 +260,7 @@
         <label for="actionChoice">Action choisie</label>
         <select id="actionChoice" class="action-select"></select>
 
-        <button onclick="chooseAction()">Annoncer cette action</button>
+        <button type="button" onclick="chooseAction()">Annoncer cette action</button>
       </div>
 
       <!-- PG annoncé / reçu -->
@@ -262,6 +269,7 @@
           <span>Action adverse</span>
           <strong id="soloOpponentActionText">-</strong>
         </div>
+
         <div class="pg-card">
           <span>PG à annoncer</span>
           <strong id="pgToAnnounce"></strong>
@@ -271,7 +279,7 @@
 
         <div class="resolve-row">
           <input id="enemyPg" type="number" placeholder="Ex : 42" />
-          <button onclick="resolveTurn()">Résoudre</button>
+          <button type="button" onclick="resolveTurn()">Résoudre</button>
         </div>
       </div>
 
@@ -281,13 +289,13 @@
 
         <div id="resultText"></div>
 
-        <button id="nextTurnButton" onclick="nextTurn()" style="display:none;">
+        <button id="nextTurnButton" type="button" onclick="nextTurn()" style="display:none;">
           Passer au tour suivant
         </button>
       </div>
     </section>
   </main>
 
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
