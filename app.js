@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.1";
+const APP_VERSION = "0.3.2";
 
 let catalog = null;
 
@@ -56,6 +56,59 @@ let victoryXpAwarded = false;
 
 const charactersIndexKey = "lw_saved_characters_index";
 const lastCharacterKey = "lw_last_character_id";
+
+/* ============================================================
+   MODALES
+   ============================================================ */
+
+  let appModalResolver = null;
+  
+  function openAppModal(title, message, options) {
+    const modal = document.getElementById("appModal");
+    const titleElement = document.getElementById("appModalTitle");
+    const textElement = document.getElementById("appModalText");
+    const cancelButton = document.getElementById("appModalCancelButton");
+    const okButton = document.getElementById("appModalOkButton");
+  
+    if (!modal || !titleElement || !textElement || !cancelButton || !okButton) {
+      return Promise.resolve(window.confirm(message));
+    }
+  
+    const mode = options && options.mode ? options.mode : "alert";
+  
+    titleElement.textContent = title || "Message";
+    textElement.textContent = message || "";
+  
+    cancelButton.style.display = mode === "confirm" ? "block" : "none";
+    okButton.textContent = mode === "confirm" ? "Confirmer" : "OK";
+  
+    modal.style.display = "flex";
+  
+    return new Promise(function(resolve) {
+      appModalResolver = resolve;
+    });
+  }
+  
+  function closeAppModal(result) {
+    const modal = document.getElementById("appModal");
+  
+    if (modal) {
+      modal.style.display = "none";
+    }
+  
+    if (appModalResolver) {
+      appModalResolver(result);
+      appModalResolver = null;
+    }
+  }
+  
+  function appAlert(message, title) {
+    return openAppModal(title || "Message", message, { mode: "alert" });
+  }
+  
+  function appConfirm(message, title) {
+    return openAppModal(title || "Confirmation", message, { mode: "confirm" });
+  }
 
 async function loadJson(path) {
   const response = await fetch(path + "?v=" + Date.now());
@@ -318,8 +371,7 @@ function showNewCharacterForm() {
   updateExperienceDisplay();
   updateEvolutionPanel();
 }
-
-function deleteSelectedCharacter() {
+async function deleteSelectedCharacter() {
   const select = document.getElementById("savedCharacterSelect");
 
   if (!select || !select.value) {
@@ -338,14 +390,15 @@ function deleteSelectedCharacter() {
     return;
   }
 
-  const confirmed = confirm(
+  const confirmed = await appConfirm(
     "Confirmer la suppression du PJ : " +
       character.name +
       " ?\n\n" +
       "Cette action supprimera aussi son expérience et ses évolutions.\n\n" +
-      "Cette action est définitive."
+      "Cette action est définitive.",
+    "Supprimer le PJ"
   );
-
+  
   if (!confirmed) {
     return;
   }
@@ -378,7 +431,7 @@ function deleteSelectedCharacter() {
   updateExperienceDisplay();
   refreshSavedCharactersSelect();
 
-  alert("PJ supprimé : " + character.name);
+  appAlert("PJ supprimé : " + character.name, "PJ supprimé");
 }
 
 /* ============================================================
@@ -1976,11 +2029,12 @@ function resetOverlayZoom() {
    NOUVEAU DUEL
    ============================================================ */
 
-function newDuel() {
-  const confirmed = confirm(
-    "Commencer un nouveau duel ?\n\nLes Points de Corps du duel en cours seront réinitialisés."
+async function newDuel() {
+  const confirmed = await appConfirm(
+    "Commencer un nouveau duel ?\n\nLes Points de Corps du duel en cours seront réinitialisés.",
+    "Nouveau duel"
   );
-
+  
   if (!confirmed) return;
 
   clearCurrentDuelState();
