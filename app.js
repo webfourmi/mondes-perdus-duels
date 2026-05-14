@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.7";
+const APP_VERSION = "0.2.8";
 
 let catalog = null;
 
@@ -53,6 +53,7 @@ let duelFinished = false;
 let victoryXpAwarded = false;
 
 const charactersIndexKey = "lw_saved_characters_index";
+const lastCharacterKey = "lw_last_character_id";
 
 async function loadJson(path) {
   const response = await fetch(path + "?v=" + Date.now());
@@ -130,21 +131,39 @@ function makeCharacterId(fighterId, name) {
 
 function refreshSavedCharactersSelect() {
   const select = document.getElementById("savedCharacterSelect");
+  const newButton = document.getElementById("newCharacterButton");
+  const deleteButton = document.getElementById("deleteCharacterButton");
+  const creationFields = document.getElementById("characterCreationFields");
+
   if (!select) return;
 
   const characters = getSavedCharacters();
 
   select.innerHTML = "";
 
-  const emptyOption = document.createElement("option");
-  emptyOption.value = "";
-  emptyOption.textContent = "Nouveau PJ / aucun PJ sauvegardé";
-  select.appendChild(emptyOption);
+  if (characters.length === 0) {
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.textContent = "Nouveau PJ / aucun PJ sauvegardé";
+    select.appendChild(emptyOption);
+
+    if (newButton) newButton.style.display = "none";
+    if (deleteButton) deleteButton.style.display = "none";
+    if (creationFields) creationFields.style.display = "block";
+
+    document.getElementById("playerName").value = "";
+
+    return;
+  }
+
+  if (newButton) newButton.style.display = "inline-block";
+  if (deleteButton) deleteButton.style.display = "block";
+  if (creationFields) creationFields.style.display = "none";
 
   characters.forEach(function(character) {
     const option = document.createElement("option");
     option.value = character.id;
-   option.textContent =
+    option.textContent =
       character.name +
       " — " +
       character.fighterName +
@@ -155,6 +174,20 @@ function refreshSavedCharactersSelect() {
       " XP utilisées";
     select.appendChild(option);
   });
+
+  const lastCharacterId = localStorage.getItem(lastCharacterKey);
+  const lastCharacterExists = characters.some(function(character) {
+    return character.id === lastCharacterId;
+  });
+
+  if (lastCharacterId && lastCharacterExists) {
+    select.value = lastCharacterId;
+  } else {
+    select.value = characters[0].id;
+    localStorage.setItem(lastCharacterKey, characters[0].id);
+  }
+
+  loadSavedCharacterFromSelect();
 }
 
 function getCurrentSetupCharacterData() {
@@ -198,6 +231,8 @@ function saveCharacterToIndex(character) {
   });
 
   saveSavedCharacters(characters);
+  localStorage.setItem(lastCharacterKey, character.id);
+
   refreshSavedCharactersSelect();
 
   const select = document.getElementById("savedCharacterSelect");
@@ -234,11 +269,43 @@ function loadSavedCharacterFromSelect() {
 
   if (!character) return;
 
+  localStorage.setItem(lastCharacterKey, character.id);
+
   document.getElementById("playerSheet").value = character.fighterId;
   document.getElementById("playerName").value = character.name;
 
+  const creationFields = document.getElementById("characterCreationFields");
+  if (creationFields) {
+    creationFields.style.display = "none";
+  }
+
   currentPlayerName = character.name;
   loadPlayerProfile(character.fighterId, character.name);
+  updateEvolutionPanel();
+}
+
+function showNewCharacterForm() {
+  const creationFields = document.getElementById("characterCreationFields");
+  const select = document.getElementById("savedCharacterSelect");
+
+  if (creationFields) {
+    creationFields.style.display = "block";
+  }
+
+  if (select) {
+    select.value = "";
+  }
+
+  document.getElementById("playerName").value = "";
+
+  currentPlayerName = "";
+  currentExperience = 0;
+  currentSpentExperience = 0;
+  currentActionBonuses = {};
+  currentBodyBonus = 0;
+  currentProfileKey = "";
+
+  updateExperienceDisplay();
   updateEvolutionPanel();
 }
 
@@ -274,6 +341,9 @@ function deleteSelectedCharacter() {
 
   const profileKey = getPlayerProfileKey(character.fighterId, character.name);
   localStorage.removeItem(profileKey);
+  if (localStorage.getItem(lastCharacterKey) === character.id) {
+    localStorage.removeItem(lastCharacterKey);
+  }
 
   document.getElementById("savedCharacterSelect").value = "";
   document.getElementById("playerName").value = "";
