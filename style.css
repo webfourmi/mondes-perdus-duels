@@ -847,3 +847,40 @@
   font-size: 0.95rem;
   line-height: 1.25;
 }
+
+.character-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.character-title-row label {
+  margin-top: 0;
+}
+
+.small-inline-button {
+  width: auto;
+  margin: 0;
+  padding: 5px 9px;
+  font-size: 0.75rem;
+  border-radius: 8px;
+}
+
+.character-creation-fields {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #8d7b28;
+  border-radius: 12px;
+  background: rgba(255, 244, 210, 0.06);
+}
+
+.character-management-buttons {
+  margin-top: 6px;
+}
+
+.character-management-buttons button {
+  padding: 7px;
+  font-size: 0.85rem;
+}
