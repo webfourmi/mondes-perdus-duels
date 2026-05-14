@@ -52,7 +52,7 @@
 
   <main class="app">
     <h1 id="appTitle">Mondes Perdus</h1>
-    <p id="appSubtitle" class="small">Prototype familial de duel numérique</p>
+    <p id="appSubtitle" class="small">Que le meilleur gagne !</p>
 
     <!-- Écran de départ -->
     <section id="setupPanel">
@@ -84,6 +84,28 @@
         >
           Supprimer ce PJ
         </button>
+      </div>
+
+      <div class="character-buttons import-export-buttons">
+        <button type="button" onclick="exportSelectedCharacter()">
+          Exporter ce PJ
+        </button>
+      
+        <button type="button" onclick="exportAllCharacters()">
+          Exporter les tous
+        </button>
+      
+        <button type="button" onclick="openImportCharactersFile()">
+          Importer PJ
+        </button>
+      
+        <input
+          id="importCharactersInput"
+          type="file"
+          accept=".json,application/json"
+          style="display:none;"
+          onchange="importCharactersFromFile(event)"
+        />
       </div>
 
       <div id="characterCreationFields" class="character-creation-fields" style="display:none;">
@@ -296,6 +318,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>
