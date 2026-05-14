@@ -822,3 +822,28 @@
     .evolution-panel button {
       margin-top: 8px;
     }
+
+    .solo-opponent-panel {
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 2px solid #c9a45b;
+  border-radius: 12px;
+  background: rgba(255, 244, 210, 0.10);
+  text-align: center;
+}
+
+.solo-opponent-panel span {
+  display: block;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  margin-bottom: 3px;
+}
+
+.solo-opponent-panel strong {
+  display: block;
+  color: #ffd98a;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
