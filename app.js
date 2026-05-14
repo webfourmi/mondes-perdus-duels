@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.5";
+const APP_VERSION = "0.2.6";
 
 let catalog = null;
 
@@ -41,7 +41,8 @@ let damageAlreadyApplied = false;
 let pendingOpponentInstruction = "";
 
 let currentPlayerName = "";
-let currentExperience = 0;
+let currentExperience = 0; // XP disponibles, non dépensées
+let currentSpentExperience = 0; // XP déjà utilisées pour évoluer
 let currentProfileKey = "";
 let currentActionBonuses = {};
 let currentBodyBonus = 0;
@@ -141,13 +142,15 @@ function refreshSavedCharactersSelect() {
   characters.forEach(function(character) {
     const option = document.createElement("option");
     option.value = character.id;
-    option.textContent =
+   option.textContent =
       character.name +
       " — " +
       character.fighterName +
       " — " +
       (character.experience || 0) +
-      " XP";
+      " XP dispo / " +
+      (character.spentExperience || 0) +
+      " XP utilisées";
     select.appendChild(option);
   });
 }
@@ -171,6 +174,7 @@ function getCurrentSetupCharacterData() {
     fighterName: fighterName,
     name: name,
     experience: currentExperience || 0
+    spentExperience: currentSpentExperience
   };
 }
 
@@ -210,6 +214,7 @@ function saveCharacterFromSetup() {
   savePlayerProfile();
 
   character.experience = currentExperience || 0;
+  character.spentExperience = currentSpentExperience || 0;
   saveCharacterToIndex(character);
 
   alert("PJ enregistré : " + character.name);
@@ -272,6 +277,7 @@ function deleteSelectedCharacter() {
   document.getElementById("playerName").value = "";
 
   currentExperience = 0;
+  currentSpentExperience = 0;
   currentProfileKey = "";
 
   updateExperienceDisplay();
@@ -319,6 +325,7 @@ function loadPlayerProfile(fighterId, playerName) {
 
   if (!raw) {
     currentExperience = 0;
+    currentSpentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
     updateExperienceDisplay();
@@ -328,9 +335,10 @@ function loadPlayerProfile(fighterId, playerName) {
   try {
     const profile = JSON.parse(raw);
     currentExperience = Number(profile.experience || 0);
+    currentSpentExperience = Number(profile.spentExperience || 0);
     currentActionBonuses = profile.actionBonuses || {};
     currentBodyBonus = Number(profile.bodyBonus || 0);
-  } catch (error) {
+      } catch (error) {
     currentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
@@ -346,6 +354,7 @@ function savePlayerProfile() {
     fighterId: currentFighter ? currentFighter.id : "",
     name: currentPlayerName,
     experience: currentExperience,
+    spentExperience: currentSpentExperience,
     actionBonuses: currentActionBonuses,
     bodyBonus: currentBodyBonus
   };
@@ -362,6 +371,7 @@ function savePlayerProfile() {
       fighterName: fighterEntry ? fighterEntry.shortName : fighterId,
       name: currentPlayerName,
       experience: currentExperience
+      spentExperience: currentSpentExperience
     });
   }
 }
@@ -370,7 +380,8 @@ function updateExperienceDisplay() {
   const display = document.getElementById("xpDisplay");
   if (!display) return;
 
-  display.textContent = currentExperience;
+  display.textContent =
+  currentExperience + " dispo / " + currentSpentExperience + " utilisées";
 
   updateEvolutionPanel();
 }
@@ -528,6 +539,7 @@ function changeExperience(delta) {
   
     currentActionBonuses[actionId] = nextLevel;
     currentExperience -= cost;
+    currentSpentExperience += cost;
   
     const oldBodyBonus = currentBodyBonus;
     currentBodyBonus = computeBodyBonusFromColors();
