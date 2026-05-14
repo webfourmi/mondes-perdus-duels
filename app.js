@@ -354,7 +354,7 @@ function savePlayerProfile() {
   if (!currentProfileKey) return;
 
   const profile = {
-    fighterId: currentFighter ? currentFighter.id : "",
+    fighterId: currentFighter ? currentFighter.id : document.getElementById("playerSheet").value,
     name: currentPlayerName,
     experience: currentExperience,
     spentExperience: currentSpentExperience,
@@ -1094,6 +1094,7 @@ function fillActions(actions, restriction) {
 async function startDuel() {
   const sheetId = document.getElementById("playerSheet").value;
   const bookId = document.getElementById("opponentBook").value;
+
   gameMode = document.getElementById("gameMode").value || "duel";
   soloOpponentAction = null;
 
@@ -1112,8 +1113,13 @@ async function startDuel() {
 
   if (savedPlayerName) {
     saveCharacterToIndex({
-    
-      
+      id: makeCharacterId(sheetId, currentPlayerName),
+      fighterId: sheetId,
+      fighterName: sheetEntry.shortName,
+      name: currentPlayerName,
+      experience: currentExperience || 0,
+      spentExperience: currentSpentExperience || 0
+    });
   }
 
   document.getElementById("pgPanel").style.display = "none";
@@ -1124,6 +1130,7 @@ async function startDuel() {
   pendingOpponentInstruction = "";
   document.getElementById("opponentInstructionPanel").style.display = "none";
   document.getElementById("opponentInstructionText").textContent = "-";
+
   duelFinished = false;
   victoryXpAwarded = false;
   document.getElementById("combatEndPanel").style.display = "none";
@@ -1151,6 +1158,7 @@ async function startDuel() {
 
       opponentMaxBody = Number(currentOpponentFighter.bodyPointsStart);
       opponentCurrentBody = opponentMaxBody;
+
       duelFinished = false;
       victoryXpAwarded = false;
 
@@ -1176,7 +1184,7 @@ async function startDuel() {
     document.getElementById("fixedOpponentName").textContent = bookEntry.shortName;
 
     document.getElementById("statSize").textContent = currentFighter.size;
-    document.getElementById("statBody").textContent = currentFighter.bodyPointsStart;
+    document.getElementById("statBody").textContent = getEffectiveBodyStart();
     document.getElementById("statAttacks").textContent = currentFighter.attacks;
 
     document.getElementById("distanceMode").value = "distance";
