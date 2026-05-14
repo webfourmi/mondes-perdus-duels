@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.0";
+const APP_VERSION = "0.3.1";
 
 let catalog = null;
 
@@ -333,15 +333,22 @@ function deleteSelectedCharacter() {
     return item.id === select.value;
   });
 
-  if (!character) return;
+  if (!character) {
+    alert("PJ introuvable.");
+    return;
+  }
 
   const confirmed = confirm(
-    "Supprimer le PJ sauvegardé : " +
+    "Confirmer la suppression du PJ : " +
       character.name +
-      " ?\n\nSon expérience sera aussi supprimée."
+      " ?\n\n" +
+      "Cette action supprimera aussi son expérience et ses évolutions.\n\n" +
+      "Cette action est définitive."
   );
 
-  if (!confirmed) return;
+  if (!confirmed) {
+    return;
+  }
 
   const updatedCharacters = characters.filter(function(item) {
     return item.id !== character.id;
@@ -357,7 +364,9 @@ function deleteSelectedCharacter() {
   }
 
   const playerNameInput = document.getElementById("playerName");
-  if (playerNameInput) playerNameInput.value = "";
+  if (playerNameInput) {
+    playerNameInput.value = "";
+  }
 
   currentPlayerName = "";
   currentExperience = 0;
@@ -368,6 +377,8 @@ function deleteSelectedCharacter() {
 
   updateExperienceDisplay();
   refreshSavedCharactersSelect();
+
+  alert("PJ supprimé : " + character.name);
 }
 
 /* ============================================================
