@@ -175,7 +175,7 @@ function getCurrentSetupCharacterData() {
     fighterId: fighterId,
     fighterName: fighterName,
     name: name,
-    experience: currentExperience || 0
+    experience: currentExperience || 0,
     spentExperience: currentSpentExperience
   };
 }
@@ -342,6 +342,7 @@ function loadPlayerProfile(fighterId, playerName) {
     currentBodyBonus = Number(profile.bodyBonus || 0);
       } catch (error) {
     currentExperience = 0;
+    currentSpentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
   }
@@ -372,7 +373,7 @@ function savePlayerProfile() {
       fighterId: fighterId,
       fighterName: fighterEntry ? fighterEntry.shortName : fighterId,
       name: currentPlayerName,
-      experience: currentExperience
+      experience: currentExperience,
       spentExperience: currentSpentExperience
     });
   }
@@ -1111,12 +1112,8 @@ async function startDuel() {
 
   if (savedPlayerName) {
     saveCharacterToIndex({
-      id: makeCharacterId(sheetId, currentPlayerName),
-      fighterId: sheetId,
-      fighterName: sheetEntry.shortName,
-      name: currentPlayerName,
-      experience: currentExperience || 0
-    });
+    
+      
   }
 
   document.getElementById("pgPanel").style.display = "none";
