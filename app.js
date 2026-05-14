@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.6";
+const APP_VERSION = "0.3.7";
 
 let catalog = null;
 
@@ -1798,7 +1798,10 @@ function resolveSoloOpponentAttack() {
   if (!selectedAction) return null;
 
   const opponentMovementPage = String(soloOpponentAction.pg);
-  const myMovementPage = String(selectedAction.pg);
+  const myMovementPage = getMovementPageForAction(
+    selectedAction,
+    soloOpponentAction.pg
+  );
 
   const movementTable = currentPlayerBook.movementPages[opponentMovementPage];
 
@@ -1905,7 +1908,8 @@ function chooseAction() {
   damageAlreadyApplied = false;
 
   document.getElementById("enemyPg").value = "";
-  document.getElementById("pgToAnnounce").textContent = selectedAction.pg;
+  document.getElementById("pgToAnnounce").textContent =
+    getPgDisplayForAction(selectedAction, null);
 
   if (gameMode === "solo") {
     const opponentAction = pickSoloOpponentAction();
@@ -1916,6 +1920,10 @@ function chooseAction() {
     }
 
     document.getElementById("enemyPg").value = opponentAction.pg;
+
+    document.getElementById("pgToAnnounce").textContent =
+      getPgDisplayForAction(selectedAction, opponentAction.pg);
+    
     updateSoloOpponentDisplay(opponentAction);
   } else {
     updateSoloOpponentDisplay(null);
@@ -1977,7 +1985,36 @@ function calculateDamage(page, action) {
 
   return Math.max(0, total);
 }
+function isDistancePg(pg) {
+  const value = Number(pg);
+  return value >= 50;
+}
 
+function getMovementPageForAction(action, enemyPg) {
+  if (!action) return "";
+
+  if (isDistancePg(enemyPg) && action.da !== undefined && action.da !== null) {
+    return String(action.da);
+  }
+
+  return String(action.pg);
+}
+
+function getPgDisplayForAction(action, enemyPg) {
+  if (!action) return "-";
+
+  const normalPg = String(action.pg);
+
+  if (isDistancePg(enemyPg) && action.da !== undefined && action.da !== null) {
+    return String(action.da) + " (DA, depuis " + normalPg + ")";
+  }
+
+  if (action.da !== undefined && action.da !== null) {
+    return normalPg + " / DA " + action.da;
+  }
+
+  return normalPg;
+}
 function resolveTurn() {
   const enemyPg = document.getElementById("enemyPg").value;
 
@@ -1996,8 +2033,8 @@ function resolveTurn() {
     return;
   }
 
-  const myMovementPage = String(selectedAction.pg);
   const enemyMovementPage = String(enemyPg);
+  const myMovementPage = getMovementPageForAction(selectedAction, enemyMovementPage);
 
   const movementTable = currentBook.movementPages[myMovementPage];
 
@@ -2131,7 +2168,7 @@ function resolveTurn() {
     actionLabel(selectedAction) +
     "</span>" +
     "<span><strong>PG</strong> : " +
-    selectedAction.pg +
+    myMovementPage +
     "</span>" +
     "<span><strong>Reçu</strong> : " +
     enemyPg +
