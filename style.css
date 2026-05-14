@@ -1022,6 +1022,92 @@
   background: rgba(20, 12, 6, 0.98);
   box-shadow: 0 0 32px rgba(0, 0, 0, 0.9);
 }
+.home-hero {
+  text-align: center;
+  padding: 18px 12px 14px;
+  margin-bottom: 16px;
+  border: 2px solid #c9a45b;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 138, 0.18), transparent 55%),
+    linear-gradient(rgba(60, 38, 18, 0.8), rgba(16, 10, 5, 0.95));
+  box-shadow: inset 0 0 20px rgba(255, 217, 138, 0.08);
+}
+
+.home-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border: 1px solid #c9a45b;
+  border-radius: 999px;
+  color: #ffe7a6;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.home-hero h1 {
+  margin-bottom: 6px;
+  font-size: 2.25rem;
+  text-shadow: 0 0 12px rgba(255, 217, 138, 0.35);
+}
+
+.home-hero #appSubtitle {
+  margin: 0 auto;
+  max-width: 420px;
+  font-size: 0.98rem;
+  opacity: 0.92;
+}
+
+.home-card {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #8d6b36;
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(255, 244, 210, 0.08), rgba(255, 244, 210, 0.03));
+}
+
+.home-card h3 {
+  margin: 0 0 8px;
+  color: #ffd98a;
+  font-size: 1rem;
+  border-bottom: 1px solid rgba(201, 164, 91, 0.45);
+  padding-bottom: 6px;
+}
+
+.home-start-card {
+  margin-top: 14px;
+  padding: 10px;
+  border: 2px solid #c9a45b;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at center, rgba(255, 217, 138, 0.16), transparent 70%),
+    rgba(0, 0, 0, 0.22);
+}
+
+.home-start-card button {
+  margin-top: 0;
+  font-size: 1.05rem;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+#setupPanel > h2 {
+  text-align: center;
+  font-size: 1.25rem;
+  margin-bottom: 10px;
+}
+
+body:not(.duel-active) .app {
+  max-width: 720px;
+}
+
+body:not(.duel-active) #loadMessage {
+  margin-top: 12px;
+  color: #ffe7a6;
+}
 
 .app-modal-card h2 {
   margin-top: 0;
