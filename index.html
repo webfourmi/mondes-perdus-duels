@@ -75,6 +75,12 @@
         <button type="button" class="danger-button" onclick="deleteSelectedCharacter()">Supprimer ce PJ</button>
       </div>
 
+      <label for="gameMode">Mode de jeu</label>
+      <select id="gameMode">
+        <option value="duel">Duel à deux joueurs</option>
+        <option value="solo">Solo contre l’appli</option>
+      </select>
+      
       <label for="opponentBook">Livret affiché, adversaire</label>
       <select id="opponentBook">
         <option value="chevalier">Chevalier</option>
@@ -229,6 +235,10 @@
 
       <!-- PG annoncé / reçu -->
       <div id="pgPanel" class="action-screen" style="display:none;">
+        <div id="soloOpponentPanel" class="solo-opponent-panel" style="display:none;">
+          <span>Action adverse</span>
+          <strong id="soloOpponentActionText">-</strong>
+        </div>
         <div class="pg-card">
           <span>PG à annoncer</span>
           <strong id="pgToAnnounce"></strong>
@@ -255,6 +265,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=910"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>
