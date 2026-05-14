@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.9";
+const APP_VERSION = "0.3.0";
 
 let catalog = null;
 
@@ -368,6 +368,248 @@ function deleteSelectedCharacter() {
 
   updateExperienceDisplay();
   refreshSavedCharactersSelect();
+}
+
+/* ============================================================
+   EXPORT / IMPORT DES PJ
+   ============================================================ */
+
+function getCharacterProfileData(character) {
+  const profileKey = getPlayerProfileKey(character.fighterId, character.name);
+  const rawProfile = localStorage.getItem(profileKey);
+
+  let profile = null;
+
+  if (rawProfile) {
+    try {
+      profile = JSON.parse(rawProfile);
+    } catch (error) {
+      profile = null;
+    }
+  }
+
+  if (!profile) {
+    profile = {
+      fighterId: character.fighterId,
+      name: character.name,
+      experience: character.experience || 0,
+      spentExperience: character.spentExperience || 0,
+      actionBonuses: {},
+      bodyBonus: 0
+    };
+  }
+
+  return {
+    character: character,
+    profile: profile
+  };
+}
+
+function buildCharactersExportPayload(characters) {
+  return {
+    app: "Mondes Perdus - Duels",
+    type: "mondes_perdus_characters_export",
+    version: APP_VERSION,
+    exportedAt: new Date().toISOString(),
+    characters: characters.map(function(character) {
+      return getCharacterProfileData(character);
+    })
+  };
+}
+
+function downloadJsonFile(filename, data) {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function safeFilename(text) {
+  return (text || "pj")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function exportSelectedCharacter() {
+  const select = document.getElementById("savedCharacterSelect");
+
+  if (!select || !select.value) {
+    alert("Choisis d’abord un PJ à exporter.");
+    return;
+  }
+
+  const characters = getSavedCharacters();
+
+  const character = characters.find(function(item) {
+    return item.id === select.value;
+  });
+
+  if (!character) {
+    alert("PJ introuvable.");
+    return;
+  }
+
+  const payload = buildCharactersExportPayload([character]);
+
+  downloadJsonFile(
+    "mondes_perdus_pj_" + safeFilename(character.name) + ".json",
+    payload
+  );
+}
+
+function exportAllCharacters() {
+  const characters = getSavedCharacters();
+
+  if (characters.length === 0) {
+    alert("Aucun PJ sauvegardé à exporter.");
+    return;
+  }
+
+  const payload = buildCharactersExportPayload(characters);
+
+  downloadJsonFile("mondes_perdus_tous_les_pj.json", payload);
+}
+
+function openImportCharactersFile() {
+  const input = document.getElementById("importCharactersInput");
+
+  if (!input) {
+    alert("Champ d’import introuvable.");
+    return;
+  }
+
+  input.value = "";
+  input.click();
+}
+
+function importCharactersFromFile(event) {
+  const file = event.target.files && event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(loadEvent) {
+    try {
+      const text = loadEvent.target.result;
+      const data = JSON.parse(text);
+
+      importCharactersData(data);
+    } catch (error) {
+      alert("Impossible de lire ce fichier JSON.");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+function normalizeImportedCharactersData(data) {
+  if (!data) return [];
+
+  if (Array.isArray(data.characters)) {
+    return data.characters;
+  }
+
+  if (data.character && data.profile) {
+    return [data];
+  }
+
+  return [];
+}
+
+function importCharactersData(data) {
+  const importedEntries = normalizeImportedCharactersData(data);
+
+  if (importedEntries.length === 0) {
+    alert("Ce fichier ne contient pas de PJ compatible.");
+    return;
+  }
+
+  const existingCharacters = getSavedCharacters();
+  let importedCount = 0;
+  let lastImportedId = "";
+
+  importedEntries.forEach(function(entry) {
+    if (!entry.character || !entry.profile) return;
+
+    const importedCharacter = entry.character;
+    const importedProfile = entry.profile;
+
+    if (!importedCharacter.fighterId || !importedCharacter.name) return;
+
+    const characterId = makeCharacterId(
+      importedCharacter.fighterId,
+      importedCharacter.name
+    );
+
+    const cleanCharacter = {
+      id: characterId,
+      fighterId: importedCharacter.fighterId,
+      fighterName: importedCharacter.fighterName || importedCharacter.fighterId,
+      name: importedCharacter.name,
+      experience: Number(importedProfile.experience || importedCharacter.experience || 0),
+      spentExperience: Number(importedProfile.spentExperience || importedCharacter.spentExperience || 0)
+    };
+
+    const cleanProfile = {
+      fighterId: cleanCharacter.fighterId,
+      name: cleanCharacter.name,
+      experience: cleanCharacter.experience,
+      spentExperience: cleanCharacter.spentExperience,
+      actionBonuses: importedProfile.actionBonuses || {},
+      bodyBonus: Number(importedProfile.bodyBonus || 0)
+    };
+
+    const existingIndex = existingCharacters.findIndex(function(item) {
+      return item.id === cleanCharacter.id;
+    });
+
+    if (existingIndex >= 0) {
+      existingCharacters[existingIndex] = cleanCharacter;
+    } else {
+      existingCharacters.push(cleanCharacter);
+    }
+
+    const profileKey = getPlayerProfileKey(
+      cleanCharacter.fighterId,
+      cleanCharacter.name
+    );
+
+    localStorage.setItem(profileKey, JSON.stringify(cleanProfile));
+
+    importedCount += 1;
+    lastImportedId = cleanCharacter.id;
+  });
+
+  if (importedCount === 0) {
+    alert("Aucun PJ valide n’a été importé.");
+    return;
+  }
+
+  existingCharacters.sort(function(a, b) {
+    return a.name.localeCompare(b.name);
+  });
+
+  saveSavedCharacters(existingCharacters);
+
+  if (lastImportedId) {
+    localStorage.setItem(lastCharacterKey, lastImportedId);
+  }
+
+  refreshSavedCharactersSelect();
+
+  alert(importedCount + " PJ importé(s).");
 }
 
 function getPlayerNameStorageKey(fighterId) {
