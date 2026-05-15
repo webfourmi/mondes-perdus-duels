@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.8";
+const APP_VERSION = "0.3.9";
 
 let catalog = null;
 
@@ -1891,36 +1891,6 @@ function buildSoloOpponentResultHtml(soloResult) {
   );
 }
 
-  let damageText = "";
-
-  if (soloResult.damage === null) {
-    damageText = "Aucun SCORE contre toi.";
-  } else if (soloResult.damage <= 0) {
-    damageText = "L’adversaire obtient un SCORE, mais ne te fait aucun dégât.";
-  } else {
-    damageText =
-      "L’adversaire te fait " +
-      soloResult.damage +
-      " dégât(s).";
-  }
-
-  return (
-    '<div class="instruction-card solo-result-card">' +
-    "<strong>Riposte adverse</strong><br>" +
-    "Action adverse : " +
-    actionLabel(soloOpponentAction) +
-    "<br>" +
-    "Restriction appliquée : " +
-    getRestrictionInfo(soloOpponentRestriction).label +
-    "<br>" +
-    "Page résultat : " +
-    soloResult.pageNumber +
-    "<br>" +
-    damageText +
-    "</div>"
-  );
-}
-
 /* ============================================================
    TOUR / RÉSOLUTION
    ============================================================ */
@@ -2057,9 +2027,9 @@ function resolveTurn() {
   const enemyPg = document.getElementById("enemyPg").value;
 
   if (!selectedAction) {
-    appAlert("Entre le PG donné par ton adversaire.", "PG manquant");
-    return;
-  }
+  appAlert("Choisis d’abord une action.", "Action manquante");
+  return;
+}
 
   if (!enemyPg) {
     appAlert("Entre le PG donné par ton adversaire.", "PG manquant");
