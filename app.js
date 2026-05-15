@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.7";
+const APP_VERSION = "0.3.8";
 
 let catalog = null;
 
@@ -44,6 +44,7 @@ let opponentCurrentBody = 0;
 let lastDamage = null;
 let damageAlreadyApplied = false;
 let pendingOpponentInstruction = "";
+let pendingPlayerInstruction = "";
 
 let currentPlayerName = "";
 let currentExperience = 0;
@@ -1615,6 +1616,7 @@ async function startDuel() {
   document.getElementById("soloOpponentActionText").textContent = "-";
 
   pendingOpponentInstruction = "";
+  pendingPlayerInstruction = "";
   document.getElementById("opponentInstructionPanel").style.display = "none";
   document.getElementById("opponentInstructionText").textContent = "-";
 
@@ -1866,6 +1868,42 @@ function buildSoloOpponentResultHtml(soloResult) {
       " dégât(s).";
   }
 
+  const nextInstruction =
+    soloResult.page.instruction || "Aucune restriction particulière.";
+
+  return (
+    '<div class="instruction-card solo-result-card">' +
+    "<strong>Riposte adverse</strong><br>" +
+    "Action adverse : " +
+    actionLabel(soloOpponentAction) +
+    "<br>" +
+    "Restriction appliquée à l’adversaire solo : " +
+    getRestrictionInfo(soloOpponentRestriction).label +
+    "<br>" +
+    "Page résultat : " +
+    soloResult.pageNumber +
+    "<br>" +
+    damageText +
+    "<br><br>" +
+    "<strong>Restriction à appliquer à votre prochain tour</strong><br>" +
+    nextInstruction +
+    "</div>"
+  );
+}
+
+  let damageText = "";
+
+  if (soloResult.damage === null) {
+    damageText = "Aucun SCORE contre toi.";
+  } else if (soloResult.damage <= 0) {
+    damageText = "L’adversaire obtient un SCORE, mais ne te fait aucun dégât.";
+  } else {
+    damageText =
+      "L’adversaire te fait " +
+      soloResult.damage +
+      " dégât(s).";
+  }
+
   return (
     '<div class="instruction-card solo-result-card">' +
     "<strong>Riposte adverse</strong><br>" +
@@ -2077,6 +2115,17 @@ function resolveTurn() {
 
   const damage = calculateDamage(page, selectedAction);
   const soloOpponentResult = resolveSoloOpponentAttack();
+  if (
+   gameMode === "solo" &&
+   soloOpponentResult &&
+   !soloOpponentResult.error &&
+   soloOpponentResult.page
+ ) {
+   pendingPlayerInstruction =
+    soloOpponentResult.page.instruction || "Aucune restriction particulière.";
+  } else {
+   pendingPlayerInstruction = "";
+ }
 
   if (
     soloOpponentResult &&
@@ -2178,8 +2227,13 @@ function resolveTurn() {
    damageHtml +
    buildSoloOpponentResultHtml(soloOpponentResult) +
    '<div class="instruction-card">' +
-    "<strong>Instruction à lire à l’adversaire</strong><br>" +
-    pendingOpponentInstruction +
+   "<strong>" +
+   (gameMode === "solo"
+    ? "Restriction donnée à l’adversaire solo"
+     : "Instruction à lire à l’adversaire") +
+    "</strong><br>" +
+   pendingOpponentInstruction +
+   
     "</div>" +
     applyButton +
     "</div>";
@@ -2246,21 +2300,43 @@ function nextTurn() {
   document.getElementById("turnPanel").style.display = "block";
   document.getElementById("bodyStatus").textContent = "";
 
-  if (pendingOpponentInstruction) {
-    if (gameMode === "solo") {
-      soloOpponentRestriction = restrictionFromInstructionText(pendingOpponentInstruction);
-  
-      const restrictionInfo = getRestrictionInfo(soloOpponentRestriction);
-  
-      document.getElementById("opponentInstructionText").textContent =
-        "Adversaire solo : " + restrictionInfo.label;
-    } else {
-      document.getElementById("opponentInstructionText").textContent =
-        pendingOpponentInstruction;
-    }
-  
-    document.getElementById("opponentInstructionPanel").style.display = "block";
+  if (gameMode === "solo") {
+  const playerRestriction = pendingPlayerInstruction
+    ? restrictionFromInstructionText(pendingPlayerInstruction)
+    : "none";
+
+  soloOpponentRestriction = pendingOpponentInstruction
+    ? restrictionFromInstructionText(pendingOpponentInstruction)
+    : "none";
+
+  document.getElementById("restrictionMode").value = playerRestriction;
+
+  const playerInfo = getRestrictionInfo(playerRestriction);
+  const opponentInfo = getRestrictionInfo(soloOpponentRestriction);
+
+  const panelLabel = document.querySelector("#opponentInstructionPanel span");
+  if (panelLabel) {
+    panelLabel.textContent = "Restrictions du prochain tour";
   }
+
+  document.getElementById("opponentInstructionText").textContent =
+    "Vous : " +
+    playerInfo.label +
+    " | Adversaire solo : " +
+    opponentInfo.label;
+
+  document.getElementById("opponentInstructionPanel").style.display = "block";
+} else if (pendingOpponentInstruction) {
+  const panelLabel = document.querySelector("#opponentInstructionPanel span");
+  if (panelLabel) {
+    panelLabel.textContent = "Instruction à donner à l’adversaire";
+  }
+
+  document.getElementById("opponentInstructionText").textContent =
+    pendingOpponentInstruction;
+
+  document.getElementById("opponentInstructionPanel").style.display = "block";
+}
 
   document.getElementById("temporaryBonus").value = "none";
 
@@ -2342,6 +2418,7 @@ async function newDuel() {
   lastDamage = null;
   damageAlreadyApplied = false;
   pendingOpponentInstruction = "";
+  pendingPlayerInstruction = "";
   duelFinished = false;
   victoryXpAwarded = false;
 
