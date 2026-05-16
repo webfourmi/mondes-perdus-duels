@@ -1894,7 +1894,7 @@ body.duel-active #fixedHpBar .hp-flee-button {
 
 /* Journal en ligne complète */
 body.duel-active #combatLogButton {
-  grid-column: 1 / -1;
+  grid-column: 1 / 3;
 }
 
 /* Champ correction PV */
