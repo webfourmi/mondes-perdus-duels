@@ -6,79 +6,84 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="style.css?v=25">
 </head>
 
 <body>
   <!-- Barre fixe des Points de Corps -->
-  <div id="fixedHpBar" class="fixed-hp-bar" style="display:none;">
-    <div class="hp-box">
-      <span id="fixedMyName">Moi</span>
-      <strong id="fixedMyBody">-</strong>
-    </div>
-
-    <div class="hp-box">
-      <span id="fixedOpponentName">Adversaire</span>
-      <strong id="fixedOpponentBody">-</strong>
-    </div>
-
-    <button class="hp-mini-button" type="button" onclick="toggleHpTools()">
-      PV
-    </button>
-
-    <div class="hp-audio-row">
-      <button
-        type="button"
-        id="duelAudioToggleButton"
-        class="hp-mini-button hp-audio-button"
-        onclick="toggleAudio()"
-      >
-        Son OFF
-      </button>
-    
-      <button
-        type="button"
-        id="duelMusicToggleButton"
-        class="hp-mini-button hp-audio-button"
-        onclick="toggleMusic()"
-      >
-        ♫ OFF
-      </button>
-    </div>
-
-    <button class="hp-mini-button hp-new-duel-button" type="button" onclick="newDuel()">
-      Nouveau
-    </button>
-
-    <button
-      id="duelCharacterSheetButton"
-      class="hp-mini-button hp-sheet-button"
-      onclick="openCharacterSheetPage()"
-    >
-      Fiche
-</button>
-    
-    <button
-      id="fleeButton"
-      class="hp-mini-button hp-flee-button"
-      onclick="fleeCombat()"
-    >
-      Fuite
-    </button>
-
-    <button
-      id="combatLogButton"
-      class="hp-mini-button hp-log-button"
-      onclick="toggleCombatLog()"
-    >
-      Journal
-    </button>
-
-    <div id="hpTools" class="hp-tools" style="display:none;">
-      <input id="myBodyManualTop" type="number" placeholder="Mes PV actuels" />
-      <button type="button" onclick="adjustMyBodyFromTop()">OK</button>
-    </div>
+<div id="fixedHpBar" class="fixed-hp-bar" style="display:none;">
+  <div class="hp-box">
+    <span id="fixedMyName">Moi</span>
+    <strong id="fixedMyBody">-</strong>
   </div>
+
+  <div class="hp-box">
+    <span id="fixedOpponentName">Adversaire</span>
+    <strong id="fixedOpponentBody">-</strong>
+  </div>
+
+  <button class="hp-mini-button" type="button" onclick="toggleHpTools()">
+    PV
+  </button>
+
+  <button
+    type="button"
+    id="duelAudioToggleButton"
+    class="hp-mini-button hp-audio-button"
+    onclick="toggleAudio()"
+  >
+    Son : OFF
+  </button>
+
+  <button
+    type="button"
+    id="duelMusicToggleButton"
+    class="hp-mini-button hp-audio-button"
+    onclick="toggleMusic()"
+  >
+    Musique : OFF
+  </button>
+
+  <button
+    class="hp-mini-button hp-new-duel-button"
+    type="button"
+    onclick="newDuel()"
+  >
+    Nouveau
+  </button>
+
+  <button
+    id="duelCharacterSheetButton"
+    class="hp-mini-button hp-sheet-button"
+    type="button"
+    onclick="openCharacterSheetPage()"
+  >
+    Fiche
+  </button>
+
+  <button
+    id="fleeButton"
+    class="hp-mini-button hp-flee-button"
+    type="button"
+    onclick="fleeCombat()"
+  >
+    Fuite
+  </button>
+
+  <button
+    id="combatLogButton"
+    class="hp-mini-button hp-log-button"
+    type="button"
+    onclick="toggleCombatLog()"
+  >
+    Journal
+  </button>
+
+  <div id="hpTools" class="hp-tools" style="display:none;">
+    <input id="myBodyManualTop" type="number" placeholder="Mes PV actuels" />
+    <button type="button" onclick="adjustMyBodyFromTop()">OK</button>
+  </div>
+</div>
 
   <!-- Fenêtre plein écran pour zoom image -->
   <div id="imageOverlay" class="image-overlay" style="display:none;">
@@ -250,25 +255,25 @@
       </select>
       </div>
       
-      <div class="audio-control-row">
-        <button
-          type="button"
-          id="audioToggleButton"
-          class="secondary-button"
-          onclick="toggleAudio()"
-        >
-          Son : OFF
-        </button>
-      
-        <button
-          type="button"
-          id="musicToggleButton"
-          class="secondary-button"
-          onclick="toggleMusic()"
-        >
-          Musique : OFF
-        </button>
-</div>
+    <div class="audio-control-row">
+      <button
+        type="button"
+        id="audioToggleButton"
+        class="secondary-button"
+        onclick="toggleAudio()"
+      >
+        Son : OFF
+      </button>
+    
+      <button
+        type="button"
+        id="musicToggleButton"
+        class="secondary-button"
+        onclick="toggleMusic()"
+      >
+        Musique : OFF
+      </button>
+    </div>
       <div class="home-start-card">
         <button type="button" onclick="startDuel()">Commencer le duel</button>
       </div>
@@ -471,6 +476,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=37"></script>
+  <script src="app.js?v=51"></script>
 </body>
 </html>
