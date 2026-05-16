@@ -26,6 +26,26 @@
       Modifier mes PV
     </button>
 
+    <div class="hp-audio-row">
+      <button
+        type="button"
+        id="duelAudioToggleButton"
+        class="hp-mini-button hp-audio-button"
+        onclick="toggleAudio()"
+      >
+        Son : OFF
+      </button>
+    
+      <button
+        type="button"
+        id="duelMusicToggleButton"
+        class="hp-mini-button hp-audio-button"
+        onclick="toggleMusic()"
+      >
+        Musique : OFF
+      </button>
+    </div>
+
     <button class="hp-mini-button hp-new-duel-button" type="button" onclick="newDuel()">
       Nouveau duel
     </button>
@@ -221,7 +241,26 @@
         <option value="squelette">Squelette</option>
       </select>
       </div>
-
+      
+      <div class="audio-control-row">
+        <button
+          type="button"
+          id="audioToggleButton"
+          class="secondary-button"
+          onclick="toggleAudio()"
+        >
+          Son : OFF
+        </button>
+      
+        <button
+          type="button"
+          id="musicToggleButton"
+          class="secondary-button"
+          onclick="toggleMusic()"
+        >
+          Musique : OFF
+        </button>
+</div>
       <div class="home-start-card">
         <button type="button" onclick="startDuel()">Commencer le duel</button>
       </div>
@@ -404,6 +443,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=35"></script>
+  <script src="app.js?v=36"></script>
 </body>
 </html>
