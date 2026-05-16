@@ -1,1 +1,444 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Fiche PJ - Mondes Perdus Duels</title>
+
+  <link rel="stylesheet" href="style.css?v=18">
+</head>
+
+<body>
+  <main class="app rules-page">
+    <h1>Fiche PJ</h1>
+    <p class="small">État du personnage, expérience et évolutions.</p>
+
+    <div class="home-actions">
+      <button type="button" class="button-link" onclick="goBackToDuel()">
+        Retour au duel
+      </button>
+    </div>
+
+    <section class="rules-card">
+      <h2 id="sheetCharacterName">Personnage</h2>
+
+      <div class="pj-summary-grid">
+        <div class="pj-summary-box">
+          <span>Livret</span>
+          <strong id="sheetFighterName">-</strong>
+        </div>
+
+        <div class="pj-summary-box">
+          <span>XP disponibles</span>
+          <strong id="sheetXpAvailable">0</strong>
+        </div>
+
+        <div class="pj-summary-box">
+          <span>XP utilisées</span>
+          <strong id="sheetXpSpent">0</strong>
+        </div>
+
+        <div class="pj-summary-box">
+          <span>XP total</span>
+          <strong id="sheetXpTotal">0</strong>
+        </div>
+
+        <div class="pj-summary-box">
+          <span>Bonus Corps</span>
+          <strong id="sheetBodyBonus">+0</strong>
+        </div>
+
+        <div class="pj-summary-box">
+          <span>Corps de départ</span>
+          <strong id="sheetBodyStart">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="rules-card">
+      <h2>Résumé par couleur</h2>
+      <p class="rules-note">
+        Quand toutes les actions d’une même couleur progressent, le PJ gagne un bonus de Points de Corps de départ.
+      </p>
+
+      <div id="colorSummary" class="color-summary-grid"></div>
+    </section>
+
+    <section class="rules-card">
+      <h2>Évolutions des actions</h2>
+      <p class="rules-note">
+        Les cases cochées indiquent les actions déjà améliorées. Le niveau indique le bonus permanent appliqué.
+      </p>
+
+      <div class="table-scroll">
+        <table class="evolution-table">
+          <thead>
+            <tr>
+              <th>OK</th>
+              <th>Couleur</th>
+              <th>Action</th>
+              <th>PG</th>
+              <th>MOD</th>
+              <th>Niveau</th>
+            </tr>
+          </thead>
+          <tbody id="evolutionTableBody">
+            <tr>
+              <td colspan="6">Chargement...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p id="sheetStatus" class="rules-note"></p>
+
+    <div class="home-actions">
+      <button type="button" class="button-link" onclick="goBackToDuel()">
+        Retour au duel
+      </button>
+    </div>
+  </main>
+
+  <script>
+    const charactersIndexKey = "lw_saved_characters_index";
+    const lastCharacterKey = "lw_last_character_id";
+
+    const fallbackCatalog = {
+      fighters: [
+        {
+          id: "chevalier",
+          shortName: "Chevalier",
+          fullName: "Homme en cotte de mailles avec épée et bouclier",
+          sheetFile: "data/fighters/chevalier.json",
+          bookFile: "data/books/chevalier.json",
+          imageFolder: "images/chevalier/"
+        },
+        {
+          id: "squelette",
+          shortName: "Squelette",
+          fullName: "Squelette avec cimeterre et bouclier",
+          sheetFile: "data/fighters/squelette.json",
+          bookFile: "data/books/squelette.json",
+          imageFolder: "images/squelette/"
+        }
+      ]
+    };
+
+    function goBackToDuel() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = "index.html";
+      }
+    }
+
+    function normalizeProfileName(name) {
+      return (name || "sans_nom")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }
+
+    function getPlayerProfileKey(fighterId, playerName) {
+      return "lw_profile_" + fighterId + "_" + normalizeProfileName(playerName);
+    }
+
+    function getSavedCharacters() {
+      const raw = localStorage.getItem(charactersIndexKey);
+      if (!raw) return [];
+
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function getQueryCharacterId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("id") || localStorage.getItem(lastCharacterKey) || "";
+    }
+
+    async function loadJson(path) {
+      const response = await fetch(path + "?v=" + Date.now());
+
+      if (!response.ok) {
+        throw new Error("Impossible de charger : " + path);
+      }
+
+      return await response.json();
+    }
+
+    async function loadCatalog() {
+      try {
+        return await loadJson("data/catalog.json");
+      } catch (error) {
+        return fallbackCatalog;
+      }
+    }
+
+    function findCatalogEntry(catalog, id) {
+      return catalog.fighters.find(function(fighter) {
+        return fighter.id === id;
+      });
+    }
+
+    function loadProfile(character) {
+      const profileKey = getPlayerProfileKey(character.fighterId, character.name);
+      const raw = localStorage.getItem(profileKey);
+
+      if (!raw) {
+        return {
+          fighterId: character.fighterId,
+          name: character.name,
+          experience: character.experience || 0,
+          spentExperience: character.spentExperience || 0,
+          actionBonuses: {},
+          bodyBonus: 0
+        };
+      }
+
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        return {
+          fighterId: character.fighterId,
+          name: character.name,
+          experience: character.experience || 0,
+          spentExperience: character.spentExperience || 0,
+          actionBonuses: {},
+          bodyBonus: 0
+        };
+      }
+    }
+
+    function actionLabel(action) {
+      if (action.category) {
+        return action.category + " " + action.name;
+      }
+
+      return action.name;
+    }
+
+    function getAllActions(fighter) {
+      const closeActions = (fighter.actions || []).map(function(action) {
+        return Object.assign({}, action, { modeLabel: "Rapproché" });
+      });
+
+      const distanceActions = (fighter.distanceActions || []).map(function(action) {
+        return Object.assign({}, action, { modeLabel: "Distance" });
+      });
+
+      return closeActions.concat(distanceActions);
+    }
+
+    function getColorLabel(color) {
+      const labels = {
+        rouge: "Rouge",
+        orange: "Orange",
+        bleu: "Bleu",
+        jaune: "Jaune",
+        vert: "Vert",
+        marron: "Marron"
+      };
+
+      return labels[color] || color || "-";
+    }
+
+    function getBonus(profile, actionId) {
+      return Number((profile.actionBonuses || {})[actionId] || 0);
+    }
+
+    function computeColorSummary(actions, profile) {
+      const byColor = {};
+
+      actions.forEach(function(action) {
+        if (!action.color) return;
+
+        if (!byColor[action.color]) {
+          byColor[action.color] = [];
+        }
+
+        byColor[action.color].push(action);
+      });
+
+      return Object.keys(byColor).sort().map(function(color) {
+        const colorActions = byColor[color];
+
+        let minBonus = Infinity;
+        let improvedCount = 0;
+
+        colorActions.forEach(function(action) {
+          const bonus = getBonus(profile, action.id);
+          minBonus = Math.min(minBonus, bonus);
+
+          if (bonus > 0) {
+            improvedCount += 1;
+          }
+        });
+
+        if (minBonus === Infinity) {
+          minBonus = 0;
+        }
+
+        return {
+          color: color,
+          total: colorActions.length,
+          improved: improvedCount,
+          minBonus: minBonus,
+          complete: improvedCount === colorActions.length && colorActions.length > 0
+        };
+      });
+    }
+
+    function renderHeader(character, profile, fighter) {
+      const xpAvailable = Number(profile.experience || 0);
+      const xpSpent = Number(profile.spentExperience || 0);
+      const xpTotal = xpAvailable + xpSpent;
+      const bodyBonus = Number(profile.bodyBonus || 0);
+      const bodyStart = Number(fighter.bodyPointsStart || 0) + bodyBonus;
+
+      document.getElementById("sheetCharacterName").textContent = character.name;
+      document.getElementById("sheetFighterName").textContent =
+        character.fighterName || fighter.shortName || character.fighterId;
+
+      document.getElementById("sheetXpAvailable").textContent = xpAvailable;
+      document.getElementById("sheetXpSpent").textContent = xpSpent;
+      document.getElementById("sheetXpTotal").textContent = xpTotal;
+      document.getElementById("sheetBodyBonus").textContent =
+        bodyBonus >= 0 ? "+" + bodyBonus : String(bodyBonus);
+      document.getElementById("sheetBodyStart").textContent = bodyStart;
+    }
+
+    function renderColorSummary(actions, profile) {
+      const container = document.getElementById("colorSummary");
+      const summaries = computeColorSummary(actions, profile);
+
+      container.innerHTML = "";
+
+      summaries.forEach(function(summary) {
+        const item = document.createElement("div");
+        item.className =
+          "color-summary-item evo-color-" + summary.color;
+
+        item.innerHTML =
+          "<strong>" +
+          getColorLabel(summary.color) +
+          "</strong>" +
+          "<span>" +
+          summary.improved +
+          " / " +
+          summary.total +
+          " améliorée(s)</span>" +
+          "<em>Bonus couleur : +" +
+          summary.minBonus +
+          "</em>";
+
+        container.appendChild(item);
+      });
+    }
+
+    function renderEvolutionTable(actions, profile) {
+      const tbody = document.getElementById("evolutionTableBody");
+      tbody.innerHTML = "";
+
+      actions.forEach(function(action) {
+        const bonus = getBonus(profile, action.id);
+        const checked = bonus > 0 ? "checked" : "";
+        const pgText =
+          action.da !== undefined && action.da !== null
+            ? action.pg + " / DA " + action.da
+            : action.pg;
+
+        const row = document.createElement("tr");
+
+        row.innerHTML =
+          "<td>" +
+          '<input type="checkbox" disabled ' +
+          checked +
+          ">" +
+          "</td>" +
+          "<td>" +
+          '<span class="evo-color-pill evo-color-' +
+          action.color +
+          '">' +
+          getColorLabel(action.color) +
+          "</span>" +
+          "</td>" +
+          "<td>" +
+          "<strong>" +
+          actionLabel(action) +
+          "</strong>" +
+          '<span class="evo-mode-label">' +
+          action.modeLabel +
+          "</span>" +
+          "</td>" +
+          "<td>" +
+          pgText +
+          "</td>" +
+          "<td>" +
+          action.mod +
+          "</td>" +
+          "<td>" +
+          (bonus > 0 ? "+" + bonus : "-") +
+          "</td>";
+
+        tbody.appendChild(row);
+      });
+    }
+
+    async function initSheetPage() {
+      const status = document.getElementById("sheetStatus");
+      const characters = getSavedCharacters();
+
+      if (characters.length === 0) {
+        status.textContent = "Aucun PJ sauvegardé sur cet appareil.";
+        document.getElementById("evolutionTableBody").innerHTML =
+          '<tr><td colspan="6">Aucun PJ trouvé.</td></tr>';
+        return;
+      }
+
+      const characterId = getQueryCharacterId();
+
+      let character = characters.find(function(item) {
+        return item.id === characterId;
+      });
+
+      if (!character) {
+        character = characters[0];
+      }
+
+      localStorage.setItem(lastCharacterKey, character.id);
+
+      const profile = loadProfile(character);
+      const catalog = await loadCatalog();
+      const catalogEntry = findCatalogEntry(catalog, character.fighterId);
+
+      if (!catalogEntry) {
+        status.textContent = "Type de combattant introuvable dans le catalogue.";
+        return;
+      }
+
+      try {
+        const fighter = await loadJson(catalogEntry.sheetFile);
+        const actions = getAllActions(fighter);
+
+        renderHeader(character, profile, fighter);
+        renderColorSummary(actions, profile);
+        renderEvolutionTable(actions, profile);
+
+        status.textContent = "Fiche chargée.";
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    }
+
+    initSheetPage();
+  </script>
+</body>
+</html>
