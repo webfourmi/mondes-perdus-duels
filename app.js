@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.3";
+const APP_VERSION = "0.4.4";
 
 let catalog = null;
 
@@ -374,6 +374,46 @@ function showNewCharacterForm() {
 
   updateExperienceDisplay();
   updateEvolutionPanel();
+
+  const cancelButton = document.getElementById("cancelNewCharacterButton");
+    if (cancelButton) {
+      cancelButton.style.display = getSavedCharacters().length > 0 ? "block" : "none";
+    }
+}
+
+function cancelNewCharacterForm() {
+  const characters = getSavedCharacters();
+  const creationFields = document.getElementById("characterCreationFields");
+  const select = document.getElementById("savedCharacterSelect");
+
+  if (characters.length === 0) {
+    appAlert(
+      "Aucun PJ sauvegardé pour le moment. Crée d’abord un personnage.",
+      "Retour impossible"
+    );
+    return;
+  }
+
+  if (creationFields) {
+    creationFields.style.display = "none";
+  }
+
+  const lastCharacterId = localStorage.getItem(lastCharacterKey);
+
+  const lastCharacterExists = characters.some(function(character) {
+    return character.id === lastCharacterId;
+  });
+
+  if (select) {
+    if (lastCharacterId && lastCharacterExists) {
+      select.value = lastCharacterId;
+    } else {
+      select.value = characters[0].id;
+      localStorage.setItem(lastCharacterKey, characters[0].id);
+    }
+  }
+
+  loadSavedCharacterFromSelect();
 }
 
 function toggleCharacterTools() {
