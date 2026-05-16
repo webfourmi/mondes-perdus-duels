@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.5";
+const APP_VERSION = "0.4.6";
 
 let catalog = null;
 
@@ -1158,6 +1158,11 @@ function showCombatEnd(title, text, cssClass) {
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("nextTurnButton").style.display = "none";
 
+  const fleeButton = document.getElementById("fleeButton");
+  if (fleeButton) {
+    fleeButton.style.display = "none";
+  }
+
   saveCurrentDuelState();
 }
 
@@ -1823,6 +1828,11 @@ async function startDuel() {
     document.getElementById("duelPanel").style.display = "block";
     document.getElementById("turnPanel").style.display = "block";
     document.getElementById("fixedHpBar").style.display = "grid";
+
+    const fleeButton = document.getElementById("fleeButton");
+    if (fleeButton) {
+      fleeButton.style.display = "block";
+    }
 
     document.body.classList.add("duel-active");
 
@@ -2494,6 +2504,40 @@ function resetOverlayZoom() {
 /* ============================================================
    NOUVEAU DUEL
    ============================================================ */
+async function fleeCombat() {
+  if (duelFinished) {
+    appAlert("Le combat est déjà terminé.", "Fuite impossible");
+    return;
+  }
+
+  const confirmed = await appConfirm(
+    "Abandonner le combat ?\n\nLe PJ prend la fuite. Aucun point d’expérience ne sera gagné.",
+    "Fuite"
+  );
+
+  if (!confirmed) return;
+
+  duelFinished = true;
+
+  document.getElementById("resultPanel").style.display = "none";
+  document.getElementById("pgPanel").style.display = "none";
+  document.getElementById("turnPanel").style.display = "none";
+  document.getElementById("nextTurnButton").style.display = "none";
+
+  showCombatEnd(
+    "Fuite",
+    currentPlayerName + " abandonne le combat. Aucun XP gagné.",
+    "combat-end-flee"
+  );
+
+  clearCurrentDuelState();
+
+  const fleeButton = document.getElementById("fleeButton");
+  if (fleeButton) {
+    fleeButton.style.display = "none";
+  }
+}
+
 
 async function newDuel() {
   const confirmed = await appConfirm(
