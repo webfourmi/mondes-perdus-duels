@@ -115,8 +115,7 @@
 
     <!-- Écran de départ -->
     <section id="setupPanel">
-      <h2>Préparer le duel</h2>
-      
+            
       <div class="home-card">
         <h3>1. Choisir le combattant</h3>
         
@@ -236,6 +235,10 @@
         <option value="squelette">Squelette</option>
       </select>
       </div>
+
+     <div class="home-start-card">
+        <button type="button" onclick="startDuel()">Commencer le duel</button>
+      </div>
       
     <div class="audio-control-row">
       <button
@@ -256,9 +259,7 @@
         Musique : OFF
       </button>
     </div>
-      <div class="home-start-card">
-        <button type="button" onclick="startDuel()">Commencer le duel</button>
-      </div>
+     
       <p id="loadMessage" class="small"></p>
     </section>
 
