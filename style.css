@@ -1161,3 +1161,50 @@ button.button-link {
   margin-top: 0;
   cursor: pointer;
 }
+
+.character-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-tool-button {
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #c9a45b;
+  background: linear-gradient(#3c2f1e, #1f1810);
+  color: #ffe7a6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-tool-button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-tool-button.active {
+  background: linear-gradient(#d8aa55, #9b6827);
+  color: #120b05;
+}
+
+.character-tools-panel {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #8d6b36;
+  border-radius: 12px;
+  background: rgba(255, 244, 210, 0.06);
+}
+
+.character-tools-panel .import-export-buttons {
+  margin-top: 0;
+}
