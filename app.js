@@ -3059,5 +3059,8 @@ async function newDuel() {
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+function openRulesPage() {
+  window.open("rules.html", "_blank");
+}
 
 initApp();
