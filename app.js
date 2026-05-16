@@ -106,29 +106,26 @@ function initAudioSystem() {
 }
 
 function updateAudioButtons() {
-  const audioLabel = audioEnabled ? "Son : ON" : "Son : OFF";
-  const musicLabel = musicEnabled ? "Musique : ON" : "Musique : OFF";
+  const audioButtons = [
+    document.getElementById("audioToggleButton"),
+    document.getElementById("duelAudioToggleButton")
+  ];
 
-  [
-    "audioToggleButton",
-    "duelAudioToggleButton"
-  ].forEach(function(id) {
-    const button = document.getElementById(id);
-    if (button) {
-      button.textContent = audioLabel;
-      button.classList.toggle("active", audioEnabled);
-    }
+  const musicButtons = [
+    document.getElementById("musicToggleButton"),
+    document.getElementById("duelMusicToggleButton")
+  ];
+
+  audioButtons.forEach(function(button) {
+    if (!button) return;
+    button.textContent = audioEnabled ? "Son : ON" : "Son : OFF";
+    button.classList.toggle("active", audioEnabled);
   });
 
-  [
-    "musicToggleButton",
-    "duelMusicToggleButton"
-  ].forEach(function(id) {
-    const button = document.getElementById(id);
-    if (button) {
-      button.textContent = musicLabel;
-      button.classList.toggle("active", musicEnabled);
-    }
+  musicButtons.forEach(function(button) {
+    if (!button) return;
+    button.textContent = musicEnabled ? "Musique : ON" : "Musique : OFF";
+    button.classList.toggle("active", musicEnabled);
   });
 }
 
