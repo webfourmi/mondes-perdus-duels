@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.8";
+const APP_VERSION = "0.5.0";
 
 let catalog = null;
 
@@ -61,6 +61,8 @@ let currentTurnNumber = 1;
 const charactersIndexKey = "lw_saved_characters_index";
 const lastCharacterKey = "lw_last_character_id";
 
+let combatLog = [];
+let lastResolutionLogKey = "";
 /* ============================================================
    AUDIO
    ============================================================ */
@@ -278,6 +280,120 @@ function findCatalogEntry(id) {
   });
 }
 
+/* ============================================================
+   JOURNAL DE COMBAT
+   ============================================================ */
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function addCombatLogEntry(title, lines, type) {
+  const entry = {
+    turn: currentTurnNumber || 1,
+    title: title || "Événement",
+    lines: Array.isArray(lines) ? lines : [String(lines || "")],
+    type: type || "normal",
+    time: new Date().toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  };
+
+  combatLog.push(entry);
+
+  if (combatLog.length > 80) {
+    combatLog = combatLog.slice(-80);
+  }
+
+  renderCombatLog();
+  saveCurrentDuelState();
+}
+
+function renderCombatLog() {
+  const list = document.getElementById("combatLogList");
+  if (!list) return;
+
+  if (!combatLog || combatLog.length === 0) {
+    list.innerHTML = '<p class="small">Aucune entrée pour le moment.</p>';
+    return;
+  }
+
+  const html = combatLog
+    .slice()
+    .reverse()
+    .map(function(entry) {
+      const linesHtml = entry.lines
+        .map(function(line) {
+          return escapeHtml(line);
+        })
+        .join("<br>");
+
+      return (
+        '<article class="combat-log-entry combat-log-' +
+        escapeHtml(entry.type) +
+        '">' +
+        '<div class="combat-log-entry-title">' +
+        "<strong>" +
+        escapeHtml(entry.title) +
+        "</strong>" +
+        "<span>" +
+        escapeHtml(entry.time) +
+        "</span>" +
+        "</div>" +
+        '<div class="combat-log-entry-text">' +
+        linesHtml +
+        "</div>" +
+        "</article>"
+      );
+    })
+    .join("");
+
+  list.innerHTML = html;
+}
+
+function toggleCombatLog() {
+  const panel = document.getElementById("combatLogPanel");
+  const button = document.getElementById("combatLogButton");
+
+  if (!panel) return;
+
+  const isOpen = panel.style.display === "block";
+
+  panel.style.display = isOpen ? "none" : "block";
+
+  if (button) {
+    button.classList.toggle("active", !isOpen);
+  }
+
+  if (!isOpen) {
+    renderCombatLog();
+    panel.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+async function clearCombatLogFromButton() {
+  const confirmed = await appConfirm(
+    "Vider le journal de combat ?\n\nLes événements déjà notés seront effacés.",
+    "Journal de combat"
+  );
+
+  if (!confirmed) return;
+
+  combatLog = [];
+  lastResolutionLogKey = "";
+
+  renderCombatLog();
+  saveCurrentDuelState();
+}
 /* ============================================================
    PROFILS / PJ SAUVEGARDÉS
    ============================================================ */
@@ -1238,7 +1354,8 @@ function saveCurrentDuelState() {
     opponentId: currentOpponentFighter.id,
     duelFinished: duelFinished,
     victoryXpAwarded: victoryXpAwarded,
-    turnNumber: currentTurnNumber
+    turnNumber: currentTurnNumber,
+    combatLog: combatLog
   };
 
   localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
@@ -1270,6 +1387,10 @@ function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
     duelFinished = Boolean(state.duelFinished);
     victoryXpAwarded = Boolean(state.victoryXpAwarded);
     currentTurnNumber = Number(state.turnNumber || 1);
+    
+    combatLog = Array.isArray(state.combatLog) ? state.combatLog : [];
+    lastResolutionLogKey = "";
+    renderCombatLog();
 
     return true;
   } catch (error) {
@@ -1317,6 +1438,14 @@ function checkCombatEnd() {
 
   if (playerDead) {
     duelFinished = true;
+    addCombatLogEntry(
+      "Fin du combat - Mort",
+      [
+        currentPlayerName + " tombe à " + myCurrentBody + " PV.",
+        "Le personnage est mort."
+      ],
+      "death"
+    );
     playSfx("death");
     showCombatEnd(
       "Mort du PJ",
@@ -1330,6 +1459,16 @@ function checkCombatEnd() {
   if (playerOut && opponentOut) {
     duelFinished = true;
 
+    addCombatLogEntry(
+      "Fin du combat - Match nul",
+      [
+        "Les deux combattants sont hors combat.",
+        currentPlayerName + " : " + myCurrentBody + " PV.",
+        "Adversaire : " + opponentCurrentBody + " PV."
+      ],
+      "draw"
+    );
+
     showCombatEnd(
       "Match nul",
       "Les deux combattants sont hors combat.",
@@ -1342,6 +1481,16 @@ function checkCombatEnd() {
   if (opponentOut && !playerOut) {
     duelFinished = true;
 
+    addCombatLogEntry(
+      "Fin du combat - Victoire",
+      [
+        "L’adversaire est hors combat.",
+        currentPlayerName + " gagne " + xpGain + " XP.",
+        "XP disponibles : " + currentExperience + "."
+      ],
+      "victory"
+    );
+
     const xpGain = Math.max(0, Number(opponentMaxBody || 0));
 
     if (!victoryXpAwarded) {
@@ -1350,6 +1499,16 @@ function checkCombatEnd() {
       updateExperienceDisplay();
       savePlayerProfile();
     }
+
+    addCombatLogEntry(
+      "Fin du combat - Victoire",
+      [
+        "L’adversaire est hors combat.",
+        currentPlayerName + " gagne " + xpGain + " XP.",
+        "XP disponibles : " + currentExperience + "."
+      ],
+      "victory"
+    );
     playSfx("victory");
     showCombatEnd(
       "Combat gagné",
@@ -1362,6 +1521,15 @@ function checkCombatEnd() {
 
   if (playerOut && !opponentOut) {
     duelFinished = true;
+
+    addCombatLogEntry(
+      "Fin du combat - Défaite",
+      [
+        currentPlayerName + " est hors combat.",
+        "PV restants de l’adversaire : " + opponentCurrentBody + "."
+      ],
+      "defeat"
+    );
     playSfx("defeat");
     showCombatEnd(
       "Combat perdu",
@@ -1922,6 +2090,8 @@ async function startDuel() {
     );
 
     if (!loadedExistingDuel) {
+      combatLog = [];
+      lastResolutionLogKey = "";
       myMaxBody = getEffectiveBodyStart();
       myCurrentBody = myMaxBody;
 
@@ -1932,7 +2102,19 @@ async function startDuel() {
       victoryXpAwarded = false;
       currentTurnNumber = 1;
 
+      addCombatLogEntry(
+        "Début du duel",
+        [
+          currentPlayerName + " affronte " + bookEntry.shortName + ".",
+          "Tour 1 : Distance Accrue obligatoire.",
+          "Points de Corps : " + myCurrentBody + " / " + myMaxBody + " contre " + opponentCurrentBody + " / " + opponentMaxBody + "."
+        ],
+        "start"
+      );
+
       saveCurrentDuelState();
+
+      
     }
 
     savePlayerProfile();
@@ -2393,6 +2575,70 @@ function resolveTurn() {
    pendingPlayerInstruction = "";
  }
 
+  const resolutionLogKey =
+    currentTurnNumber +
+    "|" +
+    selectedAction.id +
+    "|" +
+    enemyMovementPage +
+    "|" +
+    resultPageNumber;
+  
+  if (resolutionLogKey !== lastResolutionLogKey) {
+    const logLines = [
+      "Vous : " +
+        actionLabel(selectedAction) +
+        " | PG utilisé " +
+        myMovementPage +
+        " | PG reçu " +
+        enemyMovementPage,
+      damage === null
+        ? "Votre résultat : page " + resultPageNumber + " | aucun SCORE."
+        : "Votre résultat : page " + resultPageNumber + " | " + damage + " dégât(s) à appliquer à l’adversaire.",
+      "Restriction donnée à l’adversaire : " + pendingOpponentInstruction
+    ];
+  
+    if (gameMode === "solo" && soloOpponentAction) {
+      logLines.splice(
+        1,
+        0,
+        "Adversaire solo : " +
+          actionLabel(soloOpponentAction) +
+          " | PG " +
+          soloOpponentAction.pg
+      );
+  
+      if (soloOpponentResult && soloOpponentResult.error) {
+        logLines.push("Riposte adverse : " + soloOpponentResult.error);
+      } else if (soloOpponentResult && soloOpponentResult.page) {
+        const soloDamageText =
+          soloOpponentResult.damage === null
+            ? "aucun SCORE contre vous."
+            : soloOpponentResult.damage + " dégât(s) contre vous.";
+  
+        logLines.push(
+          "Riposte adverse : page " +
+            soloOpponentResult.pageNumber +
+            " | " +
+            soloDamageText
+        );
+  
+        logLines.push(
+          "Restriction à appliquer à votre prochain tour : " +
+            (pendingPlayerInstruction || "Aucune restriction particulière.")
+        );
+      }
+    }
+  
+    addCombatLogEntry(
+      "Tour " + currentTurnNumber + " - Résolution",
+      logLines,
+      "turn"
+    );
+  
+    lastResolutionLogKey = resolutionLogKey;
+  }
+
   if (
     soloOpponentResult &&
     !soloOpponentResult.error &&
@@ -2535,11 +2781,21 @@ function applyDamageToOpponent() {
   opponentCurrentBody -= Number(lastDamage);
   damageAlreadyApplied = true;
 
-  if (lastDamage > 0) {
-    playSfx("hit");
-  } else {
-    playSfx("click");
-  }
+  addCombatLogEntry(
+    "Tour " + currentTurnNumber + " - Dégâts",
+    [
+      lastDamage +
+        " dégât(s) appliqué(s) à l’adversaire.",
+      "PV adversaire : " + opponentCurrentBody + " / " + opponentMaxBody + "."
+    ],
+    lastDamage > 0 ? "damage" : "normal"
+  );
+  
+    if (lastDamage > 0) {
+      playSfx("hit");
+    } else {
+      playSfx("click");
+    }
 
   updateBodyDisplays();
   checkCombatEnd();
@@ -2679,6 +2935,15 @@ async function fleeCombat() {
 
   duelFinished = true;
 
+  addCombatLogEntry(
+    "Fin du combat - Fuite",
+    [
+      currentPlayerName + " abandonne le combat.",
+      "Aucun XP gagné."
+    ],
+    "flee"
+  );
+
   document.getElementById("resultPanel").style.display = "none";
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("turnPanel").style.display = "none";
@@ -2708,7 +2973,23 @@ async function newDuel() {
   
   if (!confirmed) return;
 
+  
+
   clearCurrentDuelState();
+
+  combatLog = [];
+      lastResolutionLogKey = "";
+      renderCombatLog();
+      
+      const combatLogPanel = document.getElementById("combatLogPanel");
+      if (combatLogPanel) {
+        combatLogPanel.style.display = "none";
+      }
+      
+      const combatLogButton = document.getElementById("combatLogButton");
+      if (combatLogButton) {
+        combatLogButton.classList.remove("active");
+      }
 
   currentFighter = null;
   currentOpponentFighter = null;
