@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.6";
+const APP_VERSION = "0.4.7";
 
 let catalog = null;
 
@@ -350,13 +350,25 @@ function loadSavedCharacterFromSelect() {
 function openCharacterSheetPage() {
   const select = document.getElementById("savedCharacterSelect");
 
-  if (!select || !select.value) {
+  let characterId = "";
+
+  if (select && select.value) {
+    characterId = select.value;
+  } else if (currentFighter && currentPlayerName) {
+    characterId = makeCharacterId(currentFighter.id, currentPlayerName);
+  } else {
+    characterId = localStorage.getItem(lastCharacterKey) || "";
+  }
+
+  if (!characterId) {
     appAlert("Choisis d’abord un PJ sauvegardé.", "Fiche PJ");
     return;
   }
 
+  localStorage.setItem(lastCharacterKey, characterId);
+
   window.location.href =
-    "fiche-pj.html?id=" + encodeURIComponent(select.value);
+    "fiche-pj.html?id=" + encodeURIComponent(characterId);
 }
 
 function showNewCharacterForm() {
@@ -1829,6 +1841,11 @@ async function startDuel() {
     document.getElementById("turnPanel").style.display = "block";
     document.getElementById("fixedHpBar").style.display = "grid";
 
+    const duelCharacterSheetButton = document.getElementById("duelCharacterSheetButton");
+    if (duelCharacterSheetButton) {
+      duelCharacterSheetButton.style.display = "block";
+    }
+
     const fleeButton = document.getElementById("fleeButton");
     if (fleeButton) {
       fleeButton.style.display = "block";
@@ -2575,6 +2592,11 @@ async function newDuel() {
   document.body.classList.remove("duel-active");
 
   document.getElementById("fixedHpBar").style.display = "none";
+
+  const duelCharacterSheetButton = document.getElementById("duelCharacterSheetButton");
+  if (duelCharacterSheetButton) {
+    duelCharacterSheetButton.style.display = "none";
+  }
   document.getElementById("hpTools").style.display = "none";
 
   document.getElementById("setupPanel").style.display = "block";
