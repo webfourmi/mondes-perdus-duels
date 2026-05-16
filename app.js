@@ -1,4 +1,4 @@
-const APP_VERSION = "0.5.0";
+const APP_VERSION = "0.5.1";
 
 let catalog = null;
 
@@ -439,8 +439,9 @@ function refreshSavedCharactersSelect() {
   const creationFields = document.getElementById("characterCreationFields");
   const sheetButton = document.getElementById("characterSheetButton");
 
-  if (sheetButton) sheetButton.style.display = "none";
-  if (sheetButton) sheetButton.style.display = "inline-block";
+  if (sheetButton) {
+    sheetButton.style.display = "none";
+  }
 
   if (!select) return;
 
@@ -462,6 +463,9 @@ function refreshSavedCharactersSelect() {
     if (playerNameInput) playerNameInput.value = "";
 
     return;
+  }
+  if (sheetButton) {
+    sheetButton.style.display = "inline-block";
   }
 
   if (newButton) newButton.style.display = "inline-block";
@@ -1438,6 +1442,7 @@ function checkCombatEnd() {
 
   if (playerDead) {
     duelFinished = true;
+
     addCombatLogEntry(
       "Fin du combat - Mort",
       [
@@ -1446,7 +1451,9 @@ function checkCombatEnd() {
       ],
       "death"
     );
+
     playSfx("death");
+
     showCombatEnd(
       "Mort du PJ",
       currentPlayerName + " tombe à " + myCurrentBody + " PV. Le personnage est mort.",
@@ -1481,16 +1488,6 @@ function checkCombatEnd() {
   if (opponentOut && !playerOut) {
     duelFinished = true;
 
-    addCombatLogEntry(
-      "Fin du combat - Victoire",
-      [
-        "L’adversaire est hors combat.",
-        currentPlayerName + " gagne " + xpGain + " XP.",
-        "XP disponibles : " + currentExperience + "."
-      ],
-      "victory"
-    );
-
     const xpGain = Math.max(0, Number(opponentMaxBody || 0));
 
     if (!victoryXpAwarded) {
@@ -1509,7 +1506,9 @@ function checkCombatEnd() {
       ],
       "victory"
     );
+
     playSfx("victory");
+
     showCombatEnd(
       "Combat gagné",
       "Victoire ! " + xpGain + " XP ajoutée(s) à " + currentPlayerName + ".",
@@ -1530,7 +1529,9 @@ function checkCombatEnd() {
       ],
       "defeat"
     );
+
     playSfx("defeat");
+
     showCombatEnd(
       "Combat perdu",
       currentPlayerName + " est hors combat.",
@@ -2972,8 +2973,8 @@ async function newDuel() {
   );
   
   if (!confirmed) return;
-
   
+  stopCombatMusic();
 
   clearCurrentDuelState();
 
