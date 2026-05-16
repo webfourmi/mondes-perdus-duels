@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.0";
+const APP_VERSION = "0.4.1";
 
 let catalog = null;
 
@@ -1013,42 +1013,12 @@ function saveCurrentDuelState() {
     fighterId: currentFighter.id,
     opponentId: currentOpponentFighter.id,
     duelFinished: duelFinished,
-    victoryXpAwarded: victoryXpAwarded
+    victoryXpAwarded: victoryXpAwarded,
     turnNumber: currentTurnNumber
   };
 
   localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
 }
-
-function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
-  const raw = localStorage.getItem(currentDuelSaveKey);
-  if (!raw) return false;
-
-  try {
-    const state = JSON.parse(raw);
-
-    if (
-      state.fighterId !== fighterId ||
-      state.opponentId !== opponentId ||
-      state.playerName !== playerName
-    ) {
-      return false;
-    }
-
-    myCurrentBody = Number(state.myCurrentBody);
-    myMaxBody = Number(state.myMaxBody);
-    opponentCurrentBody = Number(state.opponentCurrentBody);
-    opponentMaxBody = Number(state.opponentMaxBody);
-    duelFinished = Boolean(state.duelFinished);
-    victoryXpAwarded = Boolean(state.victoryXpAwarded);
-    currentTurnNumber = Number(state.turnNumber || 1);
-
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
 function clearCurrentDuelState() {
   localStorage.removeItem(currentDuelSaveKey);
 }
@@ -1666,6 +1636,8 @@ async function startDuel() {
 
   duelFinished = false;
   victoryXpAwarded = false;
+  currentTurnNumber = 1;
+  
   document.getElementById("combatEndPanel").style.display = "none";
   document.getElementById("combatEndTitle").textContent = "Fin du combat";
   document.getElementById("combatEndText").textContent = "-";
