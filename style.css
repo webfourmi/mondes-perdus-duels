@@ -1151,3 +1151,8 @@ body:not(.duel-active) #loadMessage {
 .solo-result-card strong {
   color: #ffd98a;
 }
+.mode-toggle button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
