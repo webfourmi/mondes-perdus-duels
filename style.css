@@ -1475,6 +1475,16 @@ body.duel-active .page-image {
   background: var(--brown);
 }
 
+.hp-sheet-button {
+  background: linear-gradient(#3c2f1e, #1f1810);
+  color: #ffe7a6;
+  border-color: #c9a45b;
+}
+
+.hp-sheet-button:hover {
+  filter: brightness(1.15);
+}
+
 /* ============================================================
    RESPONSIVE
    ============================================================ */
