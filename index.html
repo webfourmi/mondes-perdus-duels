@@ -66,6 +66,14 @@
       Fuite
     </button>
 
+    <button
+      id="combatLogButton"
+      class="hp-mini-button hp-log-button"
+      onclick="toggleCombatLog()"
+    >
+      Journal
+    </button>
+
     <div id="hpTools" class="hp-tools" style="display:none;">
       <input id="myBodyManualTop" type="number" placeholder="Mes PV actuels" />
       <button type="button" onclick="adjustMyBodyFromTop()">OK</button>
@@ -300,6 +308,26 @@
         <strong id="combatEndText">-</strong>
       </div>
 
+      <div id="combatLogPanel" class="combat-log-panel" style="display:none;">
+        <div class="combat-log-header">
+          <span>Journal de combat</span>
+      
+          <div class="combat-log-actions">
+            <button type="button" class="secondary-button" onclick="toggleCombatLog()">
+              Fermer
+            </button>
+      
+            <button type="button" class="danger-button" onclick="clearCombatLogFromButton()">
+              Vider
+            </button>
+          </div>
+        </div>
+      
+        <div id="combatLogList" class="combat-log-list">
+          <p class="small">Aucune entrée pour le moment.</p>
+        </div>
+      </div>
+
       <div id="duelDetails">
         <p><strong>Ma fiche :</strong> <span id="currentSheet"></span></p>
         <p><strong>Livret affiché :</strong> <span id="currentBook"></span></p>
@@ -443,6 +471,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=36"></script>
+  <script src="app.js?v=37"></script>
 </body>
 </html>
