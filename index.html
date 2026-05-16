@@ -91,15 +91,32 @@
         
       <div class="character-title-row">
         <label for="savedCharacterSelect">Ma fiche personnage</label>
-
-        <button
-          type="button"
-          id="newCharacterButton"
-          class="small-inline-button"
-          onclick="showNewCharacterForm()"
-        >
-          Nouveau PJ
-        </button>
+      
+        <div class="character-title-actions">
+          <button
+            type="button"
+            id="newCharacterButton"
+            class="small-inline-button"
+            onclick="showNewCharacterForm()"
+          >
+            Nouveau PJ
+          </button>
+      
+          <button
+            type="button"
+            id="characterToolsButton"
+            class="icon-tool-button"
+            onclick="toggleCharacterTools()"
+            title="Exporter / importer les PJ"
+            aria-label="Exporter / importer les PJ"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H9l1.4 2H17.5A2.5 2.5 0 0 1 20 9.5v7A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z" />
+              <path d="M12 10v5" />
+              <path d="M9.8 12.8 12 15l2.2-2.2" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <select id="savedCharacterSelect" onchange="loadSavedCharacterFromSelect()">
@@ -117,19 +134,13 @@
         </button>
       </div>
 
-      <div class="character-buttons import-export-buttons">
-        <button type="button" onclick="exportSelectedCharacter()">
-          Exporter ce PJ
-        </button>
-      
-        <button type="button" onclick="exportAllCharacters()">
-          Exporter les tous
-        </button>
-      
-        <button type="button" onclick="openImportCharactersFile()">
-          Importer PJ
-        </button>
-      
+      <div id="characterToolsPanel" class="character-tools-panel" style="display:none;">
+        <div class="character-buttons import-export-buttons">
+          <button type="button" onclick="exportSelectedCharacter()">Exporter ce PJ</button>
+          <button type="button" onclick="exportAllCharacters()">Exporter tous</button>
+          <button type="button" onclick="openImportCharactersFile()">Importer PJ</button>
+        </div>
+                  
         <input
           id="importCharactersInput"
           type="file"
