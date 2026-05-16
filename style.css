@@ -1946,3 +1946,10 @@ body.duel-active #hpTools button {
 .hp-rules-button:hover {
   filter: brightness(1.15);
 }
+/* ============================================================
+   ACCUEIL MASQUÉ PENDANT LE DUEL
+   ============================================================ */
+
+body.duel-active .home-hero {
+  display: none !important;
+}
