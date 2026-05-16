@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.2";
+const APP_VERSION = "0.4.3";
 
 let catalog = null;
 
@@ -375,6 +375,22 @@ function showNewCharacterForm() {
   updateExperienceDisplay();
   updateEvolutionPanel();
 }
+
+function toggleCharacterTools() {
+  const panel = document.getElementById("characterToolsPanel");
+  const button = document.getElementById("characterToolsButton");
+
+  if (!panel) return;
+
+  const isOpen = panel.style.display === "block";
+
+  panel.style.display = isOpen ? "none" : "block";
+
+  if (button) {
+    button.classList.toggle("active", !isOpen);
+  }
+}
+
 async function deleteSelectedCharacter() {
   const select = document.getElementById("savedCharacterSelect");
 
