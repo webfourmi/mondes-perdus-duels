@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.7";
+const APP_VERSION = "0.4.8";
 
 let catalog = null;
 
@@ -60,6 +60,134 @@ let currentTurnNumber = 1;
 
 const charactersIndexKey = "lw_saved_characters_index";
 const lastCharacterKey = "lw_last_character_id";
+
+/* ============================================================
+   AUDIO
+   ============================================================ */
+
+const audioStorageKey = "lw_audio_enabled";
+const musicStorageKey = "lw_music_enabled";
+
+let audioEnabled = localStorage.getItem(audioStorageKey) === "true";
+let musicEnabled = localStorage.getItem(musicStorageKey) === "true";
+
+let audioInitialized = false;
+let sfxBank = {};
+let combatMusic = null;
+
+const audioFiles = {
+  click: "audio/click.mp3",
+  hit: "audio/hit.mp3",
+  victory: "audio/victory.mp3",
+  defeat: "audio/defeat.mp3",
+  death: "audio/death.mp3",
+  flee: "audio/flee.mp3"
+};
+
+function initAudioSystem() {
+  if (audioInitialized) return;
+
+  Object.keys(audioFiles).forEach(function(key) {
+    const sound = new Audio(audioFiles[key]);
+    sound.preload = "auto";
+    sound.volume = 0.65;
+    sfxBank[key] = sound;
+  });
+
+  combatMusic = new Audio("audio/combat-loop.mp3");
+  combatMusic.preload = "auto";
+  combatMusic.loop = true;
+  combatMusic.volume = 0.28;
+
+  audioInitialized = true;
+  updateAudioButtons();
+}
+
+function updateAudioButtons() {
+  const audioLabel = audioEnabled ? "Son : ON" : "Son : OFF";
+  const musicLabel = musicEnabled ? "Musique : ON" : "Musique : OFF";
+
+  [
+    "audioToggleButton",
+    "duelAudioToggleButton"
+  ].forEach(function(id) {
+    const button = document.getElementById(id);
+    if (button) {
+      button.textContent = audioLabel;
+      button.classList.toggle("active", audioEnabled);
+    }
+  });
+
+  [
+    "musicToggleButton",
+    "duelMusicToggleButton"
+  ].forEach(function(id) {
+    const button = document.getElementById(id);
+    if (button) {
+      button.textContent = musicLabel;
+      button.classList.toggle("active", musicEnabled);
+    }
+  });
+}
+
+function toggleAudio() {
+  initAudioSystem();
+
+  audioEnabled = !audioEnabled;
+  localStorage.setItem(audioStorageKey, audioEnabled ? "true" : "false");
+
+  updateAudioButtons();
+
+  if (audioEnabled) {
+    playSfx("click");
+  }
+}
+
+function toggleMusic() {
+  initAudioSystem();
+
+  musicEnabled = !musicEnabled;
+  localStorage.setItem(musicStorageKey, musicEnabled ? "true" : "false");
+
+  updateAudioButtons();
+
+  if (musicEnabled && currentFighter && !duelFinished) {
+    startCombatMusic();
+  } else {
+    stopCombatMusic();
+  }
+}
+
+function playSfx(name) {
+  if (!audioEnabled) return;
+
+  initAudioSystem();
+
+  const sound = sfxBank[name];
+
+  if (!sound) return;
+
+  try {
+    sound.currentTime = 0;
+    sound.play().catch(function() {});
+  } catch (error) {}
+}
+
+function startCombatMusic() {
+  if (!musicEnabled) return;
+
+  initAudioSystem();
+
+  if (!combatMusic) return;
+
+  combatMusic.play().catch(function() {});
+}
+
+function stopCombatMusic() {
+  if (!combatMusic) return;
+
+  combatMusic.pause();
+}
 
 /* ============================================================
    MODALES
