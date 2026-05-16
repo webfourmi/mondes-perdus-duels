@@ -161,8 +161,15 @@
         <input id="playerName" type="text" placeholder="Exemple : Godefroy-la-Tôle" />
 
         <div class="character-buttons">
-          <button type="button" onclick="saveCharacterFromSetup()">
-            Enregistrer ce PJ
+          <button type="button" onclick="saveCharacterFromSetup()">Enregistrer ce PJ</button>
+        
+          <button
+            type="button"
+            id="cancelNewCharacterButton"
+            class="secondary-button"
+            onclick="cancelNewCharacterForm()"
+          >
+            Retour
           </button>
         </div>
       </div>
