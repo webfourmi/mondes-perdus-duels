@@ -1385,3 +1385,17 @@ button.button-link {
     padding: 5px;
   }
 }
+.hp-flee-button {
+  background: linear-gradient(#4f4f4f, #222222);
+  color: #f5e6c8;
+  border-color: #aaa;
+}
+
+.hp-flee-button:hover {
+  filter: brightness(1.15);
+}
+
+.combat-end-flee {
+  border-color: #aaa;
+  background: rgba(120, 120, 120, 0.22);
+}
