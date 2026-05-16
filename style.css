@@ -1554,3 +1554,48 @@ body.duel-active .page-image {
     font-size: 0.8rem;
   }
 }
+
+/* ============================================================
+   Sons
+   ============================================================ */
+.audio-control-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.audio-control-row button {
+  margin-top: 0;
+}
+
+.hp-audio-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.hp-audio-row .hp-mini-button {
+  grid-column: auto;
+}
+
+.hp-audio-button {
+  background: linear-gradient(#3c2f1e, #1f1810);
+  color: #ffe7a6;
+  border-color: #c9a45b;
+}
+
+.hp-audio-button.active,
+.audio-control-row button.active {
+  background: linear-gradient(#d8aa55, #9b6827);
+  color: #120b05;
+}
+
+@media (max-width: 520px) {
+  .audio-control-row,
+  .hp-audio-row {
+    grid-template-columns: 1fr;
+  }
+}
+
