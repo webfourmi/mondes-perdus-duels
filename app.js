@@ -1019,6 +1019,39 @@ function saveCurrentDuelState() {
 
   localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
 }
+
+function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
+  const raw = localStorage.getItem(currentDuelSaveKey);
+
+  if (!raw) {
+    return false;
+  }
+
+  try {
+    const state = JSON.parse(raw);
+
+    if (
+      state.fighterId !== fighterId ||
+      state.opponentId !== opponentId ||
+      state.playerName !== playerName
+    ) {
+      return false;
+    }
+
+    myCurrentBody = Number(state.myCurrentBody);
+    myMaxBody = Number(state.myMaxBody);
+    opponentCurrentBody = Number(state.opponentCurrentBody);
+    opponentMaxBody = Number(state.opponentMaxBody);
+
+    duelFinished = Boolean(state.duelFinished);
+    victoryXpAwarded = Boolean(state.victoryXpAwarded);
+    currentTurnNumber = Number(state.turnNumber || 1);
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 function clearCurrentDuelState() {
   localStorage.removeItem(currentDuelSaveKey);
 }
