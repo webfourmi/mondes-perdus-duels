@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.4";
+const APP_VERSION = "0.4.5";
 
 let catalog = null;
 
@@ -193,6 +193,10 @@ function refreshSavedCharactersSelect() {
   const newButton = document.getElementById("newCharacterButton");
   const deleteButton = document.getElementById("deleteCharacterButton");
   const creationFields = document.getElementById("characterCreationFields");
+  const sheetButton = document.getElementById("characterSheetButton");
+
+  if (sheetButton) sheetButton.style.display = "none";
+  if (sheetButton) sheetButton.style.display = "inline-block";
 
   if (!select) return;
 
@@ -343,11 +347,28 @@ function loadSavedCharacterFromSelect() {
   updateEvolutionPanel();
 }
 
+function openCharacterSheetPage() {
+  const select = document.getElementById("savedCharacterSelect");
+
+  if (!select || !select.value) {
+    appAlert("Choisis d’abord un PJ sauvegardé.", "Fiche PJ");
+    return;
+  }
+
+  window.location.href =
+    "fiche-pj.html?id=" + encodeURIComponent(select.value);
+}
+
 function showNewCharacterForm() {
   const creationFields = document.getElementById("characterCreationFields");
   const select = document.getElementById("savedCharacterSelect");
   const playerNameInput = document.getElementById("playerName");
   const playerSheetSelect = document.getElementById("playerSheet");
+
+  const sheetButton = document.getElementById("characterSheetButton");
+if (sheetButton) {
+  sheetButton.style.display = "none";
+}
 
   if (creationFields) {
     creationFields.style.display = "block";
@@ -414,6 +435,11 @@ function cancelNewCharacterForm() {
   }
 
   loadSavedCharacterFromSelect();
+
+  const sheetButton = document.getElementById("characterSheetButton");
+    if (sheetButton) {
+      sheetButton.style.display = "inline-block";
+    }
 }
 
 function toggleCharacterTools() {
