@@ -1208,3 +1208,8 @@ button.button-link {
 .character-tools-panel .import-export-buttons {
   margin-top: 0;
 }
+.secondary-button {
+  background: linear-gradient(#4b3f2a, #241b10);
+  color: #ffe7a6;
+  border-color: #c9a45b;
+}
