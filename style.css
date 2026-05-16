@@ -1843,3 +1843,121 @@ body.duel-active .page-image {
     width: 100%;
   }
 }
+/* ============================================================
+   CORRECTION BANDEAU DUEL / ACCUEIL MOBILE
+   ============================================================ */
+
+/* Hors duel : le bandeau ne doit JAMAIS apparaître */
+body:not(.duel-active) #fixedHpBar {
+  display: none !important;
+}
+
+/* En duel : le body ne doit plus fonctionner comme une ligne flex */
+body.duel-active {
+  display: block !important;
+  padding: 0 6px 6px;
+}
+
+/* En duel : le bandeau est une vraie barre du haut */
+body.duel-active #fixedHpBar {
+  display: grid !important;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto 6px auto;
+  box-sizing: border-box;
+}
+
+/* Sur téléphone : bandeau très compact */
+@media (max-width: 560px) {
+  body.duel-active #fixedHpBar {
+    max-width: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    padding: 5px;
+    border-radius: 0 0 10px 10px;
+  }
+
+  body.duel-active .hp-box {
+    padding: 4px;
+  }
+
+  body.duel-active .hp-box span {
+    font-size: 0.62rem;
+    line-height: 1;
+  }
+
+  body.duel-active .hp-box strong {
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  body.duel-active .hp-mini-button {
+    grid-column: auto;
+    margin: 0;
+    padding: 6px 4px;
+    min-height: 32px;
+    font-size: 0.68rem;
+    line-height: 1.05;
+    border-radius: 8px;
+  }
+
+  body.duel-active .hp-audio-row {
+    display: contents;
+  }
+
+  body.duel-active .hp-audio-row .hp-mini-button {
+    grid-column: auto;
+  }
+
+  body.duel-active #duelAudioToggleButton {
+    grid-column: 1 / 2;
+  }
+
+  body.duel-active #duelMusicToggleButton {
+    grid-column: 2 / 3;
+  }
+
+  body.duel-active #duelCharacterSheetButton {
+    grid-column: 3 / 4;
+  }
+
+  body.duel-active .hp-mini-button[onclick="toggleHpTools()"] {
+    grid-column: 1 / 2;
+  }
+
+  body.duel-active .hp-new-duel-button {
+    grid-column: 2 / 3;
+  }
+
+  body.duel-active .hp-flee-button {
+    grid-column: 3 / 4;
+  }
+
+  body.duel-active #combatLogButton {
+    grid-column: 1 / -1;
+  }
+
+  body.duel-active .hp-tools {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+    gap: 5px;
+  }
+
+  body.duel-active .hp-tools input,
+  body.duel-active .hp-tools button {
+    padding: 6px;
+    min-height: 30px;
+    font-size: 0.75rem;
+  }
+
+  body.duel-active .app {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+}
