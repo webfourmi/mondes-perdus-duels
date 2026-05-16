@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.9";
+const APP_VERSION = "0.4.0";
 
 let catalog = null;
 
@@ -56,6 +56,7 @@ let currentBodyBonus = 0;
 let currentDuelSaveKey = "lw_current_duel_state";
 let duelFinished = false;
 let victoryXpAwarded = false;
+let currentTurnNumber = 1;
 
 const charactersIndexKey = "lw_saved_characters_index";
 const lastCharacterKey = "lw_last_character_id";
@@ -1013,6 +1014,7 @@ function saveCurrentDuelState() {
     opponentId: currentOpponentFighter.id,
     duelFinished: duelFinished,
     victoryXpAwarded: victoryXpAwarded
+    turnNumber: currentTurnNumber
   };
 
   localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
@@ -1039,6 +1041,7 @@ function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
     opponentMaxBody = Number(state.opponentMaxBody);
     duelFinished = Boolean(state.duelFinished);
     victoryXpAwarded = Boolean(state.victoryXpAwarded);
+    currentTurnNumber = Number(state.turnNumber || 1);
 
     return true;
   } catch (error) {
@@ -1332,18 +1335,59 @@ function updateDistanceButtons() {
 
   if (!normalButton || !distanceButton) return;
 
+  if (currentTurnNumber === 1) {
+    document.getElementById("distanceMode").value = "distance";
+
+    normalButton.disabled = true;
+    normalButton.classList.remove("active");
+
+    distanceButton.disabled = false;
+    distanceButton.classList.add("active");
+
+    normalButton.title = "Le premier tour commence toujours en Distance Accrue.";
+    distanceButton.title = "Premier tour obligatoire en Distance Accrue.";
+
+    return;
+  }
+
+  normalButton.disabled = false;
+  distanceButton.disabled = false;
+
+  normalButton.title = "";
+  distanceButton.title = "";
+
   normalButton.classList.toggle("active", mode === "normal");
   distanceButton.classList.toggle("active", mode === "distance");
 }
 
 function setDistanceMode(mode) {
+  if (currentTurnNumber === 1 && mode === "normal") {
+    appAlert(
+      "Le premier tour doit toujours être joué en Distance Accrue.",
+      "Premier tour"
+    );
+
+    document.getElementById("distanceMode").value = "distance";
+    updateDistanceButtons();
+    refreshActionList();
+
+    return;
+  }
+
   document.getElementById("distanceMode").value = mode;
   updateDistanceButtons();
   refreshActionList();
 }
 
 function getActionsForCurrentMode() {
+  if (!currentFighter) return [];
+
   const distanceMode = document.getElementById("distanceMode").value;
+
+  if (currentTurnNumber === 1) {
+    document.getElementById("distanceMode").value = "distance";
+    return currentFighter.distanceActions || [];
+  }
 
   if (distanceMode === "distance") {
     return currentFighter.distanceActions || [];
@@ -1652,6 +1696,7 @@ async function startDuel() {
 
       duelFinished = false;
       victoryXpAwarded = false;
+      currentTurnNumber = 1;
 
       saveCurrentDuelState();
     }
@@ -2258,6 +2303,7 @@ function nextTurn() {
   selectedAction = null;
   lastDamage = null;
   damageAlreadyApplied = false;
+  currentTurnNumber += 1;
 
   document.getElementById("enemyPg").value = "";
   soloOpponentAction = null;
@@ -2309,7 +2355,9 @@ function nextTurn() {
 }
 
   document.getElementById("temporaryBonus").value = "none";
-
+  if (currentTurnNumber > 1 && document.getElementById("distanceMode").value === "distance") {
+  document.getElementById("distanceMode").value = "normal";
+}
   refreshActionList();
   saveCurrentDuelState();
 
@@ -2391,6 +2439,7 @@ async function newDuel() {
   pendingPlayerInstruction = "";
   duelFinished = false;
   victoryXpAwarded = false;
+  currentTurnNumber = 1;
 
   document.body.classList.remove("duel-active");
 
