@@ -1217,6 +1217,8 @@ async function initApp() {
 
     refreshSavedCharactersSelect();
   }
+
+  updateAudioButtons();
 }
 
 /* ============================================================
@@ -1302,7 +1304,7 @@ function showCombatEnd(title, text, cssClass) {
   if (fleeButton) {
     fleeButton.style.display = "none";
   }
-
+  stopCombatMusic();
   saveCurrentDuelState();
 }
 
@@ -1315,7 +1317,7 @@ function checkCombatEnd() {
 
   if (playerDead) {
     duelFinished = true;
-
+    playSfx("death");
     showCombatEnd(
       "Mort du PJ",
       currentPlayerName + " tombe à " + myCurrentBody + " PV. Le personnage est mort.",
@@ -1348,7 +1350,7 @@ function checkCombatEnd() {
       updateExperienceDisplay();
       savePlayerProfile();
     }
-
+    playSfx("victory");
     showCombatEnd(
       "Combat gagné",
       "Victoire ! " + xpGain + " XP ajoutée(s) à " + currentPlayerName + ".",
@@ -1360,7 +1362,7 @@ function checkCombatEnd() {
 
   if (playerOut && !opponentOut) {
     duelFinished = true;
-
+    playSfx("defeat");
     showCombatEnd(
       "Combat perdu",
       currentPlayerName + " est hors combat.",
@@ -1981,6 +1983,13 @@ async function startDuel() {
 
     document.body.classList.add("duel-active");
 
+  initAudioSystem();
+  updateAudioButtons();
+  
+  if (musicEnabled) {
+    startCombatMusic();
+  }
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (error) {
     appAlert(
@@ -2526,6 +2535,12 @@ function applyDamageToOpponent() {
   opponentCurrentBody -= Number(lastDamage);
   damageAlreadyApplied = true;
 
+  if (lastDamage > 0) {
+    playSfx("hit");
+  } else {
+    playSfx("click");
+  }
+
   updateBodyDisplays();
   checkCombatEnd();
   saveCurrentDuelState();
@@ -2668,7 +2683,8 @@ async function fleeCombat() {
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("turnPanel").style.display = "none";
   document.getElementById("nextTurnButton").style.display = "none";
-
+  
+  playSfx("flee");
   showCombatEnd(
     "Fuite",
     currentPlayerName + " abandonne le combat. Aucun XP gagné.",
