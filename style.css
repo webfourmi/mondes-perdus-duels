@@ -1709,64 +1709,7 @@ body.duel-active .page-image {
   }
 }
 
-/* ============================================================
-   BANDEAU DUEL MOBILE COMPACT - VERSION PROPRE
-   ============================================================ */
 
-/* Hors duel : jamais visible */
-#fixedHpBar,
-body:not(.duel-active) #fixedHpBar {
-  display: none !important;
-}
-
-/* En duel */
-body.duel-active {
-  display: block !important;
-  padding: 0 6px 6px !important;
-}
-
-body.duel-active #fixedHpBar {
-  display: grid !important;
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-
-  width: 100%;
-  max-width: 680px;
-  margin: 0 auto 6px auto;
-  padding: 6px;
-
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-
-  background: #100d07;
-  border: 2px solid #c9a45b;
-  border-top: 0;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
-  box-sizing: border-box;
-}
-
-/* Les deux blocs PV en première ligne */
-body.duel-active #fixedHpBar .hp-box {
-  padding: 4px;
-  min-height: 38px;
-  border-radius: 8px;
-  background: #18140c;
-}
-
-body.duel-active #fixedHpBar .hp-box:first-child {
-  grid-column: 1 / 3;
-}
-
-body.duel-active #fixedHpBar .hp-box:nth-child(2) {
-  grid-column: 3 / 5;
-}
-
-body.duel-active #fixedHpBar .hp-box span {
-  font-size: 0.68rem;
-  line-height: 1;
-}
 
 body.duel-active #fixedHpBar .hp-box strong {
   font-size: 0.95rem;
@@ -1854,5 +1797,139 @@ body.duel-active #hpTools button {
 
   body.duel-active #fixedHpBar .hp-box strong {
     font-size: 0.85rem;
+  }
+}
+/* ============================================================
+   BANDEAU DUEL MOBILE SANS AUDIO
+   ============================================================ */
+
+#fixedHpBar,
+body:not(.duel-active) #fixedHpBar {
+  display: none !important;
+}
+
+body.duel-active {
+  display: block !important;
+  padding: 0 6px 6px !important;
+}
+
+body.duel-active #fixedHpBar {
+  display: grid !important;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto 6px auto;
+  padding: 6px;
+
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+
+  background: #100d07;
+  border: 2px solid #c9a45b;
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
+  box-sizing: border-box;
+}
+
+body.duel-active #fixedHpBar .hp-box {
+  padding: 4px;
+  min-height: 34px;
+  border-radius: 8px;
+  background: #18140c;
+}
+
+body.duel-active #fixedHpBar .hp-box:first-child {
+  grid-column: 1 / 3;
+}
+
+body.duel-active #fixedHpBar .hp-box:nth-child(2) {
+  grid-column: 3 / 5;
+}
+
+body.duel-active #fixedHpBar .hp-box span {
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+body.duel-active #fixedHpBar .hp-box strong {
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
+body.duel-active #fixedHpBar .hp-mini-button {
+  width: 100%;
+  margin: 0;
+  padding: 5px 3px;
+  min-height: 30px;
+  border-radius: 8px;
+  font-size: 0.66rem;
+  line-height: 1.05;
+  text-align: center;
+}
+
+/* Ligne boutons : PV / Nouveau / Fiche / Fuite */
+body.duel-active #fixedHpBar .hp-mini-button[onclick="toggleHpTools()"] {
+  grid-column: 1 / 2;
+}
+
+body.duel-active #fixedHpBar .hp-new-duel-button {
+  grid-column: 2 / 3;
+}
+
+body.duel-active #duelCharacterSheetButton {
+  grid-column: 3 / 4;
+}
+
+body.duel-active #fixedHpBar .hp-flee-button {
+  grid-column: 4 / 5;
+}
+
+/* Journal en ligne complète */
+body.duel-active #combatLogButton {
+  grid-column: 1 / -1;
+}
+
+/* Champ correction PV */
+body.duel-active #hpTools {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px;
+}
+
+body.duel-active #hpTools input,
+body.duel-active #hpTools button {
+  margin: 0;
+  padding: 6px;
+  min-height: 30px;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 420px) {
+  body.duel-active #fixedHpBar {
+    gap: 4px;
+    padding: 4px;
+  }
+
+  body.duel-active #fixedHpBar .hp-mini-button {
+    font-size: 0.6rem;
+    min-height: 28px;
+    padding: 4px 2px;
+  }
+
+  body.duel-active #fixedHpBar .hp-box {
+    min-height: 32px;
+  }
+
+  body.duel-active #fixedHpBar .hp-box span {
+    font-size: 0.58rem;
+  }
+
+  body.duel-active #fixedHpBar .hp-box strong {
+    font-size: 0.82rem;
   }
 }
