@@ -1156,3 +1156,8 @@ body:not(.duel-active) #loadMessage {
   cursor: not-allowed;
   filter: grayscale(0.4);
 }
+button.button-link {
+  width: 100%;
+  margin-top: 0;
+  cursor: pointer;
+}
