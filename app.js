@@ -1,4 +1,4 @@
-const APP_VERSION = "0.5.1";
+const APP_VERSION = "0.5.2";
 
 let catalog = null;
 
@@ -439,9 +439,8 @@ function refreshSavedCharactersSelect() {
   const creationFields = document.getElementById("characterCreationFields");
   const sheetButton = document.getElementById("characterSheetButton");
 
-  if (sheetButton) {
-    sheetButton.style.display = "none";
-  }
+  if (sheetButton) sheetButton.style.display = "none";
+  if (sheetButton) sheetButton.style.display = "inline-block";
 
   if (!select) return;
 
@@ -463,9 +462,6 @@ function refreshSavedCharactersSelect() {
     if (playerNameInput) playerNameInput.value = "";
 
     return;
-  }
-  if (sheetButton) {
-    sheetButton.style.display = "inline-block";
   }
 
   if (newButton) newButton.style.display = "inline-block";
@@ -1307,7 +1303,12 @@ async function initApp() {
   const message = document.getElementById("loadMessage");
 
   document.body.classList.remove("duel-active");
-  document.getElementById("fixedHpBar").style.display = "none";
+
+  const fixedHpBar = document.getElementById("fixedHpBar");
+  if (fixedHpBar) {
+    fixedHpBar.style.display = "none";
+  }
+
   document.getElementById("setupPanel").style.display = "block";
   document.getElementById("duelPanel").style.display = "none";
 
@@ -1613,7 +1614,10 @@ function adjustMyBodyFromTop() {
   myCurrentBody = Number(value);
 
   document.getElementById("myBodyManualTop").value = "";
-  document.getElementById("hpTools").style.display = "none";
+  const hpTools = document.getElementById("hpTools");
+  if (hpTools) {
+    hpTools.style.display = "none";
+  }
 
   updateBodyDisplays();
   checkCombatEnd();
@@ -2152,7 +2156,13 @@ async function startDuel() {
     document.getElementById("setupPanel").style.display = "none";
     document.getElementById("duelPanel").style.display = "block";
     document.getElementById("turnPanel").style.display = "block";
-    document.getElementById("fixedHpBar").style.display = "grid";
+
+    document.body.classList.add("duel-active");
+
+    const fixedHpBar = document.getElementById("fixedHpBar");
+    if (fixedHpBar) {
+      fixedHpBar.style.display = "grid";
+    }
 
     const duelCharacterSheetButton = document.getElementById("duelCharacterSheetButton");
     if (duelCharacterSheetButton) {
@@ -2164,14 +2174,12 @@ async function startDuel() {
       fleeButton.style.display = "block";
     }
 
-    document.body.classList.add("duel-active");
+    initAudioSystem();
+    updateAudioButtons();
 
-  initAudioSystem();
-  updateAudioButtons();
-  
-  if (musicEnabled) {
-    startCombatMusic();
-  }
+    if (musicEnabled) {
+      startCombatMusic();
+    }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (error) {
@@ -2973,24 +2981,24 @@ async function newDuel() {
   );
   
   if (!confirmed) return;
-  
+
   stopCombatMusic();
 
   clearCurrentDuelState();
 
   combatLog = [];
-      lastResolutionLogKey = "";
-      renderCombatLog();
-      
-      const combatLogPanel = document.getElementById("combatLogPanel");
-      if (combatLogPanel) {
-        combatLogPanel.style.display = "none";
-      }
-      
-      const combatLogButton = document.getElementById("combatLogButton");
-      if (combatLogButton) {
-        combatLogButton.classList.remove("active");
-      }
+  lastResolutionLogKey = "";
+  renderCombatLog();
+
+  const combatLogPanel = document.getElementById("combatLogPanel");
+  if (combatLogPanel) {
+    combatLogPanel.style.display = "none";
+  }
+
+  const combatLogButton = document.getElementById("combatLogButton");
+  if (combatLogButton) {
+    combatLogButton.classList.remove("active");
+  }
 
   currentFighter = null;
   currentOpponentFighter = null;
@@ -3017,13 +3025,19 @@ async function newDuel() {
 
   document.body.classList.remove("duel-active");
 
-  document.getElementById("fixedHpBar").style.display = "none";
+  const fixedHpBar = document.getElementById("fixedHpBar");
+  if (fixedHpBar) {
+    fixedHpBar.style.display = "none";
+  }
 
   const duelCharacterSheetButton = document.getElementById("duelCharacterSheetButton");
   if (duelCharacterSheetButton) {
     duelCharacterSheetButton.style.display = "none";
   }
-  document.getElementById("hpTools").style.display = "none";
+  const hpTools = document.getElementById("hpTools");
+  if (hpTools) {
+    hpTools.style.display = "none";
+  }
 
   document.getElementById("setupPanel").style.display = "block";
   document.getElementById("duelPanel").style.display = "none";
