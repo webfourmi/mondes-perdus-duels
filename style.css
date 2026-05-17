@@ -1104,51 +1104,62 @@ body.duel-active .page-image {
   object-fit: contain;
 }
 
+/* ============================================================
+   ZOOM IMAGE - COMMANDES SOUS L'IMAGE
+   ============================================================ */
+
 .image-overlay {
   position: fixed;
   inset: 0;
-  z-index: 5000;
-
+  z-index: 30000;
   display: flex;
   flex-direction: column;
   padding: 8px;
-
-  background: rgba(5, 3, 1, 0.96);
-}
-
-.image-overlay-toolbar {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.4fr;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.image-overlay-toolbar button {
-  margin: 0;
-  padding: 9px;
-  font-size: 0.9rem;
+  box-sizing: border-box;
+  background: #050301;
 }
 
 .image-overlay-scroll {
   flex: 1;
   overflow: auto;
-
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-
-  border: 2px solid var(--gold);
-  border-radius: var(--radius-md);
-  background: rgba(0, 0, 0, 0.35);
+  align-items: center;
+  border: 2px solid #c9a45b;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.45);
   padding: 6px;
+  box-sizing: border-box;
 }
 
 #overlayImage {
   width: 100%;
   max-width: none;
   height: auto;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
 }
+
+.image-overlay-toolbar {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.4fr;
+  gap: 6px;
+  margin-top: 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.image-overlay-toolbar button {
+  margin: 0;
+  padding: 10px 6px;
+  min-height: 42px;
+  font-size: 0.9rem;
+}
+
+
+
+
+
+
 
 /* ============================================================
    FIN DE COMBAT
