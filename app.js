@@ -2893,9 +2893,12 @@ function openImageOverlay(src) {
   const overlay = document.getElementById("imageOverlay");
   const image = document.getElementById("overlayImage");
 
+  if (!overlay || !image) return;
+
   overlayZoom = 1;
   image.src = src;
-  overlay.style.display = "flex";
+
+  overlay.classList.add("image-overlay-open");
 
   updateOverlayZoom();
 }
@@ -2904,12 +2907,16 @@ function closeImageOverlay() {
   const overlay = document.getElementById("imageOverlay");
   const image = document.getElementById("overlayImage");
 
-  overlay.style.display = "none";
+  if (!overlay || !image) return;
+
+  overlay.classList.remove("image-overlay-open");
   image.src = "";
 }
 
 function updateOverlayZoom() {
   const image = document.getElementById("overlayImage");
+  if (!image) return;
+
   image.style.width = overlayZoom * 100 + "%";
 }
 
@@ -2922,7 +2929,6 @@ function resetOverlayZoom() {
   overlayZoom = 1;
   updateOverlayZoom();
 }
-
 /* ============================================================
    NOUVEAU DUEL
    ============================================================ */
