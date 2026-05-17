@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=105">
+  <link rel="stylesheet" href="style.css?v=107">
 </head>
 
 <body>
@@ -77,14 +77,19 @@
 </div>
 
   <!-- Fenêtre plein écran pour zoom image -->
-  <div id="imageOverlay" class="image-overlay" style="display:none;">
-    <div class="image-overlay-toolbar">
-      <button type="button" onclick="changeOverlayZoom(-0.25)">−</button>
-      <button type="button" onclick="resetOverlayZoom()">100%</button>
-      <button type="button" onclick="changeOverlayZoom(0.25)">+</button>
-      <button type="button" onclick="closeImageOverlay()">Fermer</button>
-    </div>
+ <!-- Fenêtre plein écran pour zoom image -->
+<div id="imageOverlay" class="image-overlay" style="display:none;">
+  <div class="image-overlay-scroll">
+    <img id="overlayImage" src="" alt="Image agrandie" />
+  </div>
 
+  <div class="image-overlay-toolbar">
+    <button type="button" onclick="changeOverlayZoom(-0.25)">−</button>
+    <button type="button" onclick="resetOverlayZoom()">100%</button>
+    <button type="button" onclick="changeOverlayZoom(0.25)">+</button>
+    <button type="button" onclick="closeImageOverlay()">Fermer</button>
+  </div>
+</div>
     <div class="image-overlay-scroll">
       <img id="overlayImage" src="" alt="Image agrandie" />
     </div>
