@@ -109,6 +109,33 @@
       </button>
     </div>
   </main>
+  
+  <div id="renameModal" class="rename-modal" style="display:none;" role="dialog" aria-modal="true">
+  <div class="rename-modal-card">
+    <div class="rename-modal-badge">Renommer le PJ</div>
+
+    <h2 id="renameModalTitle">Nouveau nom</h2>
+
+    <p class="rename-modal-text">
+      Choisis le nouveau nom de ton combattant. Ses XP et évolutions seront conservées.
+    </p>
+
+    <label for="renameCharacterInput">Nom du PJ</label>
+    <input id="renameCharacterInput" type="text" placeholder="Nouveau nom" />
+
+    <p id="renameModalError" class="rename-modal-error"></p>
+
+    <div class="rename-modal-actions">
+      <button type="button" class="secondary-button" onclick="closeRenameModal()">
+        Annuler
+      </button>
+
+      <button type="button" onclick="confirmRenameCharacter()">
+        Valider
+      </button>
+    </div>
+  </div>
+</div>
 
   <script>
     const charactersIndexKey = "lw_saved_characters_index";
@@ -449,99 +476,136 @@
       });
     }
 
-    function renameCurrentCharacter() {
-      if (!currentSheetCharacter || !currentSheetProfile || !currentSheetFighter) {
-        window.alert("Aucun PJ chargé.");
-        return;
-      }
-    
-      const oldName = currentSheetCharacter.name;
-      const fighterId = currentSheetCharacter.fighterId;
-    
-      const newNameRaw = window.prompt("Nouveau nom du PJ :", oldName);
-    
-      if (newNameRaw === null) return;
-    
-      const newName = newNameRaw.trim();
-    
-      if (!newName) {
-        window.alert("Le nom du PJ ne peut pas être vide.");
-        return;
-      }
-    
-      if (newName === oldName) {
-        return;
-      }
-    
-      const characters = getSavedCharacters();
-    
-      const oldId = currentSheetCharacter.id;
-      const newId = makeCharacterId(fighterId, newName);
-    
-      const alreadyExists = characters.some(function(character) {
-        return character.id === newId && character.id !== oldId;
-      });
-    
-      if (alreadyExists) {
-        window.alert("Un PJ porte déjà ce nom pour ce livret.");
-        return;
-      }
-    
-      const oldProfileKey = getPlayerProfileKey(fighterId, oldName);
-      const newProfileKey = getPlayerProfileKey(fighterId, newName);
-    
-      const updatedProfile = Object.assign({}, currentSheetProfile, {
-        fighterId: fighterId,
-        name: newName
-      });
-    
-      localStorage.setItem(newProfileKey, JSON.stringify(updatedProfile));
-    
-      if (oldProfileKey !== newProfileKey) {
-        localStorage.removeItem(oldProfileKey);
-      }
-    
-      const updatedCharacters = characters.map(function(character) {
-        if (character.id !== oldId) return character;
-    
-        return Object.assign({}, character, {
-          id: newId,
-          name: newName,
-          experience: Number(updatedProfile.experience || 0),
-          spentExperience: Number(updatedProfile.spentExperience || 0)
-        });
-      });
-    
-      saveSavedCharacters(updatedCharacters);
-    
-      localStorage.setItem(lastCharacterKey, newId);
-      localStorage.setItem("lw_player_name_" + fighterId, newName);
-    
-      updateCurrentDuelNameIfNeeded(fighterId, oldName, newName);
-    
-      currentSheetCharacter = Object.assign({}, currentSheetCharacter, {
-        id: newId,
-        name: newName
-      });
-    
-      currentSheetProfile = updatedProfile;
-    
-      renderHeader(currentSheetCharacter, currentSheetProfile, currentSheetFighter);
-      renderColorSummary(currentSheetActions, currentSheetProfile);
-      renderEvolutionTable(currentSheetActions, currentSheetProfile);
-    
-      const status = document.getElementById("sheetStatus");
-      if (status) {
-        status.textContent = "";
-      }
-    
-      const newUrl =
-        window.location.pathname +
-        "?id=" +
-        encodeURIComponent(newId);
-    
-      window.history.replaceState({}, "", newUrl);
-    }
+   function renameCurrentCharacter() {
+  if (!currentSheetCharacter || !currentSheetProfile || !currentSheetFighter) {
+    window.alert("Aucun PJ chargé.");
+    return;
+  }
+
+  const modal = document.getElementById("renameModal");
+  const input = document.getElementById("renameCharacterInput");
+  const error = document.getElementById("renameModalError");
+  const title = document.getElementById("renameModalTitle");
+
+  if (!modal || !input) return;
+
+  if (title) {
+    title.textContent = "Renommer " + currentSheetCharacter.name;
+  }
+
+  if (error) {
+    error.textContent = "";
+  }
+
+  input.value = currentSheetCharacter.name || "";
+  modal.style.display = "flex";
+
+  setTimeout(function() {
+    input.focus();
+    input.select();
+  }, 50);
+}
+
+function closeRenameModal() {
+  const modal = document.getElementById("renameModal");
+  const error = document.getElementById("renameModalError");
+
+  if (modal) {
+    modal.style.display = "none";
+  }
+
+  if (error) {
+    error.textContent = "";
+  }
+}
+
+function confirmRenameCharacter() {
+  const input = document.getElementById("renameCharacterInput");
+  const error = document.getElementById("renameModalError");
+
+  if (!input) return;
+
+  const newName = input.value.trim();
+
+  if (!newName) {
+    if (error) error.textContent = "Le nom du PJ ne peut pas être vide.";
+    return;
+  }
+
+  const oldName = currentSheetCharacter.name;
+
+  if (newName === oldName) {
+    closeRenameModal();
+    return;
+  }
+
+  const fighterId = currentSheetCharacter.fighterId;
+  const characters = getSavedCharacters();
+
+  const oldId = currentSheetCharacter.id;
+  const newId = makeCharacterId(fighterId, newName);
+
+  const alreadyExists = characters.some(function(character) {
+    return character.id === newId && character.id !== oldId;
+  });
+
+  if (alreadyExists) {
+    if (error) error.textContent = "Un PJ porte déjà ce nom pour ce livret.";
+    return;
+  }
+
+  const oldProfileKey = getPlayerProfileKey(fighterId, oldName);
+  const newProfileKey = getPlayerProfileKey(fighterId, newName);
+
+  const updatedProfile = Object.assign({}, currentSheetProfile, {
+    fighterId: fighterId,
+    name: newName
+  });
+
+  localStorage.setItem(newProfileKey, JSON.stringify(updatedProfile));
+
+  if (oldProfileKey !== newProfileKey) {
+    localStorage.removeItem(oldProfileKey);
+  }
+
+  const updatedCharacters = characters.map(function(character) {
+    if (character.id !== oldId) return character;
+
+    return Object.assign({}, character, {
+      id: newId,
+      name: newName,
+      experience: Number(updatedProfile.experience || 0),
+      spentExperience: Number(updatedProfile.spentExperience || 0)
+    });
+  });
+
+  saveSavedCharacters(updatedCharacters);
+
+  localStorage.setItem(lastCharacterKey, newId);
+  localStorage.setItem("lw_player_name_" + fighterId, newName);
+
+  updateCurrentDuelNameIfNeeded(fighterId, oldName, newName);
+
+  currentSheetCharacter = Object.assign({}, currentSheetCharacter, {
+    id: newId,
+    name: newName
+  });
+
+  currentSheetProfile = updatedProfile;
+
+  renderHeader(currentSheetCharacter, currentSheetProfile, currentSheetFighter);
+  renderColorSummary(currentSheetActions, currentSheetProfile);
+  renderEvolutionTable(currentSheetActions, currentSheetProfile);
+
+  const newUrl =
+    window.location.pathname +
+    "?id=" +
+    encodeURIComponent(newId);
+
+  window.history.replaceState({}, "", newUrl);
+
+  closeRenameModal();
+}
     async function initSheetPage() {
       const status = document.getElementById("sheetStatus");
       const characters = getSavedCharacters();
@@ -592,6 +656,19 @@
         status.textContent = error.message;
       }
     }
+    document.addEventListener("keydown", function(event) {
+      const modal = document.getElementById("renameModal");
+    
+      if (!modal || modal.style.display !== "flex") return;
+    
+      if (event.key === "Escape") {
+        closeRenameModal();
+      }
+    
+      if (event.key === "Enter") {
+        confirmRenameCharacter();
+      }
+    });
 
     initSheetPage();
   </script>
