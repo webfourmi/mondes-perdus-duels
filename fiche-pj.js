@@ -585,6 +585,36 @@ function renderEvolutionTable(actions, profile) {
   });
 }
 
+function toggleTrophyPanel() {
+  const panel = document.getElementById("trophyPanel");
+  const button = document.getElementById("toggleTrophiesButton");
+
+  if (!panel) return;
+
+  const isOpen = panel.style.display === "block";
+
+  if (isOpen) {
+    panel.style.display = "none";
+
+    if (button) {
+      button.textContent = "Afficher les trophées";
+    }
+
+    return;
+  }
+
+  panel.style.display = "block";
+
+  if (button) {
+    button.textContent = "Masquer les trophées";
+  }
+
+  panel.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
 function renameCurrentCharacter() {
   if (!currentSheetCharacter || !currentSheetProfile || !currentSheetFighter) {
     window.alert("Aucun PJ chargé.");
