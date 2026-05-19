@@ -1980,6 +1980,34 @@ body.duel-active .home-hero {
   display: none !important;
 }
 /* ============================================================
+   TITRE SIMPLE PAGE DUEL
+   ============================================================ */
+
+.duel-page-title {
+  text-align: center;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(201, 164, 91, 0.45);
+}
+
+.duel-page-title h1 {
+  margin: 0;
+  color: #ffd98a;
+  font-size: 1.65rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 10px rgba(255, 217, 138, 0.25);
+}
+
+/* En plein duel, titre très discret */
+body.duel-active .duel-page-title {
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+}
+
+body.duel-active .duel-page-title h1 {
+  font-size: 1.05rem;
+}
+/* ============================================================
    ACCUEIL
    ============================================================ */
    body.splash-page {
