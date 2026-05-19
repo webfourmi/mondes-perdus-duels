@@ -2391,4 +2391,7 @@ body.duel-active .duel-page-title h1 {
     height: 38px;
     font-size: 1.25rem;
   }
+   .special-trophy-card {
+  border-color: #c9a45b;
+}
 }
