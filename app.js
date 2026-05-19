@@ -1,4 +1,4 @@
-const APP_VERSION = "0.5.3";
+const APP_VERSION = "0.5.7";
 
 let catalog = null;
 
@@ -2221,6 +2221,164 @@ function getSoloOpponentActions() {
   });
 }
 
+/* ============================================================
+   IA SOLO - PERSONNALITÉS
+   ============================================================ */
+
+const soloPersonalities = {
+  squelette: {
+    name: "Squelette agressif",
+    colorWeights: {
+      orange: 3.2,
+      rouge: 2.8,
+      jaune: 1.4,
+      bleu: 1.1,
+      marron: 0.8,
+      vert: 0.55
+    }
+  },
+
+  default: {
+    name: "Adversaire équilibré",
+    colorWeights: {
+      orange: 1.4,
+      rouge: 1.3,
+      jaune: 1.1,
+      bleu: 1.0,
+      marron: 1.0,
+      vert: 0.9
+    }
+  }
+};
+
+function getSoloOpponentPersonality() {
+  if (!currentOpponentFighter || !currentOpponentFighter.id) {
+    return soloPersonalities.default;
+  }
+
+  return soloPersonalities[currentOpponentFighter.id] || soloPersonalities.default;
+}
+
+function normalizeActionText(action) {
+  return (
+    ((action.category || "") + " " + (action.name || ""))
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+  );
+}
+
+function getBodyRatio(current, max) {
+  if (!max || max <= 0) return 1;
+  return current / max;
+}
+
+function isClearlyOffensiveAction(action) {
+  const text = normalizeActionText(action);
+  const color = action.color || "";
+
+  return (
+    color === "orange" ||
+    color === "rouge" ||
+    text.includes("charge") ||
+    text.includes("coup") ||
+    text.includes("estoc") ||
+    text.includes("attaque")
+  );
+}
+
+function getSoloActionScore(action) {
+  const personality = getSoloOpponentPersonality();
+  const text = normalizeActionText(action);
+  const color = action.color || "";
+  const mod = Number(action.mod || 0);
+
+  let score = 10;
+
+  // Préférence par couleur
+  score *= personality.colorWeights[color] || 1;
+
+  // Les gros MOD plaisent au squelette agressif
+  score += Math.max(-6, mod) * 1.4;
+
+  // Goûts tactiques du squelette
+  if (text.includes("charge")) score += 18;
+  if (text.includes("coup plongeant")) score += 14;
+  if (text.includes("coup lateral puissant")) score += 13;
+  if (text.includes("coup lateral feroce")) score += 15;
+  if (text.includes("estoc")) score += 9;
+  if (text.includes("attaque protegee")) score += 7;
+  if (text.includes("desarmer")) score += 3;
+
+  // Il aime moins les actions prudentes
+  if (text.includes("esquive")) score *= 0.45;
+  if (text.includes("bond en arriere")) score *= 0.45;
+  if (text.includes("bond esquive")) score *= 0.5;
+  if (text.includes("recuperer")) score *= 0.35;
+  if (text.includes("bloque")) score *= 0.65;
+
+  // À distance accrue, il adore charger
+  const distanceMode = document.getElementById("distanceMode").value;
+
+  if (distanceMode === "distance") {
+    if (text.includes("charge")) score *= 2.2;
+    if (text.includes("esquive")) score *= 0.55;
+    if (text.includes("bond en arriere")) score *= 0.55;
+  }
+
+  // Si le joueur est faible, le squelette cherche à finir
+  const playerRatio = getBodyRatio(myCurrentBody, myMaxBody);
+
+  if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) {
+    score *= 1.45;
+
+    if (color === "orange" || color === "rouge") {
+      score += 10;
+    }
+  }
+
+  // Si le squelette est faible, il devient encore plus brutal
+  const opponentRatio = getBodyRatio(opponentCurrentBody, opponentMaxBody);
+
+  if (opponentRatio <= 0.35) {
+    if (color === "orange" || color === "rouge") {
+      score *= 1.35;
+    }
+
+    if (text.includes("esquive") || text.includes("bond en arriere")) {
+      score *= 0.6;
+    }
+  }
+
+  // Petite sécurité : aucune action ne doit tomber à zéro
+  return Math.max(1, score);
+}
+
+function pickWeightedSoloAction(actions) {
+  const scoredActions = actions.map(function(action) {
+    return {
+      action: action,
+      score: getSoloActionScore(action)
+    };
+  });
+
+  const total = scoredActions.reduce(function(sum, item) {
+    return sum + item.score;
+  }, 0);
+
+  let roll = Math.random() * total;
+
+  for (let i = 0; i < scoredActions.length; i++) {
+    roll -= scoredActions[i].score;
+
+    if (roll <= 0) {
+      return scoredActions[i].action;
+    }
+  }
+
+  return scoredActions[scoredActions.length - 1].action;
+}
+
 function pickSoloOpponentAction() {
   const actions = getSoloOpponentActions();
 
@@ -2229,8 +2387,7 @@ function pickSoloOpponentAction() {
     return null;
   }
 
-  const index = Math.floor(Math.random() * actions.length);
-  soloOpponentAction = actions[index];
+  soloOpponentAction = pickWeightedSoloAction(actions);
 
   return soloOpponentAction;
 }
@@ -2247,12 +2404,16 @@ function updateSoloOpponentDisplay(action) {
     return;
   }
 
-  text.textContent =
-    actionLabel(action) +
-    " | PG " +
-    action.pg +
-    " | " +
-    action.color;
+ const personality = getSoloOpponentPersonality();
+
+text.textContent =
+  personality.name +
+  " : " +
+  actionLabel(action) +
+  " | PG " +
+  action.pg +
+  " | " +
+  action.color;
 
   panel.style.display = "block";
 }
