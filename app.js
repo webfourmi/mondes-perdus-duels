@@ -59,7 +59,7 @@ let victoryXpAwarded = false;
 let currentTurnNumber = 1;
 
 const charactersIndexKey = "lw_saved_characters_index";
-
+const lastCharacterKey = "lw_last_character_id";
 
 
 let combatLog = [];
