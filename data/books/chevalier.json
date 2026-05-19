@@ -4,6 +4,12 @@
   "fullName": "Homme en cotte de mailles avec épée et bouclier",
   "startPage": 57,
   "pages": {
+      "1": {
+      "title": "Résultat page 1",
+      "score": null,
+      "instruction": "Aucune restriction au tour suivant",
+      "image": "images/chevalier/LW_chevalier_1.png"
+    },
     "3": {
       "title": "Coup latéral haut",
       "score": null,
