@@ -113,6 +113,12 @@
   <script>
     const charactersIndexKey = "lw_saved_characters_index";
     const lastCharacterKey = "lw_last_character_id";
+    const currentDuelSaveKey = "lw_current_duel_state";
+
+    let currentSheetCharacter = null;
+    let currentSheetProfile = null;
+    let currentSheetFighter = null;
+    let currentSheetActions = [];
 
     const fallbackCatalog = {
       fighters: [
@@ -153,6 +159,29 @@
         .replace(/^_+|_+$/g, "");
     }
 
+    function makeCharacterId(fighterId, name) {
+      return fighterId + "_" + normalizeProfileName(name);
+    }
+    
+    function saveSavedCharacters(characters) {
+      localStorage.setItem(charactersIndexKey, JSON.stringify(characters));
+    }
+    
+    function updateCurrentDuelNameIfNeeded(fighterId, oldName, newName) {
+      const raw = localStorage.getItem(currentDuelSaveKey);
+      if (!raw) return;
+    
+      try {
+        const state = JSON.parse(raw);
+    
+        if (state.fighterId === fighterId && state.playerName === oldName) {
+          state.playerName = newName;
+          localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
+        }
+      } catch (error) {
+        // Sauvegarde de duel illisible, on ignore.
+      }
+    }
     function getPlayerProfileKey(fighterId, playerName) {
       return "lw_profile_" + fighterId + "_" + normalizeProfileName(playerName);
     }
@@ -420,6 +449,99 @@
       });
     }
 
+    function renameCurrentCharacter() {
+      if (!currentSheetCharacter || !currentSheetProfile || !currentSheetFighter) {
+        window.alert("Aucun PJ chargé.");
+        return;
+      }
+    
+      const oldName = currentSheetCharacter.name;
+      const fighterId = currentSheetCharacter.fighterId;
+    
+      const newNameRaw = window.prompt("Nouveau nom du PJ :", oldName);
+    
+      if (newNameRaw === null) return;
+    
+      const newName = newNameRaw.trim();
+    
+      if (!newName) {
+        window.alert("Le nom du PJ ne peut pas être vide.");
+        return;
+      }
+    
+      if (newName === oldName) {
+        return;
+      }
+    
+      const characters = getSavedCharacters();
+    
+      const oldId = currentSheetCharacter.id;
+      const newId = makeCharacterId(fighterId, newName);
+    
+      const alreadyExists = characters.some(function(character) {
+        return character.id === newId && character.id !== oldId;
+      });
+    
+      if (alreadyExists) {
+        window.alert("Un PJ porte déjà ce nom pour ce livret.");
+        return;
+      }
+    
+      const oldProfileKey = getPlayerProfileKey(fighterId, oldName);
+      const newProfileKey = getPlayerProfileKey(fighterId, newName);
+    
+      const updatedProfile = Object.assign({}, currentSheetProfile, {
+        fighterId: fighterId,
+        name: newName
+      });
+    
+      localStorage.setItem(newProfileKey, JSON.stringify(updatedProfile));
+    
+      if (oldProfileKey !== newProfileKey) {
+        localStorage.removeItem(oldProfileKey);
+      }
+    
+      const updatedCharacters = characters.map(function(character) {
+        if (character.id !== oldId) return character;
+    
+        return Object.assign({}, character, {
+          id: newId,
+          name: newName,
+          experience: Number(updatedProfile.experience || 0),
+          spentExperience: Number(updatedProfile.spentExperience || 0)
+        });
+      });
+    
+      saveSavedCharacters(updatedCharacters);
+    
+      localStorage.setItem(lastCharacterKey, newId);
+      localStorage.setItem("lw_player_name_" + fighterId, newName);
+    
+      updateCurrentDuelNameIfNeeded(fighterId, oldName, newName);
+    
+      currentSheetCharacter = Object.assign({}, currentSheetCharacter, {
+        id: newId,
+        name: newName
+      });
+    
+      currentSheetProfile = updatedProfile;
+    
+      renderHeader(currentSheetCharacter, currentSheetProfile, currentSheetFighter);
+      renderColorSummary(currentSheetActions, currentSheetProfile);
+      renderEvolutionTable(currentSheetActions, currentSheetProfile);
+    
+      const status = document.getElementById("sheetStatus");
+      if (status) {
+        status.textContent = "";
+      }
+    
+      const newUrl =
+        window.location.pathname +
+        "?id=" +
+        encodeURIComponent(newId);
+    
+      window.history.replaceState({}, "", newUrl);
+    }
     async function initSheetPage() {
       const status = document.getElementById("sheetStatus");
       const characters = getSavedCharacters();
@@ -455,7 +577,12 @@
       try {
         const fighter = await loadJson(catalogEntry.sheetFile);
         const actions = getAllActions(fighter);
-
+        
+        currentSheetCharacter = character;
+        currentSheetProfile = profile;
+        currentSheetFighter = fighter;
+        currentSheetActions = actions;
+        
         renderHeader(character, profile, fighter);
         renderColorSummary(actions, profile);
         renderEvolutionTable(actions, profile);
