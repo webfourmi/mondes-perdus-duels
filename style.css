@@ -2143,5 +2143,33 @@ body.duel-active .duel-page-title h1 {
         font-size: 1rem;
         padding: 13px 14px;
       }
+
+   /* ============================================================
+   FICHE PJ - EN-TÊTE AMÉLIORÉ
+   ============================================================ */
+
+.pj-hero-card {
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 2px solid #c9a45b;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 138, 0.16), transparent 60%),
+    rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.pj-hero-card h1 {
+  margin: 0;
+  color: #ffd98a;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+}
+
+.pj-hero-card p {
+  margin: 6px 0 0;
+  color: #f5e6c8;
+  opacity: 0.9;
+}
     }
  
