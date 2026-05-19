@@ -320,9 +320,11 @@ function renderTrophies(actions, profile) {
       text: "Couleur maîtrisée."
     };
 
-    const unlocked = summary.complete;
+    const colorLevel = Math.min(5, Math.max(0, Number(summary.minBonus || 0)));
+    const unlocked = colorLevel >= 1;
 
     const item = document.createElement("div");
+
     item.className =
       "trophy-card " +
       "trophy-" +
@@ -330,22 +332,43 @@ function renderTrophies(actions, profile) {
       " " +
       (unlocked ? "trophy-unlocked" : "trophy-locked");
 
+    let levelHtml = "";
+
+    if (unlocked) {
+      levelHtml =
+        '<div class="trophy-level">' +
+        "<strong>" +
+        getTrophyLevelLabel(colorLevel) +
+        "</strong>" +
+        "<span>" +
+        getTrophyCups(colorLevel) +
+        "</span>" +
+        "</div>";
+    }
+
     item.innerHTML =
       '<div class="trophy-icon">' +
-      trophy.icon +
+      (unlocked ? getTrophyCups(colorLevel) : trophy.icon) +
       "</div>" +
       '<div class="trophy-content">' +
       "<strong>" +
       trophy.title +
       "</strong>" +
       "<span>" +
-      (unlocked ? trophy.text : "Encore verrouillé") +
+      (unlocked
+        ? trophy.text
+        : "Encore verrouillé") +
       "</span>" +
       "<em>" +
       summary.improved +
       " / " +
       summary.total +
-      " actions améliorées</em>" +
+      " actions améliorées" +
+      "</em>" +
+      "<em>Niveau couleur : +" +
+      colorLevel +
+      " / +5</em>" +
+      levelHtml +
       "</div>";
 
     container.appendChild(item);
@@ -484,6 +507,33 @@ function renderSpecialTrophies(actions, profile) {
 
     container.appendChild(item);
   });
+}
+
+function getTrophyLevelLabel(level) {
+  switch (level) {
+    case 1:
+      return "Trophée";
+    case 2:
+      return "Double trophée";
+    case 3:
+      return "Triple trophée";
+    case 4:
+      return "Quadruple trophée";
+    case 5:
+      return "Quintuple trophée";
+    default:
+      return "Trophée";
+  }
+}
+
+function getTrophyCups(level) {
+  let cups = "";
+
+  for (let i = 0; i < level; i++) {
+    cups += "🏆";
+  }
+
+  return cups;
 }
 
 function renderEvolutionTable(actions, profile) {
