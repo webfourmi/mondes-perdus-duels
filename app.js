@@ -1,4 +1,4 @@
-const APP_VERSION = "0.5.7";
+const APP_VERSION = "0.5.8";
 
 let catalog = null;
 
@@ -2228,6 +2228,7 @@ function getSoloOpponentActions() {
 const soloPersonalities = {
   squelette: {
     name: "Squelette agressif",
+    style: "aggressive",
     colorWeights: {
       orange: 3.2,
       rouge: 2.8,
@@ -2238,8 +2239,22 @@ const soloPersonalities = {
     }
   },
 
+  chevalier: {
+    name: "Chevalier discipliné",
+    style: "disciplined",
+    colorWeights: {
+      orange: 1.45,
+      rouge: 1.35,
+      bleu: 1.25,
+      jaune: 1.0,
+      marron: 1.1,
+      vert: 1.45
+    }
+  },
+
   default: {
     name: "Adversaire équilibré",
+    style: "balanced",
     colorWeights: {
       orange: 1.4,
       rouge: 1.3,
@@ -2293,64 +2308,140 @@ function getSoloActionScore(action) {
   const color = action.color || "";
   const mod = Number(action.mod || 0);
 
-  let score = 10;
+  const distanceModeElement = document.getElementById("distanceMode");
+  const distanceMode = distanceModeElement ? distanceModeElement.value : "normal";
 
-  // Préférence par couleur
-  score *= personality.colorWeights[color] || 1;
-
-  // Les gros MOD plaisent au squelette agressif
-  score += Math.max(-6, mod) * 1.4;
-
-  // Goûts tactiques du squelette
-  if (text.includes("charge")) score += 18;
-  if (text.includes("coup plongeant")) score += 14;
-  if (text.includes("coup lateral puissant")) score += 13;
-  if (text.includes("coup lateral feroce")) score += 15;
-  if (text.includes("estoc")) score += 9;
-  if (text.includes("attaque protegee")) score += 7;
-  if (text.includes("desarmer")) score += 3;
-
-  // Il aime moins les actions prudentes
-  if (text.includes("esquive")) score *= 0.45;
-  if (text.includes("bond en arriere")) score *= 0.45;
-  if (text.includes("bond esquive")) score *= 0.5;
-  if (text.includes("recuperer")) score *= 0.35;
-  if (text.includes("bloque")) score *= 0.65;
-
-  // À distance accrue, il adore charger
-  const distanceMode = document.getElementById("distanceMode").value;
-
-  if (distanceMode === "distance") {
-    if (text.includes("charge")) score *= 2.2;
-    if (text.includes("esquive")) score *= 0.55;
-    if (text.includes("bond en arriere")) score *= 0.55;
-  }
-
-  // Si le joueur est faible, le squelette cherche à finir
   const playerRatio = getBodyRatio(myCurrentBody, myMaxBody);
-
-  if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) {
-    score *= 1.45;
-
-    if (color === "orange" || color === "rouge") {
-      score += 10;
-    }
-  }
-
-  // Si le squelette est faible, il devient encore plus brutal
   const opponentRatio = getBodyRatio(opponentCurrentBody, opponentMaxBody);
 
-  if (opponentRatio <= 0.35) {
-    if (color === "orange" || color === "rouge") {
-      score *= 1.35;
+  let score = 10;
+
+  score *= personality.colorWeights[color] || 1;
+  score += Math.max(-6, Math.min(6, mod)) * 1.2;
+
+  if (personality.style === "aggressive") {
+    if (text.includes("charge")) score += 18;
+    if (text.includes("coup plongeant")) score += 14;
+    if (text.includes("coup lateral puissant")) score += 13;
+    if (text.includes("coup lateral feroce")) score += 15;
+    if (text.includes("estoc")) score += 9;
+    if (text.includes("attaque protegee")) score += 7;
+    if (text.includes("desarmer")) score += 3;
+
+    if (text.includes("esquive")) score *= 0.45;
+    if (text.includes("bond en arriere")) score *= 0.45;
+    if (text.includes("bond esquive")) score *= 0.5;
+    if (text.includes("recuperer")) score *= 0.35;
+    if (text.includes("bloque")) score *= 0.65;
+
+    if (distanceMode === "distance") {
+      if (text.includes("charge")) score *= 2.2;
+      if (text.includes("esquive")) score *= 0.55;
+      if (text.includes("bond en arriere")) score *= 0.55;
     }
 
-    if (text.includes("esquive") || text.includes("bond en arriere")) {
-      score *= 0.6;
+    if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) {
+      score *= 1.45;
+
+      if (color === "orange" || color === "rouge") {
+        score += 10;
+      }
+    }
+
+    if (opponentRatio <= 0.35) {
+      if (color === "orange" || color === "rouge") {
+        score *= 1.35;
+      }
+
+      if (text.includes("esquive") || text.includes("bond en arriere")) {
+        score *= 0.6;
+      }
+    }
+
+    return Math.max(1, score);
+  }
+
+  if (personality.style === "disciplined") {
+    if (text.includes("attaque protegee")) score += 16;
+    if (text.includes("coup de bouclier")) score += 13;
+    if (text.includes("desarmer")) score += 11;
+    if (text.includes("estoc")) score += 10;
+    if (text.includes("coup lateral")) score += 8;
+    if (text.includes("coup plongeant")) score += 6;
+
+    if (text.includes("charge")) {
+      score += distanceMode === "distance" ? 14 : 2;
+    }
+
+    if (text.includes("bloque")) {
+      score += distanceMode === "distance" ? 10 : 4;
+    }
+
+    if (text.includes("esquive")) score += 3;
+    if (text.includes("bond esquive")) score += 4;
+    if (text.includes("bond en arriere")) score *= 0.85;
+    if (text.includes("recuperer")) score *= 0.45;
+
+    // Premier échange à distance : le chevalier avance avec méthode.
+    if (distanceMode === "distance") {
+      if (text.includes("charge")) score *= 1.35;
+      if (text.includes("bloque")) score *= 1.25;
+      if (text.includes("esquive")) score *= 0.75;
+    }
+
+    // Si le joueur est faible, le chevalier cherche à finir proprement.
+    if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) {
+      score *= 1.3;
+
+      if (
+        text.includes("estoc") ||
+        text.includes("attaque protegee") ||
+        text.includes("coup lateral")
+      ) {
+        score += 8;
+      }
+    }
+
+    // Si le chevalier est blessé, il devient plus prudent.
+    if (opponentRatio <= 0.35) {
+      if (text.includes("attaque protegee")) score *= 1.45;
+      if (text.includes("coup de bouclier")) score *= 1.35;
+      if (text.includes("esquive")) score *= 1.25;
+      if (text.includes("bond esquive")) score *= 1.2;
+
+      if (color === "orange" || color === "rouge") {
+        score *= 0.8;
+      }
+    }
+
+    // S’il est en bonne santé, il accepte davantage le duel frontal.
+    if (opponentRatio >= 0.65 && playerRatio >= 0.5) {
+      if (text.includes("attaque protegee")) score += 5;
+      if (text.includes("estoc")) score += 4;
+      if (text.includes("coup lateral")) score += 4;
+    }
+
+    return Math.max(1, score);
+  }
+
+  // IA équilibrée par défaut
+  if (text.includes("attaque protegee")) score += 6;
+  if (text.includes("coup lateral")) score += 5;
+  if (text.includes("estoc")) score += 5;
+  if (text.includes("charge") && distanceMode === "distance") score += 8;
+  if (text.includes("esquive")) score *= 0.8;
+  if (text.includes("recuperer")) score *= 0.5;
+
+  if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) {
+    score *= 1.25;
+  }
+
+  if (opponentRatio <= 0.35) {
+    if (text.includes("attaque protegee") || text.includes("esquive")) {
+      score *= 1.25;
     }
   }
 
-  // Petite sécurité : aucune action ne doit tomber à zéro
   return Math.max(1, score);
 }
 
