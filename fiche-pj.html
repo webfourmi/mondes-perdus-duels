@@ -11,11 +11,18 @@
 
 <body>
   <main class="app rules-page">
-    <header class="pj-banner">
-      <div class="pj-banner-type" id="sheetCharacterType">Combattant</div>
-      <h1 class="pj-banner-name" id="sheetCharacterName">Personnage</h1>
-</header>
+   <header class="pj-banner">
+    <div class="pj-banner-type" id="sheetCharacterType">Combattant</div>
+    <h1 class="pj-banner-name" id="sheetCharacterName">Personnage</h1>
   
+    <button
+      type="button"
+      class="pj-rename-button"
+      onclick="renameCurrentCharacter()"
+    >
+      Renommer ce PJ
+    </button>
+</header>
   <div class="home-actions">
     <button type="button" class="button-link" onclick="goBackToDuel()">
       Retour au duel
