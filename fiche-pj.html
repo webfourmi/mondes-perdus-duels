@@ -6,14 +6,17 @@
 
   <title>Fiche PJ - Mondes Perdus Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=113">
 </head>
 
 <body>
   <main class="app rules-page">
-    <h1>Fiche PJ</h1>
-    <p class="small">État du personnage, expérience et évolutions.</p>
-
+    <header class="pj-hero-card">
+      <div class="splash-badge">Fiche de combattant</div>
+      <h1 id="sheetCharacterName">Personnage</h1>
+      <p id="sheetCharacterSubtitle">État du personnage, expérience et évolutions.</p>
+    </header>
+    
     <div class="home-actions">
       <button type="button" class="button-link" onclick="goBackToDuel()">
         Retour au duel
@@ -21,7 +24,7 @@
     </div>
 
     <section class="rules-card">
-      <h2 id="sheetCharacterName">Personnage</h2>
+      <h2>Résumé du PJ</h2>
 
       <div class="pj-summary-grid">
         <div class="pj-summary-box">
@@ -130,7 +133,7 @@
       if (window.history.length > 1) {
         window.history.back();
       } else {
-        window.location.href = "index.html";
+        window.location.href = "duel.html";
       }
     }
 
@@ -304,6 +307,12 @@
       const bodyStart = Number(fighter.bodyPointsStart || 0) + bodyBonus;
 
       document.getElementById("sheetCharacterName").textContent = character.name;
+
+      const subtitle = document.getElementById("sheetCharacterSubtitle");
+      if (subtitle) {
+        subtitle.textContent =
+          character.fighterName || fighter.shortName || character.fighterId;
+      }
       document.getElementById("sheetFighterName").textContent =
         character.fighterName || fighter.shortName || character.fighterId;
 
