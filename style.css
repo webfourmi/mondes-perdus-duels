@@ -2300,3 +2300,95 @@ body.duel-active .duel-page-title h1 {
 .rename-modal-actions button {
   margin-top: 0;
 }
+/* ============================================================
+   TROPHEES PJ
+   ============================================================ */
+
+.trophy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.trophy-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+
+  padding: 10px;
+  border: 2px solid #8d6b36;
+  border-radius: 14px;
+  background: rgba(255, 244, 210, 0.06);
+}
+
+.trophy-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1.45rem;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid #c9a45b;
+}
+
+.trophy-content strong {
+  display: block;
+  color: #ffd98a;
+  font-size: 1rem;
+}
+
+.trophy-content span {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.86rem;
+  opacity: 0.92;
+}
+
+.trophy-content em {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.76rem;
+  opacity: 0.75;
+}
+
+.trophy-unlocked {
+  border-color: #ffd98a;
+  background:
+    radial-gradient(circle at top left, rgba(255, 217, 138, 0.18), transparent 55%),
+    rgba(255, 244, 210, 0.08);
+  box-shadow: inset 0 0 14px rgba(255, 217, 138, 0.06);
+}
+
+.trophy-locked {
+  opacity: 0.48;
+  filter: grayscale(0.75);
+}
+
+.trophy-rouge { border-color: #ff7777; }
+.trophy-orange { border-color: #ffae4f; }
+.trophy-bleu { border-color: #66aaff; }
+.trophy-jaune { border-color: #ffe066; }
+.trophy-vert { border-color: #72d672; }
+.trophy-marron { border-color: #c49a6c; }
+
+@media (max-width: 560px) {
+  .trophy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trophy-card {
+    padding: 9px;
+  }
+
+  .trophy-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.25rem;
+  }
+}
