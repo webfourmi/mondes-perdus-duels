@@ -1,4 +1,4 @@
-const APP_VERSION = "0.6.0";
+const APP_VERSION = "0.6.1";
 
 let catalog = null;
 
@@ -430,9 +430,7 @@ function saveSavedCharacters(characters) {
   localStorage.setItem(charactersIndexKey, JSON.stringify(characters));
 }
 
-function makeCharacterId(fighterId, name) {
-  return fighterId + "_" + normalizeProfileName(name);
-}
+
 
 function refreshSavedCharactersSelect() {
   const select = document.getElementById("savedCharacterSelect");
@@ -1316,34 +1314,44 @@ async function initApp() {
 
   try {
     catalog = await loadJson("data/catalog.json");
+  } catch (error) {
+    console.error("Erreur chargement catalog.json :", error);
+    catalog = fallbackCatalog;
 
-    fillSelect("playerSheet", catalog.fighters);
-    fillSelect("opponentBook", catalog.fighters);
+    if (message) {
+      message.innerHTML =
+        '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé. Version ' +
+        APP_VERSION +
+        ".</span>";
+    }
+  }
 
+  fillSelect("playerSheet", catalog.fighters);
+  fillSelect("opponentBook", catalog.fighters);
+
+  if (message && catalog !== fallbackCatalog) {
     message.textContent =
       "Catalogue chargé : " +
       catalog.fighters.length +
       " combattants disponibles. Version " +
       APP_VERSION;
+  }
 
+  try {
     refreshSavedCharactersSelect();
   } catch (error) {
-    catalog = fallbackCatalog;
+    console.error("Erreur chargement PJ sauvegardés :", error);
 
-    fillSelect("playerSheet", catalog.fighters);
-    fillSelect("opponentBook", catalog.fighters);
-
-    message.innerHTML =
-      '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé. Version ' +
-      APP_VERSION +
-      ".</span>";
-
-    refreshSavedCharactersSelect();
+    if (message) {
+      message.innerHTML =
+        '<span class="error">Catalogue chargé, mais erreur avec les PJ sauvegardés. Version ' +
+        APP_VERSION +
+        ".</span>";
+    }
   }
 
   updateAudioButtons();
 }
-
 /* ============================================================
    SAUVEGARDE DU DUEL EN COURS
    ============================================================ */
