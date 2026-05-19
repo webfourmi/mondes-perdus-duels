@@ -59,13 +59,8 @@ let victoryXpAwarded = false;
 let currentTurnNumber = 1;
 
 const charactersIndexKey = "lw_saved_characters_index";
-const lastCharacterKey = "lw_last_character_id";
-const currentDuelSaveKey = "lw_current_duel_state";
 
-let currentSheetCharacter = null;
-let currentSheetProfile = null;
-let currentSheetFighter = null;
-let currentSheetActions = [];
+
 
 let combatLog = [];
 let lastResolutionLogKey = "";
