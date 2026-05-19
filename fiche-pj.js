@@ -161,6 +161,39 @@ function getColorLabel(color) {
   return labels[color] || color || "-";
 }
 
+const trophiesByColor = {
+  rouge: {
+    icon: "🩸",
+    title: "Lame écarlate",
+    text: "Toutes les actions rouges sont maîtrisées."
+  },
+  orange: {
+    icon: "🔥",
+    title: "Briseur d’élan",
+    text: "Toutes les actions orange sont maîtrisées."
+  },
+  bleu: {
+    icon: "🛡️",
+    title: "Garde d’azur",
+    text: "Toutes les actions bleues sont maîtrisées."
+  },
+  jaune: {
+    icon: "⚡",
+    title: "Feinteur d’or",
+    text: "Toutes les actions jaunes sont maîtrisées."
+  },
+  vert: {
+    icon: "🌿",
+    title: "Gardien du cercle",
+    text: "Toutes les actions vertes sont maîtrisées."
+  },
+  marron: {
+    icon: "🏹",
+    title: "Maître de la distance",
+    text: "Toutes les actions marron sont maîtrisées."
+  }
+};
+
 function getBonus(profile, actionId) {
   return Number((profile.actionBonuses || {})[actionId] || 0);
 }
@@ -267,6 +300,53 @@ function renderColorSummary(actions, profile) {
       "<em>Bonus couleur : +" +
       summary.minBonus +
       "</em>";
+
+    container.appendChild(item);
+  });
+}
+
+function renderTrophies(actions, profile) {
+  const container = document.getElementById("trophyGrid");
+  if (!container) return;
+
+  const summaries = computeColorSummary(actions, profile);
+
+  container.innerHTML = "";
+
+  summaries.forEach(function(summary) {
+    const trophy = trophiesByColor[summary.color] || {
+      icon: "🏆",
+      title: getColorLabel(summary.color),
+      text: "Couleur maîtrisée."
+    };
+
+    const unlocked = summary.complete;
+
+    const item = document.createElement("div");
+    item.className =
+      "trophy-card " +
+      "trophy-" +
+      summary.color +
+      " " +
+      (unlocked ? "trophy-unlocked" : "trophy-locked");
+
+    item.innerHTML =
+      '<div class="trophy-icon">' +
+      trophy.icon +
+      "</div>" +
+      '<div class="trophy-content">' +
+      "<strong>" +
+      trophy.title +
+      "</strong>" +
+      "<span>" +
+      (unlocked ? trophy.text : "Encore verrouillé") +
+      "</span>" +
+      "<em>" +
+      summary.improved +
+      " / " +
+      summary.total +
+      " actions améliorées</em>" +
+      "</div>";
 
     container.appendChild(item);
   });
@@ -440,6 +520,7 @@ function confirmRenameCharacter() {
 
   renderHeader(currentSheetCharacter, currentSheetProfile, currentSheetFighter);
   renderColorSummary(currentSheetActions, currentSheetProfile);
+  renderTrophies(currentSheetActions, currentSheetProfile);
   renderEvolutionTable(currentSheetActions, currentSheetProfile);
 
   const newUrl =
@@ -511,6 +592,7 @@ async function initSheetPage() {
 
     renderHeader(character, profile, fighter);
     renderColorSummary(actions, profile);
+    renderTrophies(actions, profile);
     renderEvolutionTable(actions, profile);
 
     status.textContent = "";
