@@ -1,4 +1,4 @@
-const APP_VERSION = "0.5.8";
+const APP_VERSION = "0.6.0";
 
 let catalog = null;
 
