@@ -2394,4 +2394,32 @@ body.duel-active .duel-page-title h1 {
    .special-trophy-card {
   border-color: #c9a45b;
 }
+/* Niveau de trophée couleur */
+
+.trophy-level {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 217, 138, 0.55);
+  background: rgba(255, 217, 138, 0.10);
+}
+
+.trophy-level strong {
+  display: block;
+  color: #ffd98a;
+  font-size: 0.82rem;
+}
+
+.trophy-level span {
+  display: block;
+  margin-top: 3px;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+
+.trophy-card .trophy-icon {
+  min-width: 42px;
+  text-align: center;
+  font-size: 1.15rem;
+  line-height: 1.2;
 }
