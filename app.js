@@ -2562,7 +2562,7 @@ function resolveSoloOpponentAttack() {
     };
   }
 
-  const page = currentPlayerBook.pages[String(resultPageNumber)];
+  const page = getBookPage(currentPlayerBook, resultPageNumber);
 
   if (!page) {
     return {
@@ -2759,6 +2759,19 @@ function getPgDisplayForAction(action, enemyPg) {
 
   return normalPg;
 }
+
+function getBookPage(book, pageNumber) {
+  if (!book || !book.pages) return null;
+
+  const key = String(pageNumber);
+
+  return (
+    book.pages[key] ||
+    book.pages[key.padStart(2, "0")] ||
+    book.pages[key.padStart(3, "0")] ||
+    null
+  );
+}
 function resolveTurn() {
   const enemyPg = document.getElementById("enemyPg").value;
 
@@ -2804,7 +2817,7 @@ function resolveTurn() {
     return;
   }
 
-  const page = currentBook.pages[String(resultPageNumber)];
+  const page = getBookPage(currentBook, resultPageNumber);
 
   if (!page) {
    appAlert(
