@@ -107,30 +107,41 @@
       <div id="colorSummary" class="color-summary-grid"></div>
     </section>
 
-    <section class="rules-card">
-      <h2>Trophées du combattant</h2>
-      <p class="rules-note">
-        Un trophée est débloqué quand toutes les actions d’une même couleur ont été améliorées.
-      </p>
+    <section id="trophyPanel" class="trophy-panel" style="display:none;">
+      <section class="rules-card">
+        <h2>Trophées par couleur</h2>
+        <p class="rules-note">
+          Un trophée est débloqué quand toutes les actions d’une même couleur ont été améliorées.
+          Les niveaux supérieurs donnent double, triple, quadruple ou quintuple trophée.
+        </p>
     
-      <div id="trophyGrid" class="trophy-grid"></div>
+        <div id="trophyGrid" class="trophy-grid"></div>
+      </section>
+    
+      <section class="rules-card">
+        <h2>Trophées spéciaux</h2>
+        <p class="rules-note">
+          Ces trophées récompensent la progression générale du combattant.
+        </p>
+    
+        <div id="specialTrophyGrid" class="trophy-grid"></div>
+      </section>
     </section>
-    
-    <section class="rules-card">
-      <h2>Trophées spéciaux</h2>
-      <p class="rules-note">
-        Ces trophées récompensent la progression générale du combattant.
-      </p>
-    
-      <div id="specialTrophyGrid" class="trophy-grid"></div>
-    </section>
-    
 
-    <div class="home-actions">
-      <button type="button" class="button-link" onclick="goBackToDuel()">
-        Retour au duel
-      </button>
-    </div>
+    <div class="home-actions sheet-actions">
+  <button type="button" class="button-link" onclick="goBackToDuel()">
+    Retour au duel
+  </button>
+
+  <button
+    type="button"
+    id="toggleTrophiesButton"
+    class="button-link trophy-toggle-button"
+    onclick="toggleTrophyPanel()"
+  >
+    Afficher les trophées
+  </button>
+</div>
   </main>
 
   <div id="renameModal" class="rename-modal" style="display:none;" role="dialog" aria-modal="true">
