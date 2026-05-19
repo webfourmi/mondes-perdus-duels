@@ -2423,3 +2423,35 @@ body.duel-active .duel-page-title h1 {
   font-size: 1.15rem;
   line-height: 1.2;
 }
+/* ============================================================
+   FICHE PJ - BOUTON ET PANNEAU TROPHEES
+   ============================================================ */
+
+.sheet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.trophy-toggle-button {
+  background: linear-gradient(#5c4724, #2d2112);
+  color: #ffe7a6;
+  border-color: #ffd98a;
+}
+
+.trophy-panel {
+  margin-top: 12px;
+}
+
+.trophy-panel .rules-card {
+  border-color: #c9a45b;
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 138, 0.08), transparent 60%),
+    rgba(255, 244, 210, 0.05);
+}
+
+@media (max-width: 560px) {
+  .sheet-actions {
+    grid-template-columns: 1fr;
+  }
+}
