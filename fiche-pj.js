@@ -352,6 +352,140 @@ function renderTrophies(actions, profile) {
   });
 }
 
+function renderSpecialTrophies(actions, profile) {
+  const container = document.getElementById("specialTrophyGrid");
+  if (!container) return;
+
+  const xpAvailable = Number(profile.experience || 0);
+  const xpSpent = Number(profile.spentExperience || 0);
+  const xpTotal = xpAvailable + xpSpent;
+  const bodyBonus = Number(profile.bodyBonus || 0);
+
+  const summaries = computeColorSummary(actions, profile);
+  const completedColors = summaries.filter(function(summary) {
+    return summary.complete;
+  }).length;
+
+  let improvedActions = 0;
+  let maxActionBonus = 0;
+
+  actions.forEach(function(action) {
+    const bonus = getBonus(profile, action.id);
+
+    if (bonus > 0) {
+      improvedActions += 1;
+    }
+
+    maxActionBonus = Math.max(maxActionBonus, bonus);
+  });
+
+  const allActionsImproved =
+    actions.length > 0 && improvedActions === actions.length;
+
+  const allColorsCompleted =
+    summaries.length > 0 && completedColors === summaries.length;
+
+  const specialTrophies = [
+    {
+      icon: "🏆",
+      title: "Premier sang",
+      text: "Le combattant a gagné ses premiers XP.",
+      unlocked: xpTotal >= 1
+    },
+    {
+      icon: "⚔️",
+      title: "Apprenti duelliste",
+      text: "Le combattant a atteint 10 XP total.",
+      unlocked: xpTotal >= 10
+    },
+    {
+      icon: "🛡️",
+      title: "Vétéran d’arène",
+      text: "Le combattant a atteint 50 XP total.",
+      unlocked: xpTotal >= 50
+    },
+    {
+      icon: "👑",
+      title: "Champion des Mondes Perdus",
+      text: "Le combattant a atteint 100 XP total.",
+      unlocked: xpTotal >= 100
+    },
+    {
+      icon: "💪",
+      title: "Corps endurci",
+      text: "Le combattant a gagné au moins +1 Corps de départ.",
+      unlocked: bodyBonus >= 1
+    },
+    {
+      icon: "🔥",
+      title: "Maître d’une couleur",
+      text: "Une couleur complète a été validée.",
+      unlocked: completedColors >= 1
+    },
+    {
+      icon: "🌈",
+      title: "Maître des six couleurs",
+      text: "Toutes les couleurs disponibles sont validées.",
+      unlocked: allColorsCompleted
+    },
+    {
+      icon: "📚",
+      title: "Élève appliqué",
+      text: "Au moins 5 actions ont été améliorées.",
+      unlocked: improvedActions >= 5
+    },
+    {
+      icon: "🧠",
+      title: "Tacticien",
+      text: "Au moins 10 actions ont été améliorées.",
+      unlocked: improvedActions >= 10
+    },
+    {
+      icon: "⚒️",
+      title: "Arsenal complet",
+      text: "Toutes les actions ont été améliorées au moins une fois.",
+      unlocked: allActionsImproved
+    },
+    {
+      icon: "⭐",
+      title: "Technique favorite",
+      text: "Une action a atteint le niveau +2.",
+      unlocked: maxActionBonus >= 2
+    },
+    {
+      icon: "🌟",
+      title: "Technique légendaire",
+      text: "Une action a atteint le niveau +3.",
+      unlocked: maxActionBonus >= 3
+    }
+  ];
+
+  container.innerHTML = "";
+
+  specialTrophies.forEach(function(trophy) {
+    const item = document.createElement("div");
+
+    item.className =
+      "trophy-card special-trophy-card " +
+      (trophy.unlocked ? "trophy-unlocked" : "trophy-locked");
+
+    item.innerHTML =
+      '<div class="trophy-icon">' +
+      trophy.icon +
+      "</div>" +
+      '<div class="trophy-content">' +
+      "<strong>" +
+      trophy.title +
+      "</strong>" +
+      "<span>" +
+      (trophy.unlocked ? trophy.text : "Encore verrouillé") +
+      "</span>" +
+      "</div>";
+
+    container.appendChild(item);
+  });
+}
+
 function renderEvolutionTable(actions, profile) {
   const tbody = document.getElementById("evolutionTableBody");
   tbody.innerHTML = "";
@@ -521,6 +655,7 @@ function confirmRenameCharacter() {
   renderHeader(currentSheetCharacter, currentSheetProfile, currentSheetFighter);
   renderColorSummary(currentSheetActions, currentSheetProfile);
   renderTrophies(currentSheetActions, currentSheetProfile);
+  renderSpecialTrophies(currentSheetActions, currentSheetProfile);
   renderEvolutionTable(currentSheetActions, currentSheetProfile);
 
   const newUrl =
@@ -593,6 +728,7 @@ async function initSheetPage() {
     renderHeader(character, profile, fighter);
     renderColorSummary(actions, profile);
     renderTrophies(actions, profile);
+    renderSpecialTrophies(actions, profile);
     renderEvolutionTable(actions, profile);
 
     status.textContent = "";
