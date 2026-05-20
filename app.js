@@ -1354,6 +1354,7 @@ async function initApp() {
   
   refreshSoloDifficultyOptions();
 
+
   if (message && catalog !== fallbackCatalog) {
     message.textContent =
       "Catalogue chargé : " +
@@ -1384,6 +1385,18 @@ async function initApp() {
   }
 
   updateAudioButtons();
+  resumeDuelAfterSheetIfNeeded();
+}
+
+function getSavedDuelState() {
+  const raw = localStorage.getItem(currentDuelSaveKey);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
 }
 
 function shouldResumeDuelAfterSheet() {
@@ -1393,6 +1406,70 @@ function shouldResumeDuelAfterSheet() {
     params.get("resume") === "1" ||
     localStorage.getItem(resumeDuelAfterSheetKey) === "1"
   );
+}
+
+function applySavedDuelToSetup() {
+  const state = getSavedDuelState();
+
+  if (!state || !state.fighterId || !state.opponentId || !state.playerName) {
+    return false;
+  }
+
+  const playerSheetSelect = document.getElementById("playerSheet");
+  const opponentBookSelect = document.getElementById("opponentBook");
+  const gameModeSelect = document.getElementById("gameMode");
+  const playerNameInput = document.getElementById("playerName");
+  const savedCharacterSelect = document.getElementById("savedCharacterSelect");
+  const soloDifficultySelect = document.getElementById("soloDifficultyLevel");
+
+  if (playerSheetSelect) {
+    playerSheetSelect.value = state.fighterId;
+  }
+
+  if (opponentBookSelect) {
+    opponentBookSelect.value = state.opponentId;
+  }
+
+  if (gameModeSelect) {
+    gameModeSelect.value = state.gameMode || "duel";
+  }
+
+  if (playerNameInput) {
+    playerNameInput.value = state.playerName;
+  }
+
+  if (savedCharacterSelect) {
+    const characterId = makeCharacterId(state.fighterId, state.playerName);
+    savedCharacterSelect.value = characterId;
+    localStorage.setItem(lastCharacterKey, characterId);
+  }
+
+  if (soloDifficultySelect) {
+    soloDifficultySelect.value = String(state.soloDifficultyLevel || 0);
+  }
+
+  if (typeof refreshSoloDifficultyOptions === "function") {
+    refreshSoloDifficultyOptions();
+  }
+
+  return true;
+}
+
+function resumeDuelAfterSheetIfNeeded() {
+  if (!shouldResumeDuelAfterSheet()) return;
+
+  localStorage.removeItem(resumeDuelAfterSheetKey);
+
+  const restored = applySavedDuelToSetup();
+
+  if (!restored) {
+    appAlert("Aucun duel en cours à reprendre.", "Retour au duel");
+    return;
+  }
+
+  setTimeout(function() {
+    startDuel();
+  }, 80);
 }
 /* ============================================================
    SAUVEGARDE DU DUEL EN COURS
@@ -1406,13 +1483,24 @@ function saveCurrentDuelState() {
     myMaxBody: myMaxBody,
     opponentCurrentBody: opponentCurrentBody,
     opponentMaxBody: opponentMaxBody,
+    
     playerName: currentPlayerName,
     fighterId: currentFighter.id,
     opponentId: currentOpponentFighter.id,
+    
+    
+    combatLog: combatLog
+    gameMode: gameMode,
+    soloDifficultyLevel:
+      typeof soloDifficultyLevel !== "undefined" ? Number(soloDifficultyLevel || 0) : 0,
+    soloOpponentRestriction: soloOpponentRestriction || "none",
+    pendingOpponentInstruction: pendingOpponentInstruction || "",
+    pendingPlayerInstruction: pendingPlayerInstruction || "",
+    turnNumber: currentTurnNumber
+
     duelFinished: duelFinished,
     victoryXpAwarded: victoryXpAwarded,
     turnNumber: currentTurnNumber,
-    combatLog: combatLog
   };
 
   localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
@@ -1444,6 +1532,15 @@ function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
     duelFinished = Boolean(state.duelFinished);
     victoryXpAwarded = Boolean(state.victoryXpAwarded);
     currentTurnNumber = Number(state.turnNumber || 1);
+
+    gameMode = state.gameMode || gameMode || "duel";
+    soloOpponentRestriction = state.soloOpponentRestriction || "none";
+    pendingOpponentInstruction = state.pendingOpponentInstruction || "";
+    pendingPlayerInstruction = state.pendingPlayerInstruction || "";
+    
+    if (typeof soloDifficultyLevel !== "undefined") {
+      soloDifficultyLevel = Number(state.soloDifficultyLevel || 0);
+    }
     
     combatLog = Array.isArray(state.combatLog) ? state.combatLog : [];
     lastResolutionLogKey = "";
