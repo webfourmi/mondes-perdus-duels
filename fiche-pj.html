@@ -39,41 +39,50 @@
       </button>
     </div>
 
-    <section class="rules-card">
-      <h2>Résumé du PJ</h2>
+    <section class="rules-card pj-compact-summary-card">
+  <h2>Résumé du PJ</h2>
 
-      <div class="pj-summary-grid">
-        <div class="pj-summary-box">
-          <span>Livret</span>
-          <strong id="sheetFighterName">-</strong>
-        </div>
+  <div class="pj-compact-summary">
+    <div class="pj-summary-line">
+      <span>Livret</span>
+      <strong id="sheetFighterName">-</strong>
+    </div>
 
-        <div class="pj-summary-box">
-          <span>XP disponibles</span>
-          <strong id="sheetXpAvailable">0</strong>
-        </div>
-
-        <div class="pj-summary-box">
-          <span>XP utilisées</span>
-          <strong id="sheetXpSpent">0</strong>
-        </div>
-
-        <div class="pj-summary-box">
-          <span>XP total</span>
-          <strong id="sheetXpTotal">0</strong>
-        </div>
-
-        <div class="pj-summary-box">
-          <span>Bonus Corps</span>
-          <strong id="sheetBodyBonus">+0</strong>
-        </div>
-
-        <div class="pj-summary-box">
-          <span>Corps de départ</span>
-          <strong id="sheetBodyStart">-</strong>
-        </div>
+    <div class="pj-summary-line pj-summary-line-three">
+      <div>
+        <span>XP dispo</span>
+        <strong id="sheetXpAvailable">0</strong>
       </div>
-    </section>
+
+      <div>
+        <span>XP utilisées</span>
+        <strong id="sheetXpSpent">0</strong>
+      </div>
+
+      <div>
+        <span>XP total</span>
+        <strong id="sheetXpTotal">0</strong>
+      </div>
+    </div>
+
+    <div class="pj-summary-line pj-summary-line-three">
+      <div>
+        <span>PV départ</span>
+        <strong id="sheetBodyStart">-</strong>
+      </div>
+
+      <div>
+        <span>Bonus PV</span>
+        <strong id="sheetBodyBonus">+0</strong>
+      </div>
+
+      <div>
+        <span>PV actuels</span>
+        <strong id="sheetCurrentPv">-</strong>
+      </div>
+    </div>
+  </div>
+</section>
 
    
     
@@ -84,7 +93,7 @@
      <section class="rules-card">
       <h2>Résumé par couleur</h2>
       <p class="rules-note">
-        Quand toutes les actions d’une même couleur progressent, le PJ gagne un bonus de Points de Corps de départ.
+        Quand toutes les actions d’une même couleur progressent, le PJ gagne un bonus de PV de départ.
       </p>
 
       <div id="colorSummary" class="color-summary-grid"></div>
