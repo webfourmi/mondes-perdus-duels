@@ -6,7 +6,7 @@
 
   <title>Fiche PJ - Mondes Perdus Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=124">
+  <link rel="stylesheet" href="style.css?v=125">
 </head>
 
 <body>
@@ -103,7 +103,7 @@
 
       <div class="table-scroll">
         <table class="evolution-table">
-         <thead>
+          <thead>
             <tr>
               <th>OK</th>
               <th>Action</th>
@@ -111,7 +111,7 @@
               <th>Niveau</th>
             </tr>
           </thead>
-          
+
           <tbody id="evolutionTableBody">
             <tr>
               <td colspan="4">Chargement...</td>
@@ -149,7 +149,13 @@
     </div>
   </main>
 
-  <div id="renameModal" class="rename-modal" style="display:none;" role="dialog" aria-modal="true">
+  <div
+    id="renameModal"
+    class="rename-modal"
+    style="display:none;"
+    role="dialog"
+    aria-modal="true"
+  >
     <div class="rename-modal-card">
       <div class="rename-modal-badge">Renommer le PJ</div>
 
@@ -165,7 +171,11 @@
       <p id="renameModalError" class="rename-modal-error"></p>
 
       <div class="rename-modal-actions">
-        <button type="button" class="secondary-button" onclick="closeRenameModal()">
+        <button
+          type="button"
+          class="secondary-button"
+          onclick="closeRenameModal()"
+        >
           Annuler
         </button>
 
