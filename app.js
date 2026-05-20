@@ -1511,6 +1511,16 @@ function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
     ) {
       return false;
     }
+    if ((state.gameMode || "duel") !== gameMode) {
+      return false;
+    }
+    
+    if (
+      gameMode === "solo" &&
+      Number(state.soloDifficultyLevel || 0) !== Number(soloDifficultyLevel || 0)
+    ) {
+      return false;
+    }
 
     myCurrentBody = Number(state.myCurrentBody);
     myMaxBody = Number(state.myMaxBody);
@@ -2118,8 +2128,11 @@ async function startDuel() {
       myMaxBody = getEffectiveBodyStart();
       myCurrentBody = myMaxBody;
 
-      opponentMaxBody = Number(currentOpponentFighter.bodyPointsStart);
-      opponentCurrentBody = opponentMaxBody;
+     const opponentBaseBody = Number(currentOpponentFighter.bodyPointsStart || 0);
+     const opponentDifficultyBodyBonus = getSoloDifficultyBodyBonus();
+      
+     opponentMaxBody = opponentBaseBody + opponentDifficultyBodyBonus;
+     opponentCurrentBody = opponentMaxBody;
 
       duelFinished = false;
       victoryXpAwarded = false;
@@ -2247,6 +2260,12 @@ function getSoloDifficultyLevel() {
   return Math.max(0, Math.min(5, value));
 }
 
+function getSoloDifficultyBodyBonus() {
+  if (gameMode !== "solo") return 0;
+
+  return Number(soloDifficultyLevel || 0) * 8;
+}
+
 function refreshSoloDifficultyOptions() {
   const block = document.getElementById("soloDifficultyBlock");
   const select = document.getElementById("soloDifficultyLevel");
@@ -2289,7 +2308,9 @@ function refreshSoloDifficultyOptions() {
       getSoloDifficultyTitle(opponentId, level) +
       " : l’adversaire solo ajoute +" +
       level +
-      " à ses dégâts.";
+      " aux dégâts et +" +
+      level * 8 +
+      " PV.";
   }
 }
 
