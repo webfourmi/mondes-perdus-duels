@@ -1,4 +1,4 @@
-const APP_VERSION = "0.6.3";
+const APP_VERSION = "0.6.5";
 
 let catalog = null;
 
@@ -54,18 +54,18 @@ let currentProfileKey = "";
 let currentActionBonuses = {};
 let currentBodyBonus = 0;
 
-let currentDuelSaveKey = "lw_current_duel_state";
-let duelFinished = false;
-let victoryXpAwarded = false;
-let currentTurnNumber = 1;
-
+const currentDuelSaveKey = "lw_current_duel_state";
 const charactersIndexKey = "lw_saved_characters_index";
 const lastCharacterKey = "lw_last_character_id";
 const resumeDuelAfterSheetKey = "lw_resume_duel_after_sheet";
 
+let duelFinished = false;
+let victoryXpAwarded = false;
+let currentTurnNumber = 1;
 
 let combatLog = [];
 let lastResolutionLogKey = "";
+
 /* ============================================================
    AUDIO
    ============================================================ */
@@ -166,7 +166,6 @@ function playSfx(name) {
   initAudioSystem();
 
   const sound = sfxBank[name];
-
   if (!sound) return;
 
   try {
@@ -195,54 +194,58 @@ function stopCombatMusic() {
    MODALES
    ============================================================ */
 
-  let appModalResolver = null;
-  
-  function openAppModal(title, message, options) {
-    const modal = document.getElementById("appModal");
-    const titleElement = document.getElementById("appModalTitle");
-    const textElement = document.getElementById("appModalText");
-    const cancelButton = document.getElementById("appModalCancelButton");
-    const okButton = document.getElementById("appModalOkButton");
-  
-    if (!modal || !titleElement || !textElement || !cancelButton || !okButton) {
-      return Promise.resolve(window.confirm(message));
-    }
-  
-    const mode = options && options.mode ? options.mode : "alert";
-  
-    titleElement.textContent = title || "Message";
-    textElement.textContent = message || "";
-  
-    cancelButton.style.display = mode === "confirm" ? "block" : "none";
-    okButton.textContent = mode === "confirm" ? "Confirmer" : "OK";
-  
-    modal.style.display = "flex";
-  
-    return new Promise(function(resolve) {
-      appModalResolver = resolve;
-    });
+let appModalResolver = null;
+
+function openAppModal(title, message, options) {
+  const modal = document.getElementById("appModal");
+  const titleElement = document.getElementById("appModalTitle");
+  const textElement = document.getElementById("appModalText");
+  const cancelButton = document.getElementById("appModalCancelButton");
+  const okButton = document.getElementById("appModalOkButton");
+
+  if (!modal || !titleElement || !textElement || !cancelButton || !okButton) {
+    return Promise.resolve(window.confirm(message));
   }
-  
-  function closeAppModal(result) {
-    const modal = document.getElementById("appModal");
-  
-    if (modal) {
-      modal.style.display = "none";
-    }
-  
-    if (appModalResolver) {
-      appModalResolver(result);
-      appModalResolver = null;
-    }
+
+  const mode = options && options.mode ? options.mode : "alert";
+
+  titleElement.textContent = title || "Message";
+  textElement.textContent = message || "";
+
+  cancelButton.style.display = mode === "confirm" ? "block" : "none";
+  okButton.textContent = mode === "confirm" ? "Confirmer" : "OK";
+
+  modal.style.display = "flex";
+
+  return new Promise(function(resolve) {
+    appModalResolver = resolve;
+  });
+}
+
+function closeAppModal(result) {
+  const modal = document.getElementById("appModal");
+
+  if (modal) {
+    modal.style.display = "none";
   }
-  
-  function appAlert(message, title) {
-    return openAppModal(title || "Message", message, { mode: "alert" });
+
+  if (appModalResolver) {
+    appModalResolver(result);
+    appModalResolver = null;
   }
-  
-  function appConfirm(message, title) {
-    return openAppModal(title || "Confirmation", message, { mode: "confirm" });
-  }
+}
+
+function appAlert(message, title) {
+  return openAppModal(title || "Message", message, { mode: "alert" });
+}
+
+function appConfirm(message, title) {
+  return openAppModal(title || "Confirmation", message, { mode: "confirm" });
+}
+
+/* ============================================================
+   OUTILS JSON / CATALOGUE
+   ============================================================ */
 
 async function loadJson(path) {
   const response = await fetch(path + "?v=" + Date.now());
@@ -289,7 +292,7 @@ function escapeHtml(text) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
+    .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
 
@@ -394,6 +397,7 @@ async function clearCombatLogFromButton() {
   renderCombatLog();
   saveCurrentDuelState();
 }
+
 /* ============================================================
    PROFILS / PJ SAUVEGARDÉS
    ============================================================ */
@@ -422,8 +426,23 @@ function getSavedCharacters() {
   if (!raw) return [];
 
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      console.warn("Index PJ invalide :", parsed);
+      return [];
+    }
+
+    return parsed.filter(function(character) {
+      return (
+        character &&
+        character.id &&
+        character.fighterId &&
+        character.name
+      );
+    });
   } catch (error) {
+    console.error("Index PJ illisible :", error, raw);
     return [];
   }
 }
@@ -431,8 +450,6 @@ function getSavedCharacters() {
 function saveSavedCharacters(characters) {
   localStorage.setItem(charactersIndexKey, JSON.stringify(characters));
 }
-
-
 
 function refreshSavedCharactersSelect() {
   const select = document.getElementById("savedCharacterSelect");
@@ -455,11 +472,20 @@ function refreshSavedCharactersSelect() {
 
     if (newButton) newButton.style.display = "none";
     if (deleteButton) deleteButton.style.display = "none";
-    if (creationFields) creationFields.style.display = "block";
     if (sheetButton) sheetButton.style.display = "none";
-    
+    if (creationFields) creationFields.style.display = "block";
+
     const playerNameInput = document.getElementById("playerName");
     if (playerNameInput) playerNameInput.value = "";
+
+    currentPlayerName = "";
+    currentExperience = 0;
+    currentSpentExperience = 0;
+    currentActionBonuses = {};
+    currentBodyBonus = 0;
+    currentProfileKey = "";
+
+    updateExperienceDisplay();
 
     return;
   }
@@ -481,6 +507,7 @@ function refreshSavedCharactersSelect() {
       " XP dispo / " +
       (character.spentExperience || 0) +
       " XP utilisées";
+
     select.appendChild(option);
   });
 
@@ -500,8 +527,12 @@ function refreshSavedCharactersSelect() {
 }
 
 function getCurrentSetupCharacterData() {
-  const fighterId = document.getElementById("playerSheet").value;
+  const fighterSelect = document.getElementById("playerSheet");
   const nameInput = document.getElementById("playerName");
+
+  if (!fighterSelect || !nameInput) return null;
+
+  const fighterId = fighterSelect.value;
   const name = nameInput.value.trim();
 
   if (!name) {
@@ -587,6 +618,11 @@ function loadSavedCharacterFromSelect() {
     creationFields.style.display = "none";
   }
 
+  const sheetButton = document.getElementById("characterSheetButton");
+  if (sheetButton) {
+    sheetButton.style.display = "inline-block";
+  }
+
   currentPlayerName = character.name;
   loadPlayerProfile(character.fighterId, character.name);
   updateEvolutionPanel();
@@ -627,27 +663,13 @@ function showNewCharacterForm() {
   const select = document.getElementById("savedCharacterSelect");
   const playerNameInput = document.getElementById("playerName");
   const playerSheetSelect = document.getElementById("playerSheet");
-
   const sheetButton = document.getElementById("characterSheetButton");
-if (sheetButton) {
-  sheetButton.style.display = "none";
-}
 
-  if (creationFields) {
-    creationFields.style.display = "block";
-  }
-
-  if (select) {
-    select.value = "";
-  }
-
-  if (playerNameInput) {
-    playerNameInput.value = "";
-  }
-
-  if (playerSheetSelect) {
-    playerSheetSelect.value = "chevalier";
-  }
+  if (sheetButton) sheetButton.style.display = "none";
+  if (creationFields) creationFields.style.display = "block";
+  if (select) select.value = "";
+  if (playerNameInput) playerNameInput.value = "";
+  if (playerSheetSelect) playerSheetSelect.value = "chevalier";
 
   currentPlayerName = "";
   currentExperience = 0;
@@ -660,9 +682,9 @@ if (sheetButton) {
   updateEvolutionPanel();
 
   const cancelButton = document.getElementById("cancelNewCharacterButton");
-    if (cancelButton) {
-      cancelButton.style.display = getSavedCharacters().length > 0 ? "block" : "none";
-    }
+  if (cancelButton) {
+    cancelButton.style.display = getSavedCharacters().length > 0 ? "block" : "none";
+  }
 }
 
 function cancelNewCharacterForm() {
@@ -678,12 +700,9 @@ function cancelNewCharacterForm() {
     return;
   }
 
-  if (creationFields) {
-    creationFields.style.display = "none";
-  }
+  if (creationFields) creationFields.style.display = "none";
 
   const lastCharacterId = localStorage.getItem(lastCharacterKey);
-
   const lastCharacterExists = characters.some(function(character) {
     return character.id === lastCharacterId;
   });
@@ -698,11 +717,6 @@ function cancelNewCharacterForm() {
   }
 
   loadSavedCharacterFromSelect();
-
-  const sheetButton = document.getElementById("characterSheetButton");
-    if (sheetButton) {
-      sheetButton.style.display = "inline-block";
-    }
 }
 
 function toggleCharacterTools() {
@@ -724,7 +738,7 @@ async function deleteSelectedCharacter() {
   const select = document.getElementById("savedCharacterSelect");
 
   if (!select || !select.value) {
-    appAlert("Choisis d’abord un PJ sauvegardé à supprimer.","PJ à supprimer");
+    appAlert("Choisis d’abord un PJ sauvegardé à supprimer.", "PJ à supprimer");
     return;
   }
 
@@ -735,7 +749,7 @@ async function deleteSelectedCharacter() {
   });
 
   if (!character) {
-    appAlert("PJ introuvable.","Pj Introuvable");
+    appAlert("PJ introuvable.", "PJ introuvable");
     return;
   }
 
@@ -747,10 +761,8 @@ async function deleteSelectedCharacter() {
       "Cette action est définitive.",
     "Supprimer le PJ"
   );
-  
-  if (!confirmed) {
-    return;
-  }
+
+  if (!confirmed) return;
 
   const updatedCharacters = characters.filter(function(item) {
     return item.id !== character.id;
@@ -766,9 +778,7 @@ async function deleteSelectedCharacter() {
   }
 
   const playerNameInput = document.getElementById("playerName");
-  if (playerNameInput) {
-    playerNameInput.value = "";
-  }
+  if (playerNameInput) playerNameInput.value = "";
 
   currentPlayerName = "";
   currentExperience = 0;
@@ -1029,18 +1039,6 @@ function getPlayerNameStorageKey(fighterId) {
   return "lw_player_name_" + fighterId;
 }
 
-function loadPlayerNameForSelectedFighter() {
-  const select = document.getElementById("playerSheet");
-  const input = document.getElementById("playerName");
-
-  if (!select || !input) return;
-
-  const fighterId = select.value;
-  const savedName = localStorage.getItem(getPlayerNameStorageKey(fighterId)) || "";
-
-  input.value = savedName;
-}
-
 function savePlayerNameForSelectedFighter() {
   const select = document.getElementById("playerSheet");
   const input = document.getElementById("playerName");
@@ -1123,10 +1121,10 @@ function savePlayerProfile() {
 
 function updateExperienceDisplay() {
   const display = document.getElementById("xpDisplay");
-  if (!display) return;
-
-  display.textContent =
-    currentExperience + " dispo / " + currentSpentExperience + " utilisées";
+  if (display) {
+    display.textContent =
+      currentExperience + " dispo / " + currentSpentExperience + " utilisées";
+  }
 
   updateEvolutionPanel();
 }
@@ -1134,6 +1132,14 @@ function updateExperienceDisplay() {
 /* ============================================================
    ÉVOLUTION DU PERSONNAGE
    ============================================================ */
+
+function actionLabel(action) {
+  if (action.category) {
+    return action.category + " " + action.name;
+  }
+
+  return action.name;
+}
 
 function getAllUpgradeableActions() {
   if (!currentFighter) return [];
@@ -1296,88 +1302,15 @@ function upgradeSelectedAction() {
     message +=
       "\n\nToutes les actions d’une couleur ont progressé : +" +
       bodyIncrease +
-      " Point(s) de Corps de départ au prochain combat.";
+      " PV de départ au prochain combat.";
   }
 
   appAlert(message, "Évolution du PJ");
 }
 
 /* ============================================================
-   INITIALISATION
+   REPRISE DU DUEL
    ============================================================ */
-
-async function initApp() {
-  const message = document.getElementById("loadMessage");
-
-  document.body.classList.remove("duel-active");
-
-  const fixedHpBar = document.getElementById("fixedHpBar");
-  if (fixedHpBar) {
-    fixedHpBar.style.display = "none";
-  }
-
-  document.getElementById("setupPanel").style.display = "block";
-  document.getElementById("duelPanel").style.display = "none";
-
-  try {
-    catalog = await loadJson("data/catalog.json");
-  } catch (error) {
-    console.error("Erreur chargement catalog.json :", error);
-    catalog = fallbackCatalog;
-
-    if (message) {
-      message.innerHTML =
-        '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé. Version ' +
-        APP_VERSION +
-        ".</span>";
-    }
-  }
-
-  fillSelect("playerSheet", catalog.fighters);
-  fillSelect("opponentBook", catalog.fighters);
-
-  const gameModeSelect = document.getElementById("gameMode");
-  const opponentBookSelect = document.getElementById("opponentBook");
-  const soloDifficultySelect = document.getElementById("soloDifficultyLevel");
-  
-  if (gameModeSelect) {
-    gameModeSelect.addEventListener("change", refreshSoloDifficultyOptions);
-  }
-  
-  if (opponentBookSelect) {
-    opponentBookSelect.addEventListener("change", refreshSoloDifficultyOptions);
-  }
-  
-  if (soloDifficultySelect) {
-    soloDifficultySelect.addEventListener("change", refreshSoloDifficultyOptions);
-  }
-  
-  refreshSoloDifficultyOptions();
-
-
-  if (message && catalog !== fallbackCatalog) {
-    message.textContent =
-      "Catalogue chargé : " +
-      catalog.fighters.length +
-      " combattants disponibles. Version " +
-      APP_VERSION;
-  }
-
-try {
-  refreshSavedCharactersSelect();
-} catch (error) {
-  console.error("Erreur chargement PJ sauvegardés :", error);
-
-  if (message) {
-    message.innerHTML =
-      '<span class="error">Catalogue chargé, mais erreur avec les PJ sauvegardés. Version ' +
-      APP_VERSION +
-      ".</span>";
-  }
-}
-
-updateAudioButtons();
-resumeDuelAfterSheetIfNeeded();
 
 function getSavedDuelState() {
   const raw = localStorage.getItem(currentDuelSaveKey);
@@ -1413,21 +1346,10 @@ function applySavedDuelToSetup() {
   const savedCharacterSelect = document.getElementById("savedCharacterSelect");
   const soloDifficultySelect = document.getElementById("soloDifficultyLevel");
 
-  if (playerSheetSelect) {
-    playerSheetSelect.value = state.fighterId;
-  }
-
-  if (opponentBookSelect) {
-    opponentBookSelect.value = state.opponentId;
-  }
-
-  if (gameModeSelect) {
-    gameModeSelect.value = state.gameMode || "duel";
-  }
-
-  if (playerNameInput) {
-    playerNameInput.value = state.playerName;
-  }
+  if (playerSheetSelect) playerSheetSelect.value = state.fighterId;
+  if (opponentBookSelect) opponentBookSelect.value = state.opponentId;
+  if (gameModeSelect) gameModeSelect.value = state.gameMode || "duel";
+  if (playerNameInput) playerNameInput.value = state.playerName;
 
   if (savedCharacterSelect) {
     const characterId = makeCharacterId(state.fighterId, state.playerName);
@@ -1439,9 +1361,7 @@ function applySavedDuelToSetup() {
     soloDifficultySelect.value = String(state.soloDifficultyLevel || 0);
   }
 
-  if (typeof refreshSoloDifficultyOptions === "function") {
-    refreshSoloDifficultyOptions();
-  }
+  refreshSoloDifficultyOptions();
 
   return true;
 }
@@ -1462,6 +1382,85 @@ function resumeDuelAfterSheetIfNeeded() {
     startDuel();
   }, 80);
 }
+
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
+
+async function initApp() {
+  const message = document.getElementById("loadMessage");
+
+  document.body.classList.remove("duel-active");
+
+  const fixedHpBar = document.getElementById("fixedHpBar");
+  if (fixedHpBar) fixedHpBar.style.display = "none";
+
+  const setupPanel = document.getElementById("setupPanel");
+  const duelPanel = document.getElementById("duelPanel");
+
+  if (setupPanel) setupPanel.style.display = "block";
+  if (duelPanel) duelPanel.style.display = "none";
+
+  try {
+    catalog = await loadJson("data/catalog.json");
+  } catch (error) {
+    console.error("Erreur chargement catalog.json :", error);
+    catalog = fallbackCatalog;
+
+    if (message) {
+      message.innerHTML =
+        '<span class="error">Catalogue distant non chargé, catalogue de secours utilisé. Version ' +
+        APP_VERSION +
+        ".</span>";
+    }
+  }
+
+  fillSelect("playerSheet", catalog.fighters);
+  fillSelect("opponentBook", catalog.fighters);
+
+  const gameModeSelect = document.getElementById("gameMode");
+  const opponentBookSelect = document.getElementById("opponentBook");
+  const soloDifficultySelect = document.getElementById("soloDifficultyLevel");
+
+  if (gameModeSelect) {
+    gameModeSelect.addEventListener("change", refreshSoloDifficultyOptions);
+  }
+
+  if (opponentBookSelect) {
+    opponentBookSelect.addEventListener("change", refreshSoloDifficultyOptions);
+  }
+
+  if (soloDifficultySelect) {
+    soloDifficultySelect.addEventListener("change", refreshSoloDifficultyOptions);
+  }
+
+  refreshSoloDifficultyOptions();
+
+  if (message && catalog !== fallbackCatalog) {
+    message.textContent =
+      "Catalogue chargé : " +
+      catalog.fighters.length +
+      " combattants disponibles. Version " +
+      APP_VERSION;
+  }
+
+  try {
+    refreshSavedCharactersSelect();
+  } catch (error) {
+    console.error("Erreur chargement PJ sauvegardés :", error);
+
+    if (message) {
+      message.innerHTML =
+        '<span class="error">Catalogue chargé, mais erreur avec les PJ sauvegardés. Version ' +
+        APP_VERSION +
+        ".</span>";
+    }
+  }
+
+  updateAudioButtons();
+  resumeDuelAfterSheetIfNeeded();
+}
+
 /* ============================================================
    SAUVEGARDE DU DUEL EN COURS
    ============================================================ */
@@ -1500,10 +1499,7 @@ function saveCurrentDuelState() {
 
 function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
   const raw = localStorage.getItem(currentDuelSaveKey);
-
-  if (!raw) {
-    return false;
-  }
+  if (!raw) return false;
 
   try {
     const state = JSON.parse(raw);
@@ -1529,20 +1525,19 @@ function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
     soloOpponentRestriction = state.soloOpponentRestriction || "none";
     pendingOpponentInstruction = state.pendingOpponentInstruction || "";
     pendingPlayerInstruction = state.pendingPlayerInstruction || "";
-    
-    if (typeof soloDifficultyLevel !== "undefined") {
-      soloDifficultyLevel = Number(state.soloDifficultyLevel || 0);
-    }
-    
+    soloDifficultyLevel = Number(state.soloDifficultyLevel || 0);
+
     combatLog = Array.isArray(state.combatLog) ? state.combatLog : [];
     lastResolutionLogKey = "";
     renderCombatLog();
 
     return true;
   } catch (error) {
+    console.error("Duel sauvegardé illisible :", error);
     return false;
   }
 }
+
 function clearCurrentDuelState() {
   localStorage.removeItem(currentDuelSaveKey);
 }
@@ -1563,14 +1558,16 @@ function showCombatEnd(title, text, cssClass) {
   textElement.textContent = text;
   panel.style.display = "block";
 
-  document.getElementById("turnPanel").style.display = "none";
-  document.getElementById("pgPanel").style.display = "none";
-  document.getElementById("nextTurnButton").style.display = "none";
-
+  const turnPanel = document.getElementById("turnPanel");
+  const pgPanel = document.getElementById("pgPanel");
+  const nextTurnButton = document.getElementById("nextTurnButton");
   const fleeButton = document.getElementById("fleeButton");
-  if (fleeButton) {
-    fleeButton.style.display = "none";
-  }
+
+  if (turnPanel) turnPanel.style.display = "none";
+  if (pgPanel) pgPanel.style.display = "none";
+  if (nextTurnButton) nextTurnButton.style.display = "none";
+  if (fleeButton) fleeButton.style.display = "none";
+
   stopCombatMusic();
   saveCurrentDuelState();
 }
@@ -1683,51 +1680,49 @@ function checkCombatEnd() {
 }
 
 /* ============================================================
-   POINTS DE CORPS
+   POINTS DE CORPS / PV
    ============================================================ */
 
 function updateBodyDisplays() {
-  document.getElementById("myBodyDisplay").textContent =
-    myCurrentBody + " / " + myMaxBody;
+  const myBodyDisplay = document.getElementById("myBodyDisplay");
+  const opponentBodyDisplay = document.getElementById("opponentBodyDisplay");
+  const fixedMyBody = document.getElementById("fixedMyBody");
+  const fixedOpponentBody = document.getElementById("fixedOpponentBody");
 
-  document.getElementById("opponentBodyDisplay").textContent =
-    opponentCurrentBody + " / " + opponentMaxBody;
-
-  document.getElementById("fixedMyBody").textContent =
-    myCurrentBody + " / " + myMaxBody;
-
-  document.getElementById("fixedOpponentBody").textContent =
-    opponentCurrentBody + " / " + opponentMaxBody;
+  if (myBodyDisplay) myBodyDisplay.textContent = myCurrentBody + " / " + myMaxBody;
+  if (opponentBodyDisplay) opponentBodyDisplay.textContent = opponentCurrentBody + " / " + opponentMaxBody;
+  if (fixedMyBody) fixedMyBody.textContent = myCurrentBody + " / " + myMaxBody;
+  if (fixedOpponentBody) fixedOpponentBody.textContent = opponentCurrentBody + " / " + opponentMaxBody;
 
   const status = document.getElementById("bodyStatus");
+  if (!status) return;
 
   if (opponentCurrentBody <= -5) {
-    status.innerHTML =
-      '<span class="danger">Adversaire à -5 ou moins : mort selon les règles.</span>';
+    status.innerHTML = '<span class="danger">Adversaire à -5 ou moins : mort selon les règles.</span>';
   } else if (opponentCurrentBody < 1) {
-    status.innerHTML =
-      '<span class="success">Adversaire sous 1 Point de Corps : combat terminé.</span>';
+    status.innerHTML = '<span class="success">Adversaire sous 1 PV : combat terminé.</span>';
   } else if (myCurrentBody <= -5) {
-    status.innerHTML =
-      '<span class="danger">Tu es à -5 ou moins : mort selon les règles.</span>';
+    status.innerHTML = '<span class="danger">Tu es à -5 ou moins : mort selon les règles.</span>';
   } else if (myCurrentBody < 1) {
-    status.innerHTML =
-      '<span class="danger">Tu es sous 1 Point de Corps : hors combat.</span>';
+    status.innerHTML = '<span class="danger">Tu es sous 1 PV : hors combat.</span>';
   } else {
     status.textContent = "";
   }
 }
 
 function adjustMyBody() {
-  const value = document.getElementById("myBodyManual").value;
+  const input = document.getElementById("myBodyManual");
+  if (!input) return;
+
+  const value = input.value;
 
   if (value === "") {
-    appAlert("Entre ton nouveau total de Points de Corps.", "Points de Corps");
+    appAlert("Entre ton nouveau total de PV.", "PV");
     return;
   }
 
   myCurrentBody = Number(value);
-  document.getElementById("myBodyManual").value = "";
+  input.value = "";
 
   updateBodyDisplays();
   checkCombatEnd();
@@ -1736,29 +1731,27 @@ function adjustMyBody() {
 
 function toggleHpTools() {
   const tools = document.getElementById("hpTools");
+  if (!tools) return;
 
-  if (tools.style.display === "grid") {
-    tools.style.display = "none";
-  } else {
-    tools.style.display = "grid";
-  }
+  tools.style.display = tools.style.display === "grid" ? "none" : "grid";
 }
 
 function adjustMyBodyFromTop() {
-  const value = document.getElementById("myBodyManualTop").value;
+  const input = document.getElementById("myBodyManualTop");
+  if (!input) return;
+
+  const value = input.value;
 
   if (value === "") {
-    appAlert("Entre ton nouveau total de Points de Corps.", "Points de Corps");
+    appAlert("Entre ton nouveau total de PV.", "PV");
     return;
   }
 
   myCurrentBody = Number(value);
+  input.value = "";
 
-  document.getElementById("myBodyManualTop").value = "";
   const hpTools = document.getElementById("hpTools");
-  if (hpTools) {
-    hpTools.style.display = "none";
-  }
+  if (hpTools) hpTools.style.display = "none";
 
   updateBodyDisplays();
   checkCombatEnd();
@@ -1768,14 +1761,6 @@ function adjustMyBodyFromTop() {
 /* ============================================================
    ACTIONS / RESTRICTIONS
    ============================================================ */
-
-function actionLabel(action) {
-  if (action.category) {
-    return action.category + " " + action.name;
-  }
-
-  return action.name;
-}
 
 function actionAllowedByRestriction(action, restriction) {
   const color = action.color;
@@ -1814,25 +1799,13 @@ function actionAllowedByRestriction(action, restriction) {
       return category !== "Coup latéral" && !lowerName.includes("latéral");
 
     case "no_thrust_red":
-      return (
-        category !== "Estoc" &&
-        !lowerName.includes("estoc") &&
-        color !== "rouge"
-      );
+      return category !== "Estoc" && !lowerName.includes("estoc") && color !== "rouge";
 
     case "no_thrust_blue":
-      return (
-        category !== "Estoc" &&
-        !lowerName.includes("estoc") &&
-        color !== "bleu"
-      );
+      return category !== "Estoc" && !lowerName.includes("estoc") && color !== "bleu";
 
     case "no_lateral_red":
-      return (
-        category !== "Coup latéral" &&
-        !lowerName.includes("latéral") &&
-        color !== "rouge"
-      );
+      return category !== "Coup latéral" && !lowerName.includes("latéral") && color !== "rouge";
 
     case "no_green_yellow":
       return color !== "vert" && color !== "jaune";
@@ -1863,10 +1836,7 @@ function actionAllowedByRestriction(action, restriction) {
       ) && !lowerName.includes("coup latéral féroce");
 
     case "shield_broken":
-      return (
-        category !== "Coup de bouclier" &&
-        category !== "Attaque protégée"
-      );
+      return category !== "Coup de bouclier" && category !== "Attaque protégée";
 
     default:
       return true;
@@ -1874,15 +1844,16 @@ function actionAllowedByRestriction(action, restriction) {
 }
 
 function updateDistanceButtons() {
-  const mode = document.getElementById("distanceMode").value;
-
+  const distanceModeElement = document.getElementById("distanceMode");
   const normalButton = document.getElementById("btnNormalMode");
   const distanceButton = document.getElementById("btnDistanceMode");
 
-  if (!normalButton || !distanceButton) return;
+  if (!distanceModeElement || !normalButton || !distanceButton) return;
+
+  const mode = distanceModeElement.value;
 
   if (currentTurnNumber === 1) {
-    document.getElementById("distanceMode").value = "distance";
+    distanceModeElement.value = "distance";
 
     normalButton.disabled = true;
     normalButton.classList.remove("active");
@@ -1907,20 +1878,22 @@ function updateDistanceButtons() {
 }
 
 function setDistanceMode(mode) {
+  const distanceModeElement = document.getElementById("distanceMode");
+  if (!distanceModeElement) return;
+
   if (currentTurnNumber === 1 && mode === "normal") {
     appAlert(
       "Le premier tour doit toujours être joué en Distance Accrue.",
       "Premier tour"
     );
 
-    document.getElementById("distanceMode").value = "distance";
+    distanceModeElement.value = "distance";
     updateDistanceButtons();
     refreshActionList();
-
     return;
   }
 
-  document.getElementById("distanceMode").value = mode;
+  distanceModeElement.value = mode;
   updateDistanceButtons();
   refreshActionList();
 }
@@ -1928,10 +1901,11 @@ function setDistanceMode(mode) {
 function getActionsForCurrentMode() {
   if (!currentFighter) return [];
 
-  const distanceMode = document.getElementById("distanceMode").value;
+  const distanceModeElement = document.getElementById("distanceMode");
+  const distanceMode = distanceModeElement ? distanceModeElement.value : "normal";
 
   if (currentTurnNumber === 1) {
-    document.getElementById("distanceMode").value = "distance";
+    if (distanceModeElement) distanceModeElement.value = "distance";
     return currentFighter.distanceActions || [];
   }
 
@@ -1944,158 +1918,57 @@ function getActionsForCurrentMode() {
 
 function getRestrictionInfo(restriction) {
   switch (restriction) {
-    case "none":
-      return { label: "Aucune restriction", css: "restriction-none" };
-
-    case "no_blue":
-      return { label: "Pas de Bleu", css: "restriction-blue" };
-
-    case "no_red":
-      return { label: "Pas de Rouge", css: "restriction-red" };
-
-    case "no_orange":
-      return { label: "Pas d’Orange", css: "restriction-orange" };
-
-    case "no_yellow":
-      return { label: "Pas de Jaune", css: "restriction-yellow" };
-
-    case "no_red_orange":
-      return { label: "Pas de Rouge ni d’Orange", css: "restriction-orange" };
-
-    case "no_blue_yellow":
-      return { label: "Pas de Bleu ni de Jaune", css: "restriction-blue" };
-
-    case "no_thrust":
-      return { label: "Pas d’Estoc", css: "restriction-danger" };
-
-    case "no_lateral":
-      return { label: "Pas de Coup Latéral", css: "restriction-danger" };
-
-    case "no_thrust_red":
-      return { label: "Pas d’Estoc ni de Rouge", css: "restriction-red" };
-
-    case "no_thrust_blue":
-      return { label: "Pas d’Estoc ni de Bleu", css: "restriction-blue" };
-
-    case "no_lateral_red":
-      return { label: "Pas de Coup Latéral ni de Rouge", css: "restriction-red" };
-
-    case "no_green_yellow":
-      return { label: "Pas de Vert ni de Jaune", css: "restriction-danger" };
-
-    case "only_green":
-      return { label: "Seulement Vert", css: "restriction-green" };
-
-    case "only_yellow":
-      return { label: "Seulement Jaune", css: "restriction-yellow" };
-
-    case "only_green_yellow":
-      return { label: "Seulement Vert ou Jaune", css: "restriction-green" };
-
-    case "only_brown":
-      return { label: "Seulement Marron", css: "restriction-brown" };
-
-    case "only_bond":
-      return { label: "Seulement Bond", css: "restriction-yellow" };
-
-    case "only_distance":
-      return { label: "Seulement Distance Accrue", css: "restriction-brown" };
-
-    case "disarmed":
-      return { label: "Désarmé", css: "restriction-danger" };
-
-    case "shield_broken":
-      return { label: "Bouclier brisé", css: "restriction-danger" };
-
-    default:
-      return { label: "Aucune restriction", css: "restriction-none" };
+    case "none": return { label: "Aucune restriction", css: "restriction-none" };
+    case "no_blue": return { label: "Pas de Bleu", css: "restriction-blue" };
+    case "no_red": return { label: "Pas de Rouge", css: "restriction-red" };
+    case "no_orange": return { label: "Pas d’Orange", css: "restriction-orange" };
+    case "no_yellow": return { label: "Pas de Jaune", css: "restriction-yellow" };
+    case "no_red_orange": return { label: "Pas de Rouge ni d’Orange", css: "restriction-orange" };
+    case "no_blue_yellow": return { label: "Pas de Bleu ni de Jaune", css: "restriction-blue" };
+    case "no_thrust": return { label: "Pas d’Estoc", css: "restriction-danger" };
+    case "no_lateral": return { label: "Pas de Coup Latéral", css: "restriction-danger" };
+    case "no_thrust_red": return { label: "Pas d’Estoc ni de Rouge", css: "restriction-red" };
+    case "no_thrust_blue": return { label: "Pas d’Estoc ni de Bleu", css: "restriction-blue" };
+    case "no_lateral_red": return { label: "Pas de Coup Latéral ni de Rouge", css: "restriction-red" };
+    case "no_green_yellow": return { label: "Pas de Vert ni de Jaune", css: "restriction-danger" };
+    case "only_green": return { label: "Seulement Vert", css: "restriction-green" };
+    case "only_yellow": return { label: "Seulement Jaune", css: "restriction-yellow" };
+    case "only_green_yellow": return { label: "Seulement Vert ou Jaune", css: "restriction-green" };
+    case "only_brown": return { label: "Seulement Marron", css: "restriction-brown" };
+    case "only_bond": return { label: "Seulement Bond", css: "restriction-yellow" };
+    case "only_distance": return { label: "Seulement Distance Accrue", css: "restriction-brown" };
+    case "disarmed": return { label: "Désarmé", css: "restriction-danger" };
+    case "shield_broken": return { label: "Bouclier brisé", css: "restriction-danger" };
+    default: return { label: "Aucune restriction", css: "restriction-none" };
   }
 }
+
 function restrictionFromInstructionText(instruction) {
   const text = (instruction || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
-  if (text.includes("aucune restriction")) {
-    return "none";
-  }
-
-  if (text.includes("pas de rouge ni d'orange") || text.includes("pas de rouge ni d orange")) {
-    return "no_red_orange";
-  }
-
-  if (text.includes("pas de bleu ni de jaune")) {
-    return "no_blue_yellow";
-  }
-
-  if (text.includes("pas de vert ni de jaune")) {
-    return "no_green_yellow";
-  }
-
-  if (text.includes("pas d'estoc ni de rouge") || text.includes("pas d estoc ni de rouge")) {
-    return "no_thrust_red";
-  }
-
-  if (text.includes("pas d'estoc ni de bleu") || text.includes("pas d estoc ni de bleu")) {
-    return "no_thrust_blue";
-  }
-
-  if (text.includes("pas de coup lateral ni de rouge")) {
-    return "no_lateral_red";
-  }
-
-  if (text.includes("pas de rouge")) {
-    return "no_red";
-  }
-
-  if (text.includes("pas de bleu")) {
-    return "no_blue";
-  }
-
-  if (text.includes("pas d'orange") || text.includes("pas d orange")) {
-    return "no_orange";
-  }
-
-  if (text.includes("pas de jaune")) {
-    return "no_yellow";
-  }
-
-  if (text.includes("pas d'estoc") || text.includes("pas d estoc")) {
-    return "no_thrust";
-  }
-
-  if (text.includes("pas de coup lateral")) {
-    return "no_lateral";
-  }
-
-  if (text.includes("seulement du vert ou du jaune") || text.includes("seulement vert ou jaune")) {
-    return "only_green_yellow";
-  }
-
-  if (text.includes("seulement du vert") || text.includes("seulement vert")) {
-    return "only_green";
-  }
-
-  if (text.includes("seulement du jaune") || text.includes("seulement jaune")) {
-    return "only_yellow";
-  }
-
-  if (text.includes("seulement du marron") || text.includes("seulement marron")) {
-    return "only_brown";
-  }
-
-  if (text.includes("distance accrue") || text.includes("marron")) {
-    return "only_distance";
-  }
-
-  if (text.includes("desarme") || text.includes("desarmé")) {
-    return "disarmed";
-  }
-
-  if (text.includes("bouclier brise") || text.includes("bouclier brisé")) {
-    return "shield_broken";
-  }
+  if (text.includes("aucune restriction")) return "none";
+  if (text.includes("pas de rouge ni d'orange") || text.includes("pas de rouge ni d orange")) return "no_red_orange";
+  if (text.includes("pas de bleu ni de jaune")) return "no_blue_yellow";
+  if (text.includes("pas de vert ni de jaune")) return "no_green_yellow";
+  if (text.includes("pas d'estoc ni de rouge") || text.includes("pas d estoc ni de rouge")) return "no_thrust_red";
+  if (text.includes("pas d'estoc ni de bleu") || text.includes("pas d estoc ni de bleu")) return "no_thrust_blue";
+  if (text.includes("pas de coup lateral ni de rouge")) return "no_lateral_red";
+  if (text.includes("pas de rouge")) return "no_red";
+  if (text.includes("pas de bleu")) return "no_blue";
+  if (text.includes("pas d'orange") || text.includes("pas d orange")) return "no_orange";
+  if (text.includes("pas de jaune")) return "no_yellow";
+  if (text.includes("pas d'estoc") || text.includes("pas d estoc")) return "no_thrust";
+  if (text.includes("pas de coup lateral")) return "no_lateral";
+  if (text.includes("seulement du vert ou du jaune") || text.includes("seulement vert ou jaune")) return "only_green_yellow";
+  if (text.includes("seulement du vert") || text.includes("seulement vert")) return "only_green";
+  if (text.includes("seulement du jaune") || text.includes("seulement jaune")) return "only_yellow";
+  if (text.includes("seulement du marron") || text.includes("seulement marron")) return "only_brown";
+  if (text.includes("distance accrue") || text.includes("marron")) return "only_distance";
+  if (text.includes("desarme") || text.includes("desarmé")) return "disarmed";
+  if (text.includes("bouclier brise") || text.includes("bouclier brisé")) return "shield_broken";
 
   return "none";
 }
@@ -2113,10 +1986,13 @@ function updateRestrictionBanner(restriction) {
 function refreshActionList() {
   if (!currentFighter) return;
 
-  const restriction = document.getElementById("restrictionMode").value;
+  const restrictionElement = document.getElementById("restrictionMode");
+  const distanceModeElement = document.getElementById("distanceMode");
 
-  if (restriction === "only_distance") {
-    document.getElementById("distanceMode").value = "distance";
+  const restriction = restrictionElement ? restrictionElement.value : "none";
+
+  if (restriction === "only_distance" && distanceModeElement) {
+    distanceModeElement.value = "distance";
   }
 
   const actions = getActionsForCurrentMode();
@@ -2128,6 +2004,8 @@ function refreshActionList() {
 
 function fillActions(actions, restriction) {
   const select = document.getElementById("actionChoice");
+  if (!select) return;
+
   select.innerHTML = "";
   currentActions = [];
 
@@ -2172,10 +2050,10 @@ async function startDuel() {
   const sheetId = document.getElementById("playerSheet").value;
   const bookId = document.getElementById("opponentBook").value;
 
- gameMode = document.getElementById("gameMode").value || "duel";
- soloOpponentAction = null;
- soloOpponentRestriction = "none";
- soloDifficultyLevel = gameMode === "solo" ? getSoloDifficultyLevel() : 0;
+  gameMode = document.getElementById("gameMode").value || "duel";
+  soloOpponentAction = null;
+  soloOpponentRestriction = "none";
+  soloDifficultyLevel = gameMode === "solo" ? getSoloDifficultyLevel() : 0;
 
   const sheetEntry = findCatalogEntry(sheetId);
   const bookEntry = findCatalogEntry(bookId);
@@ -2214,7 +2092,7 @@ async function startDuel() {
   duelFinished = false;
   victoryXpAwarded = false;
   currentTurnNumber = 1;
-  
+
   document.getElementById("combatEndPanel").style.display = "none";
   document.getElementById("combatEndTitle").textContent = "Fin du combat";
   document.getElementById("combatEndText").textContent = "-";
@@ -2222,12 +2100,10 @@ async function startDuel() {
   try {
     currentFighter = await loadJson(sheetEntry.sheetFile);
     currentOpponentFighter = await loadJson(bookEntry.sheetFile);
-    
     currentBook = await loadJson(bookEntry.bookFile);
     currentPlayerBook = await loadJson(sheetEntry.bookFile);
 
     currentBodyBonus = computeBodyBonusFromColors();
-
     sizeModifier = Number(currentFighter.size) - Number(currentOpponentFighter.size);
 
     const loadedExistingDuel = loadCurrentDuelStateIfMatching(
@@ -2254,14 +2130,12 @@ async function startDuel() {
         [
           currentPlayerName + " affronte " + bookEntry.shortName + ".",
           "Tour 1 : Distance Accrue obligatoire.",
-          "Points de Corps : " + myCurrentBody + " / " + myMaxBody + " contre " + opponentCurrentBody + " / " + opponentMaxBody + "."
+          "PV : " + myCurrentBody + " / " + myMaxBody + " contre " + opponentCurrentBody + " / " + opponentMaxBody + "."
         ],
         "start"
       );
 
       saveCurrentDuelState();
-
-      
     }
 
     savePlayerProfile();
@@ -2294,6 +2168,7 @@ async function startDuel() {
     updateExperienceDisplay();
     refreshActionList();
     updateEvolutionPanel();
+    renderCombatLog();
 
     document.getElementById("setupPanel").style.display = "none";
     document.getElementById("duelPanel").style.display = "block";
@@ -2302,19 +2177,13 @@ async function startDuel() {
     document.body.classList.add("duel-active");
 
     const fixedHpBar = document.getElementById("fixedHpBar");
-    if (fixedHpBar) {
-      fixedHpBar.style.display = "grid";
-    }
+    if (fixedHpBar) fixedHpBar.style.display = "grid";
 
     const duelCharacterSheetButton = document.getElementById("duelCharacterSheetButton");
-    if (duelCharacterSheetButton) {
-      duelCharacterSheetButton.style.display = "block";
-    }
+    if (duelCharacterSheetButton) duelCharacterSheetButton.style.display = "block";
 
     const fleeButton = document.getElementById("fleeButton");
-    if (fleeButton) {
-      fleeButton.style.display = "block";
-    }
+    if (fleeButton) fleeButton.style.display = duelFinished ? "none" : "block";
 
     initAudioSystem();
     updateAudioButtons();
@@ -2328,15 +2197,16 @@ async function startDuel() {
     appAlert(
       "Erreur : " +
         error.message +
-        "\n\nPour l’instant, seul le livret Chevalier existe. Choisis Chevalier comme livret affiché pour tester.",
+        "\n\nVérifie les fichiers JSON du combattant et du livret affiché.",
       "Erreur de chargement"
     );
   }
 }
 
 /* ============================================================
-   MODE SOLO
+   MODE SOLO / DIFFICULTÉ
    ============================================================ */
+
 const soloDifficultyTitles = {
   chevalier: [
     "Apprenti",
@@ -2346,7 +2216,6 @@ const soloDifficultyTitles = {
     "Champion",
     "Vétéran"
   ],
-
   squelette: [
     "Osselet",
     "Serviteur d’os",
@@ -2355,7 +2224,6 @@ const soloDifficultyTitles = {
     "Champion d’os",
     "Vétéran des tombes"
   ],
-
   default: [
     "Niveau 0",
     "Niveau 1",
@@ -2373,11 +2241,9 @@ function getSoloDifficultyTitle(fighterId, level) {
 
 function getSoloDifficultyLevel() {
   const select = document.getElementById("soloDifficultyLevel");
-
   if (!select) return 0;
 
   const value = Number(select.value || 0);
-
   return Math.max(0, Math.min(5, value));
 }
 
@@ -2391,7 +2257,6 @@ function refreshSoloDifficultyOptions() {
   if (!block || !select) return;
 
   const isSolo = modeSelect && modeSelect.value === "solo";
-
   block.style.display = isSolo ? "block" : "none";
 
   const opponentId = opponentSelect ? opponentSelect.value : "default";
@@ -2427,10 +2292,12 @@ function refreshSoloDifficultyOptions() {
       " à ses dégâts.";
   }
 }
+
 function getSoloOpponentActions() {
   if (!currentOpponentFighter) return [];
 
-  const distanceMode = document.getElementById("distanceMode").value;
+  const distanceModeElement = document.getElementById("distanceMode");
+  const distanceMode = distanceModeElement ? distanceModeElement.value : "normal";
 
   let actions = [];
 
@@ -2472,7 +2339,6 @@ const soloPersonalities = {
       vert: 0.55
     }
   },
-
   chevalier: {
     name: "Chevalier discipliné",
     style: "disciplined",
@@ -2485,7 +2351,6 @@ const soloPersonalities = {
       vert: 1.45
     }
   },
-
   default: {
     name: "Adversaire équilibré",
     style: "balanced",
@@ -2576,20 +2441,12 @@ function getSoloActionScore(action) {
 
     if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) {
       score *= 1.45;
-
-      if (color === "orange" || color === "rouge") {
-        score += 10;
-      }
+      if (color === "orange" || color === "rouge") score += 10;
     }
 
     if (opponentRatio <= 0.35) {
-      if (color === "orange" || color === "rouge") {
-        score *= 1.35;
-      }
-
-      if (text.includes("esquive") || text.includes("bond en arriere")) {
-        score *= 0.6;
-      }
+      if (color === "orange" || color === "rouge") score *= 1.35;
+      if (text.includes("esquive") || text.includes("bond en arriere")) score *= 0.6;
     }
 
     return Math.max(1, score);
@@ -2603,27 +2460,20 @@ function getSoloActionScore(action) {
     if (text.includes("coup lateral")) score += 8;
     if (text.includes("coup plongeant")) score += 6;
 
-    if (text.includes("charge")) {
-      score += distanceMode === "distance" ? 14 : 2;
-    }
-
-    if (text.includes("bloque")) {
-      score += distanceMode === "distance" ? 10 : 4;
-    }
+    if (text.includes("charge")) score += distanceMode === "distance" ? 14 : 2;
+    if (text.includes("bloque")) score += distanceMode === "distance" ? 10 : 4;
 
     if (text.includes("esquive")) score += 3;
     if (text.includes("bond esquive")) score += 4;
     if (text.includes("bond en arriere")) score *= 0.85;
     if (text.includes("recuperer")) score *= 0.45;
 
-    // Premier échange à distance : le chevalier avance avec méthode.
     if (distanceMode === "distance") {
       if (text.includes("charge")) score *= 1.35;
       if (text.includes("bloque")) score *= 1.25;
       if (text.includes("esquive")) score *= 0.75;
     }
 
-    // Si le joueur est faible, le chevalier cherche à finir proprement.
     if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) {
       score *= 1.3;
 
@@ -2636,19 +2486,14 @@ function getSoloActionScore(action) {
       }
     }
 
-    // Si le chevalier est blessé, il devient plus prudent.
     if (opponentRatio <= 0.35) {
       if (text.includes("attaque protegee")) score *= 1.45;
       if (text.includes("coup de bouclier")) score *= 1.35;
       if (text.includes("esquive")) score *= 1.25;
       if (text.includes("bond esquive")) score *= 1.2;
-
-      if (color === "orange" || color === "rouge") {
-        score *= 0.8;
-      }
+      if (color === "orange" || color === "rouge") score *= 0.8;
     }
 
-    // S’il est en bonne santé, il accepte davantage le duel frontal.
     if (opponentRatio >= 0.65 && playerRatio >= 0.5) {
       if (text.includes("attaque protegee")) score += 5;
       if (text.includes("estoc")) score += 4;
@@ -2658,7 +2503,6 @@ function getSoloActionScore(action) {
     return Math.max(1, score);
   }
 
-  // IA équilibrée par défaut
   if (text.includes("attaque protegee")) score += 6;
   if (text.includes("coup lateral")) score += 5;
   if (text.includes("estoc")) score += 5;
@@ -2666,14 +2510,9 @@ function getSoloActionScore(action) {
   if (text.includes("esquive")) score *= 0.8;
   if (text.includes("recuperer")) score *= 0.5;
 
-  if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) {
-    score *= 1.25;
-  }
-
+  if (playerRatio <= 0.35 && isClearlyOffensiveAction(action)) score *= 1.25;
   if (opponentRatio <= 0.35) {
-    if (text.includes("attaque protegee") || text.includes("esquive")) {
-      score *= 1.25;
-    }
+    if (text.includes("attaque protegee") || text.includes("esquive")) score *= 1.25;
   }
 
   return Math.max(1, score);
@@ -2729,24 +2568,24 @@ function updateSoloOpponentDisplay(action) {
     return;
   }
 
- const personality = getSoloOpponentPersonality();
- const difficultyTitle = getSoloDifficultyTitle(
-  currentOpponentFighter ? currentOpponentFighter.id : "default",
-  soloDifficultyLevel
-);
+  const personality = getSoloOpponentPersonality();
+  const difficultyTitle = getSoloDifficultyTitle(
+    currentOpponentFighter ? currentOpponentFighter.id : "default",
+    soloDifficultyLevel
+  );
 
-text.textContent =
-  personality.name +
-  " : " +
-   difficultyTitle +
-  " +" +
-  soloDifficultyLevel +
-  " : " +
-  actionLabel(action) +
-  " | PG " +
-  action.pg +
-  " | " +
-  action.color;
+  text.textContent =
+    personality.name +
+    " : " +
+    difficultyTitle +
+    " +" +
+    soloDifficultyLevel +
+    " : " +
+    actionLabel(action) +
+    " | PG " +
+    action.pg +
+    " | " +
+    action.color;
 
   panel.style.display = "block";
 }
@@ -2841,14 +2680,10 @@ function buildSoloOpponentResultHtml(soloResult) {
   } else if (soloResult.damage <= 0) {
     damageText = "L’adversaire obtient un SCORE, mais ne te fait aucun dégât.";
   } else {
-    damageText =
-      "L’adversaire te fait " +
-      soloResult.damage +
-      " dégât(s).";
+    damageText = "L’adversaire te fait " + soloResult.damage + " dégât(s).";
   }
 
-  const nextInstruction =
-    soloResult.page.instruction || "Aucune restriction particulière.";
+  const nextInstruction = soloResult.page.instruction || "Aucune restriction particulière.";
 
   return (
     '<div class="instruction-card solo-result-card">' +
@@ -2884,7 +2719,10 @@ function buildSoloOpponentResultHtml(soloResult) {
    ============================================================ */
 
 function chooseAction() {
-  const actionId = document.getElementById("actionChoice").value;
+  const actionSelect = document.getElementById("actionChoice");
+  if (!actionSelect) return;
+
+  const actionId = actionSelect.value;
 
   if (!actionId) {
     appAlert("Aucune action disponible avec cette restriction.", "Action impossible");
@@ -2903,9 +2741,11 @@ function chooseAction() {
   lastDamage = null;
   damageAlreadyApplied = false;
 
-  document.getElementById("enemyPg").value = "";
-  document.getElementById("pgToAnnounce").textContent =
-    getPgDisplayForAction(selectedAction, null);
+  const enemyPgInput = document.getElementById("enemyPg");
+  const pgToAnnounce = document.getElementById("pgToAnnounce");
+
+  if (enemyPgInput) enemyPgInput.value = "";
+  if (pgToAnnounce) pgToAnnounce.textContent = getPgDisplayForAction(selectedAction, null);
 
   if (gameMode === "solo") {
     const opponentAction = pickSoloOpponentAction();
@@ -2915,11 +2755,9 @@ function chooseAction() {
       return;
     }
 
-    document.getElementById("enemyPg").value = opponentAction.pg;
+    if (enemyPgInput) enemyPgInput.value = opponentAction.pg;
+    if (pgToAnnounce) pgToAnnounce.textContent = getPgDisplayForAction(selectedAction, opponentAction.pg);
 
-    document.getElementById("pgToAnnounce").textContent =
-      getPgDisplayForAction(selectedAction, opponentAction.pg);
-    
     updateSoloOpponentDisplay(opponentAction);
   } else {
     updateSoloOpponentDisplay(null);
@@ -2930,11 +2768,10 @@ function chooseAction() {
 }
 
 function calculateTemporaryBonus(page, action) {
-  const bonusMode = document.getElementById("temporaryBonus").value;
+  const temporaryBonusSelect = document.getElementById("temporaryBonus");
+  const bonusMode = temporaryBonusSelect ? temporaryBonusSelect.value : "none";
 
-  if (page.score === null || page.score === undefined) {
-    return 0;
-  }
+  if (page.score === null || page.score === undefined) return 0;
 
   const color = action.color || "";
   const category = action.category || "";
@@ -2942,22 +2779,12 @@ function calculateTemporaryBonus(page, action) {
   const label = (category + " " + name).toLowerCase();
 
   switch (bonusMode) {
-    case "score_any":
-      return 2;
-
-    case "score_blue":
-      return color === "bleu" ? 2 : 0;
-
-    case "score_orange":
-      return color === "orange" ? 2 : 0;
-
+    case "score_any": return 2;
+    case "score_blue": return color === "bleu" ? 2 : 0;
+    case "score_orange": return color === "orange" ? 2 : 0;
     case "score_plunge_or_lateral":
-      return label.includes("coup plongeant") || label.includes("coup latéral")
-        ? 2
-        : 0;
-
-    default:
-      return 0;
+      return label.includes("coup plongeant") || label.includes("coup latéral") ? 2 : 0;
+    default: return 0;
   }
 }
 
@@ -2981,6 +2808,7 @@ function calculateDamage(page, action) {
 
   return Math.max(0, total);
 }
+
 function isDistancePg(pg) {
   const value = Number(pg);
   return value >= 50;
@@ -3024,13 +2852,15 @@ function getBookPage(book, pageNumber) {
     null
   );
 }
+
 function resolveTurn() {
-  const enemyPg = document.getElementById("enemyPg").value;
+  const enemyPgInput = document.getElementById("enemyPg");
+  const enemyPg = enemyPgInput ? enemyPgInput.value : "";
 
   if (!selectedAction) {
-  appAlert("Choisis d’abord une action.", "Action manquante");
-  return;
-}
+    appAlert("Choisis d’abord une action.", "Action manquante");
+    return;
+  }
 
   if (!enemyPg) {
     appAlert("Entre le PG donné par ton adversaire.", "PG manquant");
@@ -3044,14 +2874,10 @@ function resolveTurn() {
 
   const enemyMovementPage = String(enemyPg);
   const myMovementPage = getMovementPageForAction(selectedAction, enemyMovementPage);
-
   const movementTable = currentBook.movementPages[myMovementPage];
 
   if (!movementTable) {
-    appAlert(
-      "Aucune table de mouvement trouvée pour ton PG : " + myMovementPage,
-      "Table introuvable"
-    );
+    appAlert("Aucune table de mouvement trouvée pour ton PG : " + myMovementPage, "Table introuvable");
     return;
   }
 
@@ -3072,31 +2898,30 @@ function resolveTurn() {
   const page = getBookPage(currentBook, resultPageNumber);
 
   if (!page) {
-   appAlert(
-    "La page résultat " +
-      resultPageNumber +
-      " existe dans la table, mais pas dans la liste des pages.",
-    "Page manquante"
-  );
+    appAlert(
+      "La page résultat " +
+        resultPageNumber +
+        " existe dans la table, mais pas dans la liste des pages.",
+      "Page manquante"
+    );
     return;
   }
 
-  pendingOpponentInstruction =
-    page.instruction || "Aucune instruction particulière.";
+  pendingOpponentInstruction = page.instruction || "Aucune instruction particulière.";
 
   const damage = calculateDamage(page, selectedAction);
   const soloOpponentResult = resolveSoloOpponentAttack();
+
   if (
-   gameMode === "solo" &&
-   soloOpponentResult &&
-   !soloOpponentResult.error &&
-   soloOpponentResult.page
- ) {
-   pendingPlayerInstruction =
-    soloOpponentResult.page.instruction || "Aucune restriction particulière.";
+    gameMode === "solo" &&
+    soloOpponentResult &&
+    !soloOpponentResult.error &&
+    soloOpponentResult.page
+  ) {
+    pendingPlayerInstruction = soloOpponentResult.page.instruction || "Aucune restriction particulière.";
   } else {
-   pendingPlayerInstruction = "";
- }
+    pendingPlayerInstruction = "";
+  }
 
   const resolutionLogKey =
     currentTurnNumber +
@@ -3106,7 +2931,7 @@ function resolveTurn() {
     enemyMovementPage +
     "|" +
     resultPageNumber;
-  
+
   if (resolutionLogKey !== lastResolutionLogKey) {
     const logLines = [
       "Vous : " +
@@ -3120,7 +2945,7 @@ function resolveTurn() {
         : "Votre résultat : page " + resultPageNumber + " | " + damage + " dégât(s) à appliquer à l’adversaire.",
       "Restriction donnée à l’adversaire : " + pendingOpponentInstruction
     ];
-  
+
     if (gameMode === "solo" && soloOpponentAction) {
       logLines.splice(
         1,
@@ -3130,7 +2955,7 @@ function resolveTurn() {
           " | PG " +
           soloOpponentAction.pg
       );
-  
+
       if (soloOpponentResult && soloOpponentResult.error) {
         logLines.push("Riposte adverse : " + soloOpponentResult.error);
       } else if (soloOpponentResult && soloOpponentResult.page) {
@@ -3138,27 +2963,22 @@ function resolveTurn() {
           soloOpponentResult.damage === null
             ? "aucun SCORE contre vous."
             : soloOpponentResult.damage + " dégât(s) contre vous.";
-  
+
         logLines.push(
           "Riposte adverse : page " +
             soloOpponentResult.pageNumber +
             " | " +
             soloDamageText
         );
-  
+
         logLines.push(
           "Restriction à appliquer à votre prochain tour : " +
             (pendingPlayerInstruction || "Aucune restriction particulière.")
         );
       }
     }
-  
-    addCombatLogEntry(
-      "Tour " + currentTurnNumber + " - Résolution",
-      logLines,
-      "turn"
-    );
-  
+
+    addCombatLogEntry("Tour " + currentTurnNumber + " - Résolution", logLines, "turn");
     lastResolutionLogKey = resolutionLogKey;
   }
 
@@ -3171,7 +2991,8 @@ function resolveTurn() {
     myCurrentBody -= Number(soloOpponentResult.damage);
     updateBodyDisplays();
     saveCurrentDuelState();
-}
+  }
+
   lastDamage = damage;
   damageAlreadyApplied = false;
 
@@ -3258,17 +3079,14 @@ function resolveTurn() {
     enemyPg +
     "</span>" +
     "</div>" +
-   imageHtml +
-   damageHtml +
-   buildSoloOpponentResultHtml(soloOpponentResult) +
-   '<div class="instruction-card">' +
-   "<strong>" +
-   (gameMode === "solo"
-    ? "Restriction donnée à l’adversaire solo"
-     : "Instruction à lire à l’adversaire") +
+    imageHtml +
+    damageHtml +
+    buildSoloOpponentResultHtml(soloOpponentResult) +
+    '<div class="instruction-card">' +
+    "<strong>" +
+    (gameMode === "solo" ? "Restriction donnée à l’adversaire solo" : "Instruction à lire à l’adversaire") +
     "</strong><br>" +
-   pendingOpponentInstruction +
-   
+    pendingOpponentInstruction +
     "</div>" +
     applyButton +
     "</div>";
@@ -3277,6 +3095,7 @@ function resolveTurn() {
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("resultPanel").style.display = "block";
   document.getElementById("nextTurnButton").style.display = "block";
+
   checkCombatEnd();
 
   document.getElementById("resultPanel").scrollIntoView({
@@ -3287,7 +3106,6 @@ function resolveTurn() {
 
 function applyDamageToOpponent() {
   const status = document.getElementById("applyStatus");
-
   if (!status) return;
 
   if (lastDamage === null || lastDamage === undefined) {
@@ -3296,8 +3114,7 @@ function applyDamageToOpponent() {
   }
 
   if (damageAlreadyApplied) {
-    status.innerHTML =
-      '<span class="danger">Ces dégâts ont déjà été appliqués.</span>';
+    status.innerHTML = '<span class="danger">Ces dégâts ont déjà été appliqués.</span>';
     return;
   }
 
@@ -3307,31 +3124,26 @@ function applyDamageToOpponent() {
   addCombatLogEntry(
     "Tour " + currentTurnNumber + " - Dégâts",
     [
-      lastDamage +
-        " dégât(s) appliqué(s) à l’adversaire.",
+      lastDamage + " dégât(s) appliqué(s) à l’adversaire.",
       "PV adversaire : " + opponentCurrentBody + " / " + opponentMaxBody + "."
     ],
     lastDamage > 0 ? "damage" : "normal"
   );
-  
-    if (lastDamage > 0) {
-      playSfx("hit");
-    } else {
-      playSfx("click");
-    }
+
+  if (lastDamage > 0) {
+    playSfx("hit");
+  } else {
+    playSfx("click");
+  }
 
   updateBodyDisplays();
   checkCombatEnd();
   saveCurrentDuelState();
 
   if (lastDamage === 0) {
-    status.innerHTML =
-      '<span class="success">Aucun dégât. Points de Corps adverses inchangés.</span>';
+    status.innerHTML = '<span class="success">Aucun dégât. PV adverses inchangés.</span>';
   } else {
-    status.innerHTML =
-      '<span class="success">' +
-      lastDamage +
-      " dégât(s) appliqué(s) à l’adversaire.</span>";
+    status.innerHTML = '<span class="success">' + lastDamage + " dégât(s) appliqué(s) à l’adversaire.</span>";
   }
 }
 
@@ -3341,7 +3153,9 @@ function nextTurn() {
   damageAlreadyApplied = false;
   currentTurnNumber += 1;
 
-  document.getElementById("enemyPg").value = "";
+  const enemyPgInput = document.getElementById("enemyPg");
+  if (enemyPgInput) enemyPgInput.value = "";
+
   soloOpponentAction = null;
   updateSoloOpponentDisplay(null);
 
@@ -3350,50 +3164,45 @@ function nextTurn() {
   document.getElementById("resultText").innerHTML = "";
   document.getElementById("nextTurnButton").style.display = "none";
   document.getElementById("turnPanel").style.display = "block";
-  document.getElementById("bodyStatus").textContent = "";
+
+  const bodyStatus = document.getElementById("bodyStatus");
+  if (bodyStatus) bodyStatus.textContent = "";
 
   if (gameMode === "solo") {
-  const playerRestriction = pendingPlayerInstruction
-    ? restrictionFromInstructionText(pendingPlayerInstruction)
-    : "none";
+    const playerRestriction = pendingPlayerInstruction
+      ? restrictionFromInstructionText(pendingPlayerInstruction)
+      : "none";
 
-  soloOpponentRestriction = pendingOpponentInstruction
-    ? restrictionFromInstructionText(pendingOpponentInstruction)
-    : "none";
+    soloOpponentRestriction = pendingOpponentInstruction
+      ? restrictionFromInstructionText(pendingOpponentInstruction)
+      : "none";
 
-  document.getElementById("restrictionMode").value = playerRestriction;
+    document.getElementById("restrictionMode").value = playerRestriction;
 
-  const playerInfo = getRestrictionInfo(playerRestriction);
-  const opponentInfo = getRestrictionInfo(soloOpponentRestriction);
+    const playerInfo = getRestrictionInfo(playerRestriction);
+    const opponentInfo = getRestrictionInfo(soloOpponentRestriction);
 
-  const panelLabel = document.querySelector("#opponentInstructionPanel span");
-  if (panelLabel) {
-    panelLabel.textContent = "Restrictions du prochain tour";
+    const panelLabel = document.querySelector("#opponentInstructionPanel span");
+    if (panelLabel) panelLabel.textContent = "Restrictions du prochain tour";
+
+    document.getElementById("opponentInstructionText").textContent =
+      "Vous : " + playerInfo.label + " | Adversaire solo : " + opponentInfo.label;
+
+    document.getElementById("opponentInstructionPanel").style.display = "block";
+  } else if (pendingOpponentInstruction) {
+    const panelLabel = document.querySelector("#opponentInstructionPanel span");
+    if (panelLabel) panelLabel.textContent = "Instruction à donner à l’adversaire";
+
+    document.getElementById("opponentInstructionText").textContent = pendingOpponentInstruction;
+    document.getElementById("opponentInstructionPanel").style.display = "block";
   }
-
-  document.getElementById("opponentInstructionText").textContent =
-    "Vous : " +
-    playerInfo.label +
-    " | Adversaire solo : " +
-    opponentInfo.label;
-
-  document.getElementById("opponentInstructionPanel").style.display = "block";
-} else if (pendingOpponentInstruction) {
-  const panelLabel = document.querySelector("#opponentInstructionPanel span");
-  if (panelLabel) {
-    panelLabel.textContent = "Instruction à donner à l’adversaire";
-  }
-
-  document.getElementById("opponentInstructionText").textContent =
-    pendingOpponentInstruction;
-
-  document.getElementById("opponentInstructionPanel").style.display = "block";
-}
 
   document.getElementById("temporaryBonus").value = "none";
+
   if (currentTurnNumber > 1 && document.getElementById("distanceMode").value === "distance") {
-  document.getElementById("distanceMode").value = "normal";
-}
+    document.getElementById("distanceMode").value = "normal";
+  }
+
   refreshActionList();
   saveCurrentDuelState();
 
@@ -3414,9 +3223,7 @@ function openImageOverlay(src) {
 
   overlayZoom = 1;
   image.src = src;
-
   overlay.classList.add("image-overlay-open");
-
   updateOverlayZoom();
 }
 
@@ -3446,9 +3253,11 @@ function resetOverlayZoom() {
   overlayZoom = 1;
   updateOverlayZoom();
 }
+
 /* ============================================================
-   NOUVEAU DUEL
+   FUITE / NOUVEAU DUEL / RÈGLES
    ============================================================ */
+
 async function fleeCombat() {
   if (duelFinished) {
     appAlert("Le combat est déjà terminé.", "Fuite impossible");
@@ -3477,8 +3286,9 @@ async function fleeCombat() {
   document.getElementById("pgPanel").style.display = "none";
   document.getElementById("turnPanel").style.display = "none";
   document.getElementById("nextTurnButton").style.display = "none";
-  
+
   playSfx("flee");
+
   showCombatEnd(
     "Fuite",
     currentPlayerName + " abandonne le combat. Aucun XP gagné.",
@@ -3488,22 +3298,18 @@ async function fleeCombat() {
   clearCurrentDuelState();
 
   const fleeButton = document.getElementById("fleeButton");
-  if (fleeButton) {
-    fleeButton.style.display = "none";
-  }
+  if (fleeButton) fleeButton.style.display = "none";
 }
-
 
 async function newDuel() {
   const confirmed = await appConfirm(
-    "Commencer un nouveau duel ?\n\nLes Points de Corps du duel en cours seront réinitialisés.",
+    "Commencer un nouveau duel ?\n\nLes PV du duel en cours seront réinitialisés.",
     "Nouveau duel"
   );
-  
+
   if (!confirmed) return;
 
   stopCombatMusic();
-
   clearCurrentDuelState();
 
   combatLog = [];
@@ -3511,14 +3317,10 @@ async function newDuel() {
   renderCombatLog();
 
   const combatLogPanel = document.getElementById("combatLogPanel");
-  if (combatLogPanel) {
-    combatLogPanel.style.display = "none";
-  }
+  if (combatLogPanel) combatLogPanel.style.display = "none";
 
   const combatLogButton = document.getElementById("combatLogButton");
-  if (combatLogButton) {
-    combatLogButton.classList.remove("active");
-  }
+  if (combatLogButton) combatLogButton.classList.remove("active");
 
   currentFighter = null;
   currentOpponentFighter = null;
@@ -3529,6 +3331,7 @@ async function newDuel() {
   gameMode = "duel";
   soloOpponentAction = null;
   soloOpponentRestriction = "none";
+  soloDifficultyLevel = 0;
 
   myMaxBody = 0;
   myCurrentBody = 0;
@@ -3546,18 +3349,13 @@ async function newDuel() {
   document.body.classList.remove("duel-active");
 
   const fixedHpBar = document.getElementById("fixedHpBar");
-  if (fixedHpBar) {
-    fixedHpBar.style.display = "none";
-  }
+  if (fixedHpBar) fixedHpBar.style.display = "none";
 
   const duelCharacterSheetButton = document.getElementById("duelCharacterSheetButton");
-  if (duelCharacterSheetButton) {
-    duelCharacterSheetButton.style.display = "none";
-  }
+  if (duelCharacterSheetButton) duelCharacterSheetButton.style.display = "none";
+
   const hpTools = document.getElementById("hpTools");
-  if (hpTools) {
-    hpTools.style.display = "none";
-  }
+  if (hpTools) hpTools.style.display = "none";
 
   document.getElementById("setupPanel").style.display = "block";
   document.getElementById("duelPanel").style.display = "none";
@@ -3579,9 +3377,11 @@ async function newDuel() {
   document.getElementById("soloOpponentActionText").textContent = "-";
 
   refreshSavedCharactersSelect();
+  refreshSoloDifficultyOptions();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
 function openRulesPage() {
   window.open("regles.html", "_blank");
 }
