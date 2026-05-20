@@ -2525,3 +2525,77 @@ body.duel-active .duel-page-title h1 {
     font-size: 0.95rem;
   }
 }
+   /* ============================================================
+   FICHE PJ - TABLE EVOLUTIONS COMPACTE
+   ============================================================ */
+
+.evolution-table th:nth-child(1),
+.evolution-table td:nth-child(1) {
+  width: 44px;
+  text-align: center;
+}
+
+.evolution-table th:nth-child(3),
+.evolution-table td:nth-child(3),
+.evolution-table th:nth-child(4),
+.evolution-table td:nth-child(4) {
+  text-align: center;
+  width: 70px;
+}
+
+.evolution-row {
+  border-left: 4px solid transparent;
+}
+
+.evolution-row-rouge {
+  border-left-color: #ff7777;
+}
+
+.evolution-row-orange {
+  border-left-color: #ffae4f;
+}
+
+.evolution-row-vert {
+  border-left-color: #72d672;
+}
+
+.evolution-row-jaune {
+  border-left-color: #ffe066;
+}
+
+.evolution-row-bleu {
+  border-left-color: #66aaff;
+}
+
+.evolution-row-marron {
+  border-left-color: #c49a6c;
+}
+
+.evo-action-name {
+  display: block;
+  font-weight: bold;
+}
+
+.evo-text-rouge {
+  color: #ff8f8f;
+}
+
+.evo-text-orange {
+  color: #ffbd69;
+}
+
+.evo-text-vert {
+  color: #96ef96;
+}
+
+.evo-text-jaune {
+  color: #ffe066;
+}
+
+.evo-text-bleu {
+  color: #91c6ff;
+}
+
+.evo-text-marron {
+  color: #d7ae7f;
+}
