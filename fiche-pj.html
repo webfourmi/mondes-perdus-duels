@@ -39,51 +39,15 @@
       </button>
     </div>
 
-    <section class="rules-card pj-compact-summary-card">
-  <h2>Résumé du PJ</h2>
+document.getElementById("sheetBodyBonus").textContent =
+  bodyBonus >= 0 ? "+" + bodyBonus : String(bodyBonus);
 
-  <div class="pj-compact-summary">
-    <div class="pj-summary-line">
-      <span>Livret</span>
-      <strong id="sheetFighterName">-</strong>
-    </div>
+document.getElementById("sheetBodyStart").textContent = bodyBase;
 
-    <div class="pj-summary-line pj-summary-line-three">
-      <div>
-        <span>XP dispo</span>
-        <strong id="sheetXpAvailable">0</strong>
-      </div>
-
-      <div>
-        <span>XP utilisées</span>
-        <strong id="sheetXpSpent">0</strong>
-      </div>
-
-      <div>
-        <span>XP total</span>
-        <strong id="sheetXpTotal">0</strong>
-      </div>
-    </div>
-
-    <div class="pj-summary-line pj-summary-line-three">
-      <div>
-        <span>PV Base</span>
-        <strong id="sheetBodyStart">-</strong>
-      </div>
-
-      <div>
-        <span>Bonus PV</span>
-        <strong id="sheetBodyBonus">+0</strong>
-      </div>
-
-      <div>
-        <span>PV MAX</span>
-        <strong id="sheetCurrentPv">-</strong>
-      </div>
-    </div>
-  </div>
-</section>
-
+const currentPvElement = document.getElementById("sheetCurrentPv");
+if (currentPvElement) {
+  currentPvElement.textContent = bodyMax;
+}
    
     
     
