@@ -33,6 +33,7 @@ let selectedAction = null;
 let gameMode = "duel";
 let soloOpponentAction = null;
 let soloOpponentRestriction = "none";
+let soloDifficultyLevel = 0;
 
 let sizeModifier = 0;
 
@@ -1329,6 +1330,24 @@ async function initApp() {
   fillSelect("playerSheet", catalog.fighters);
   fillSelect("opponentBook", catalog.fighters);
 
+  const gameModeSelect = document.getElementById("gameMode");
+  const opponentBookSelect = document.getElementById("opponentBook");
+  const soloDifficultySelect = document.getElementById("soloDifficultyLevel");
+  
+  if (gameModeSelect) {
+    gameModeSelect.addEventListener("change", refreshSoloDifficultyOptions);
+  }
+  
+  if (opponentBookSelect) {
+    opponentBookSelect.addEventListener("change", refreshSoloDifficultyOptions);
+  }
+  
+  if (soloDifficultySelect) {
+    soloDifficultySelect.addEventListener("change", refreshSoloDifficultyOptions);
+  }
+  
+  refreshSoloDifficultyOptions();
+
   if (message && catalog !== fallbackCatalog) {
     message.textContent =
       "Catalogue chargé : " +
@@ -2041,9 +2060,10 @@ async function startDuel() {
   const sheetId = document.getElementById("playerSheet").value;
   const bookId = document.getElementById("opponentBook").value;
 
-  gameMode = document.getElementById("gameMode").value || "duel";
-  soloOpponentAction = null;
-  soloOpponentRestriction = "none";
+ gameMode = document.getElementById("gameMode").value || "duel";
+ soloOpponentAction = null;
+ soloOpponentRestriction = "none";
+ soloDifficultyLevel = gameMode === "solo" ? getSoloDifficultyLevel() : 0;
 
   const sheetEntry = findCatalogEntry(sheetId);
   const bookEntry = findCatalogEntry(bookId);
@@ -2205,7 +2225,96 @@ async function startDuel() {
 /* ============================================================
    MODE SOLO
    ============================================================ */
+const soloDifficultyTitles = {
+  chevalier: [
+    "Apprenti",
+    "Écuyer",
+    "Homme d’armes",
+    "Chevalier",
+    "Champion",
+    "Vétéran"
+  ],
 
+  squelette: [
+    "Osselet",
+    "Serviteur d’os",
+    "Guerrier squelette",
+    "Garde des cryptes",
+    "Champion d’os",
+    "Vétéran des tombes"
+  ],
+
+  default: [
+    "Niveau 0",
+    "Niveau 1",
+    "Niveau 2",
+    "Niveau 3",
+    "Niveau 4",
+    "Niveau 5"
+  ]
+};
+
+function getSoloDifficultyTitle(fighterId, level) {
+  const titles = soloDifficultyTitles[fighterId] || soloDifficultyTitles.default;
+  return titles[level] || titles[0];
+}
+
+function getSoloDifficultyLevel() {
+  const select = document.getElementById("soloDifficultyLevel");
+
+  if (!select) return 0;
+
+  const value = Number(select.value || 0);
+
+  return Math.max(0, Math.min(5, value));
+}
+
+function refreshSoloDifficultyOptions() {
+  const block = document.getElementById("soloDifficultyBlock");
+  const select = document.getElementById("soloDifficultyLevel");
+  const hint = document.getElementById("soloDifficultyHint");
+  const modeSelect = document.getElementById("gameMode");
+  const opponentSelect = document.getElementById("opponentBook");
+
+  if (!block || !select) return;
+
+  const isSolo = modeSelect && modeSelect.value === "solo";
+
+  block.style.display = isSolo ? "block" : "none";
+
+  const opponentId = opponentSelect ? opponentSelect.value : "default";
+  const oldValue = String(select.value || "0");
+
+  select.innerHTML = "";
+
+  for (let level = 0; level <= 5; level++) {
+    const option = document.createElement("option");
+    option.value = String(level);
+    option.textContent =
+      "+" +
+      level +
+      " — " +
+      getSoloDifficultyTitle(opponentId, level);
+
+    select.appendChild(option);
+  }
+
+  select.value = oldValue;
+
+  if (!select.value) {
+    select.value = "0";
+  }
+
+  if (hint) {
+    const level = Number(select.value || 0);
+
+    hint.textContent =
+      getSoloDifficultyTitle(opponentId, level) +
+      " : l’adversaire solo ajoute +" +
+      level +
+      " à ses dégâts.";
+  }
+}
 function getSoloOpponentActions() {
   if (!currentOpponentFighter) return [];
 
@@ -2509,9 +2618,17 @@ function updateSoloOpponentDisplay(action) {
   }
 
  const personality = getSoloOpponentPersonality();
+ const difficultyTitle = getSoloDifficultyTitle(
+  currentOpponentFighter ? currentOpponentFighter.id : "default",
+  soloDifficultyLevel
+);
 
 text.textContent =
   personality.name +
+  " : " +
+   difficultyTitle +
+  " +" +
+  soloDifficultyLevel +
   " : " +
   actionLabel(action) +
   " | PG " +
@@ -2530,8 +2647,9 @@ function calculateOpponentDamage(page, action) {
   const score = Number(page.score);
   const mod = Number(action.mod || 0);
   const bonus = Number(action.bonus || 0);
+  const difficultyBonus = gameMode === "solo" ? Number(soloDifficultyLevel || 0) : 0;
 
-  let total = score + mod + bonus;
+  let total = score + mod + bonus + difficultyBonus;
 
   const opponentSizeModifier = -sizeModifier;
 
@@ -2625,6 +2743,15 @@ function buildSoloOpponentResultHtml(soloResult) {
     "<strong>Riposte adverse</strong><br>" +
     "Action adverse : " +
     actionLabel(soloOpponentAction) +
+    "<br>" +
+    "Niveau solo : " +
+    getSoloDifficultyTitle(
+      currentOpponentFighter ? currentOpponentFighter.id : "default",
+      soloDifficultyLevel
+    ) +
+    " (+" +
+    soloDifficultyLevel +
+    " dégâts)" +
     "<br>" +
     "Restriction appliquée à l’adversaire solo : " +
     getRestrictionInfo(soloOpponentRestriction).label +
