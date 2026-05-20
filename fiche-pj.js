@@ -1,6 +1,7 @@
 const charactersIndexKey = "lw_saved_characters_index";
 const lastCharacterKey = "lw_last_character_id";
 const currentDuelSaveKey = "lw_current_duel_state";
+const resumeDuelAfterSheetKey = "lw_resume_duel_after_sheet";
 
 let currentSheetCharacter = null;
 let currentSheetProfile = null;
@@ -28,6 +29,41 @@ const fallbackCatalog = {
   ]
 };
 
+const evolutionColorOrder = ["rouge", "orange", "vert", "jaune", "bleu", "marron"];
+
+const trophiesByColor = {
+  rouge: {
+    icon: "🩸",
+    title: "Lame écarlate",
+    text: "Toutes les actions rouges sont maîtrisées."
+  },
+  orange: {
+    icon: "🔥",
+    title: "Briseur d’élan",
+    text: "Toutes les actions orange sont maîtrisées."
+  },
+  vert: {
+    icon: "🌿",
+    title: "Gardien du cercle",
+    text: "Toutes les actions vertes sont maîtrisées."
+  },
+  jaune: {
+    icon: "⚡",
+    title: "Feinteur d’or",
+    text: "Toutes les actions jaunes sont maîtrisées."
+  },
+  bleu: {
+    icon: "🛡️",
+    title: "Garde d’azur",
+    text: "Toutes les actions bleues sont maîtrisées."
+  },
+  marron: {
+    icon: "🏹",
+    title: "Maître de la distance",
+    text: "Toutes les actions marron sont maîtrisées."
+  }
+};
+
 /* ============================================================
    OUTILS GENERAUX
    ============================================================ */
@@ -41,7 +77,7 @@ function setText(id, value) {
 }
 
 function goBackToDuel() {
-  localStorage.setItem("lw_resume_duel_after_sheet", "1");
+  localStorage.setItem(resumeDuelAfterSheetKey, "1");
   window.location.href = "duel.html?resume=1";
 }
 
@@ -69,8 +105,23 @@ function getSavedCharacters() {
   if (!raw) return [];
 
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      console.warn("Index PJ invalide :", parsed);
+      return [];
+    }
+
+    return parsed.filter(function(character) {
+      return (
+        character &&
+        character.id &&
+        character.fighterId &&
+        character.name
+      );
+    });
   } catch (error) {
+    console.error("Index PJ illisible :", error, raw);
     return [];
   }
 }
@@ -98,29 +149,34 @@ async function loadCatalog() {
   try {
     return await loadJson("data/catalog.json");
   } catch (error) {
+    console.warn("Catalogue distant non chargé, catalogue de secours utilisé.", error);
     return fallbackCatalog;
   }
 }
 
 function findCatalogEntry(catalog, id) {
+  if (!catalog || !Array.isArray(catalog.fighters)) return null;
+
   return catalog.fighters.find(function(fighter) {
     return fighter.id === id;
   });
 }
 
 function loadProfile(character) {
+  const fallbackProfile = {
+    fighterId: character.fighterId,
+    name: character.name,
+    experience: Number(character.experience || 0),
+    spentExperience: Number(character.spentExperience || 0),
+    actionBonuses: {},
+    bodyBonus: 0
+  };
+
   const profileKey = getPlayerProfileKey(character.fighterId, character.name);
   const raw = localStorage.getItem(profileKey);
 
   if (!raw) {
-    return {
-      fighterId: character.fighterId,
-      name: character.name,
-      experience: character.experience || 0,
-      spentExperience: character.spentExperience || 0,
-      actionBonuses: {},
-      bodyBonus: 0
-    };
+    return fallbackProfile;
   }
 
   try {
@@ -135,14 +191,8 @@ function loadProfile(character) {
       bodyBonus: Number(profile.bodyBonus || 0)
     };
   } catch (error) {
-    return {
-      fighterId: character.fighterId,
-      name: character.name,
-      experience: character.experience || 0,
-      spentExperience: character.spentExperience || 0,
-      actionBonuses: {},
-      bodyBonus: 0
-    };
+    console.error("Profil PJ illisible :", error, raw);
+    return fallbackProfile;
   }
 }
 
@@ -155,7 +205,7 @@ function actionLabel(action) {
     return action.category + " " + action.name;
   }
 
-  return action.name;
+  return action.name || "Action";
 }
 
 function getAllActions(fighter) {
@@ -174,13 +224,47 @@ function getColorLabel(color) {
   const labels = {
     rouge: "Rouge",
     orange: "Orange",
-    bleu: "Bleu",
-    jaune: "Jaune",
     vert: "Vert",
+    jaune: "Jaune",
+    bleu: "Bleu",
     marron: "Marron"
   };
 
   return labels[color] || color || "-";
+}
+
+function getEvolutionColorRank(color) {
+  const index = evolutionColorOrder.indexOf(color);
+
+  if (index === -1) {
+    return 999;
+  }
+
+  return index;
+}
+
+function getSortedEvolutionActions(actions) {
+  return actions
+    .map(function(action, index) {
+      return {
+        action: action,
+        originalIndex: index
+      };
+    })
+    .sort(function(a, b) {
+      const colorDifference =
+        getEvolutionColorRank(a.action.color) -
+        getEvolutionColorRank(b.action.color);
+
+      if (colorDifference !== 0) {
+        return colorDifference;
+      }
+
+      return a.originalIndex - b.originalIndex;
+    })
+    .map(function(item) {
+      return item.action;
+    });
 }
 
 function getBonus(profile, actionId) {
@@ -200,72 +284,43 @@ function computeColorSummary(actions, profile) {
     byColor[action.color].push(action);
   });
 
-  return Object.keys(byColor).sort().map(function(color) {
-    const colorActions = byColor[color];
+  return Object.keys(byColor)
+    .sort(function(a, b) {
+      return getEvolutionColorRank(a) - getEvolutionColorRank(b);
+    })
+    .map(function(color) {
+      const colorActions = byColor[color];
 
-    let minBonus = Infinity;
-    let improvedCount = 0;
+      let minBonus = Infinity;
+      let improvedCount = 0;
 
-    colorActions.forEach(function(action) {
-      const bonus = getBonus(profile, action.id);
+      colorActions.forEach(function(action) {
+        const bonus = getBonus(profile, action.id);
 
-      minBonus = Math.min(minBonus, bonus);
+        minBonus = Math.min(minBonus, bonus);
 
-      if (bonus > 0) {
-        improvedCount += 1;
+        if (bonus > 0) {
+          improvedCount += 1;
+        }
+      });
+
+      if (minBonus === Infinity) {
+        minBonus = 0;
       }
+
+      return {
+        color: color,
+        total: colorActions.length,
+        improved: improvedCount,
+        minBonus: minBonus,
+        complete: improvedCount === colorActions.length && colorActions.length > 0
+      };
     });
-
-    if (minBonus === Infinity) {
-      minBonus = 0;
-    }
-
-    return {
-      color: color,
-      total: colorActions.length,
-      improved: improvedCount,
-      minBonus: minBonus,
-      complete: improvedCount === colorActions.length && colorActions.length > 0
-    };
-  });
 }
 
 /* ============================================================
    TROPHEES
    ============================================================ */
-
-const trophiesByColor = {
-  rouge: {
-    icon: "🩸",
-    title: "Lame écarlate",
-    text: "Toutes les actions rouges sont maîtrisées."
-  },
-  orange: {
-    icon: "🔥",
-    title: "Briseur d’élan",
-    text: "Toutes les actions orange sont maîtrisées."
-  },
-  bleu: {
-    icon: "🛡️",
-    title: "Garde d’azur",
-    text: "Toutes les actions bleues sont maîtrisées."
-  },
-  jaune: {
-    icon: "⚡",
-    title: "Feinteur d’or",
-    text: "Toutes les actions jaunes sont maîtrisées."
-  },
-  vert: {
-    icon: "🌿",
-    title: "Gardien du cercle",
-    text: "Toutes les actions vertes sont maîtrisées."
-  },
-  marron: {
-    icon: "🏹",
-    title: "Maître de la distance",
-    text: "Toutes les actions marron sont maîtrisées."
-  }
-};
 
 function getTrophyLevelLabel(level) {
   switch (level) {
@@ -354,41 +409,7 @@ function renderColorSummary(actions, profile) {
     container.appendChild(item);
   });
 }
-const evolutionColorOrder = ["rouge", "orange", "vert", "jaune", "bleu", "marron"];
 
-function getEvolutionColorRank(color) {
-  const index = evolutionColorOrder.indexOf(color);
-
-  if (index === -1) {
-    return 999;
-  }
-
-  return index;
-}
-
-function getSortedEvolutionActions(actions) {
-  return actions
-    .map(function(action, index) {
-      return {
-        action: action,
-        originalIndex: index
-      };
-    })
-    .sort(function(a, b) {
-      const colorDifference =
-        getEvolutionColorRank(a.action.color) -
-        getEvolutionColorRank(b.action.color);
-
-      if (colorDifference !== 0) {
-        return colorDifference;
-      }
-
-      return a.originalIndex - b.originalIndex;
-    })
-    .map(function(item) {
-      return item.action;
-    });
-}
 function renderEvolutionTable(actions, profile) {
   const tbody = document.getElementById("evolutionTableBody");
   if (!tbody) return;
@@ -400,9 +421,10 @@ function renderEvolutionTable(actions, profile) {
   sortedActions.forEach(function(action) {
     const bonus = getBonus(profile, action.id);
     const checked = bonus > 0 ? "checked" : "";
+    const actionColor = action.color || "none";
 
     const row = document.createElement("tr");
-    row.className = "evolution-row evolution-row-" + (action.color || "none");
+    row.className = "evolution-row evolution-row-" + actionColor;
 
     row.innerHTML =
       "<td>" +
@@ -412,7 +434,7 @@ function renderEvolutionTable(actions, profile) {
       "</td>" +
       "<td>" +
       '<strong class="evo-action-name evo-text-' +
-      action.color +
+      actionColor +
       '">' +
       actionLabel(action) +
       "</strong>" +
@@ -421,7 +443,7 @@ function renderEvolutionTable(actions, profile) {
       "</span>" +
       "</td>" +
       "<td>" +
-      action.mod +
+      (action.mod !== undefined && action.mod !== null ? action.mod : "-") +
       "</td>" +
       "<td>" +
       (bonus > 0 ? "+" + bonus : "-") +
@@ -430,6 +452,7 @@ function renderEvolutionTable(actions, profile) {
     tbody.appendChild(row);
   });
 }
+
 function renderTrophies(actions, profile) {
   const container = document.getElementById("trophyGrid");
   if (!container) return;
@@ -712,7 +735,7 @@ function confirmRenameCharacter() {
   const input = document.getElementById("renameCharacterInput");
   const error = document.getElementById("renameModalError");
 
-  if (!input) return;
+  if (!input || !currentSheetCharacter || !currentSheetProfile) return;
 
   const newName = input.value.trim();
 
@@ -819,7 +842,6 @@ function updateCurrentDuelNameIfNeeded(fighterId, oldName, newName) {
    ============================================================ */
 
 async function initSheetPage() {
-  const status = document.getElementById("sheetStatus");
   const characters = getSavedCharacters();
 
   if (characters.length === 0) {
@@ -871,6 +893,7 @@ async function initSheetPage() {
 
     setText("sheetStatus", "");
   } catch (error) {
+    console.error(error);
     setText("sheetStatus", error.message);
   }
 }
@@ -889,4 +912,6 @@ document.addEventListener("keydown", function(event) {
   }
 });
 
-initSheetPage();
+document.addEventListener("DOMContentLoaded", function() {
+  initSheetPage();
+});
