@@ -246,6 +246,7 @@ function renderHeader(character, profile, fighter) {
   const xpTotal = xpAvailable + xpSpent;
   const bodyBonus = Number(profile.bodyBonus || 0);
   const bodyStart = Number(fighter.bodyPointsStart || 0) + bodyBonus;
+  const bodyMax = bodyBase + bodyBonus;
 
   const fighterName =
     character.fighterName ||
@@ -272,12 +273,16 @@ function renderHeader(character, profile, fighter) {
   document.getElementById("sheetXpSpent").textContent = xpSpent;
   document.getElementById("sheetXpTotal").textContent = xpTotal;
 
-  document.getElementById("sheetBodyBonus").textContent =
-    bodyBonus >= 0 ? "+" + bodyBonus : String(bodyBonus);
+ document.getElementById("sheetBodyBonus").textContent =
+  bodyBonus >= 0 ? "+" + bodyBonus : String(bodyBonus);
 
-  document.getElementById("sheetBodyStart").textContent = bodyStart;
+document.getElementById("sheetBodyStart").textContent = bodyBase;
+
+const currentPvElement = document.getElementById("sheetCurrentPv");
+if (currentPvElement) {
+  currentPvElement.textContent = bodyMax;
 }
-
+  
 function renderColorSummary(actions, profile) {
   const container = document.getElementById("colorSummary");
   const summaries = computeColorSummary(actions, profile);
