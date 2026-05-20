@@ -2599,3 +2599,72 @@ body.duel-active .duel-page-title h1 {
 .evo-text-marron {
   color: #d7ae7f;
 }
+/* ============================================================
+   FICHE PJ - ACTIONS AVEC FOND COULEUR
+   ============================================================ */
+
+.evo-action-name {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-weight: bold;
+  color: #120b05;
+  line-height: 1.2;
+}
+
+/* Fonds colorés des actions */
+.evo-text-rouge {
+  background: #ff7777;
+  color: #120b05;
+}
+
+.evo-text-orange {
+  background: #ffae4f;
+  color: #120b05;
+}
+
+.evo-text-vert {
+  background: #72d672;
+  color: #120b05;
+}
+
+.evo-text-jaune {
+  background: #ffe066;
+  color: #120b05;
+}
+
+.evo-text-bleu {
+  background: #66aaff;
+  color: #120b05;
+}
+
+.evo-text-marron {
+  background: #c49a6c;
+  color: #120b05;
+}
+
+/* Le mode reste discret sous le badge */
+.evo-mode-label {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+/* Un peu plus d'air dans la colonne Action */
+.evolution-table td:nth-child(2) {
+  min-width: 190px;
+}
+
+/* Mobile */
+@media (max-width: 560px) {
+  .evo-action-name {
+    padding: 4px 7px;
+    font-size: 0.78rem;
+    border-radius: 10px;
+  }
+
+  .evolution-table td:nth-child(2) {
+    min-width: 150px;
+  }
+}
