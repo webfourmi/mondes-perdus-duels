@@ -6,7 +6,7 @@
 
   <title>Fiche PJ - Mondes Perdus Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=121">
+  <link rel="stylesheet" href="style.css?v=122">
 </head>
 
 <body>
@@ -24,12 +24,12 @@
       </button>
     </header>
 
-    <div class="home-actions">
+    <div class="home-actions sheet-actions">
       <button type="button" class="button-link" onclick="goBackToDuel()">
         Retour au duel
       </button>
-    </div>
-    <button
+
+      <button
         type="button"
         id="toggleTrophiesButton"
         class="button-link trophy-toggle-button"
@@ -38,58 +38,55 @@
         Afficher les trophées
       </button>
     </div>
-<section class="rules-card pj-compact-summary-card">
-  <h2>Résumé du PJ</h2>
 
-  <div class="pj-compact-summary">
-    <div class="pj-summary-line">
-      <span>Livret</span>
-      <strong id="sheetFighterName">-</strong>
-    </div>
+    <section class="rules-card pj-compact-summary-card">
+      <h2>Résumé du PJ</h2>
 
-    <div class="pj-summary-line pj-summary-line-three">
-      <div>
-        <span>XP dispo</span>
-        <strong id="sheetXpAvailable">0</strong>
+      <div class="pj-compact-summary">
+        <div class="pj-summary-line">
+          <span>Livret</span>
+          <strong id="sheetFighterName">-</strong>
+        </div>
+
+        <div class="pj-summary-line pj-summary-line-three">
+          <div>
+            <span>XP dispo</span>
+            <strong id="sheetXpAvailable">0</strong>
+          </div>
+
+          <div>
+            <span>XP utilisées</span>
+            <strong id="sheetXpSpent">0</strong>
+          </div>
+
+          <div>
+            <span>XP total</span>
+            <strong id="sheetXpTotal">0</strong>
+          </div>
+        </div>
+
+        <div class="pj-summary-line pj-summary-line-three">
+          <div>
+            <span>PV base</span>
+            <strong id="sheetBodyStart">-</strong>
+          </div>
+
+          <div>
+            <span>Bonus PV</span>
+            <strong id="sheetBodyBonus">+0</strong>
+          </div>
+
+          <div>
+            <span>PV max</span>
+            <strong id="sheetCurrentPv">-</strong>
+          </div>
+        </div>
       </div>
-
-      <div>
-        <span>XP utilisées</span>
-        <strong id="sheetXpSpent">0</strong>
-      </div>
-
-      <div>
-        <span>XP total</span>
-        <strong id="sheetXpTotal">0</strong>
-      </div>
-    </div>
-
-    <div class="pj-summary-line pj-summary-line-three">
-      <div>
-        <span>PV base</span>
-        <strong id="sheetBodyStart">-</strong>
-      </div>
-
-      <div>
-        <span>Bonus PV</span>
-        <strong id="sheetBodyBonus">+0</strong>
-      </div>
-
-      <div>
-        <span>PV max</span>
-        <strong id="sheetCurrentPv">-</strong>
-      </div>
-    </div>
-  </div>
-</section>
-
-   
-    
-    
+    </section>
 
     <p id="sheetStatus" class="rules-note"></p>
 
-     <section class="rules-card">
+    <section class="rules-card">
       <h2>Résumé par couleur</h2>
       <p class="rules-note">
         Quand toutes les actions d’une même couleur progressent, le PJ gagne un bonus de PV de départ.
@@ -133,26 +130,25 @@
           Un trophée est débloqué quand toutes les actions d’une même couleur ont été améliorées.
           Les niveaux supérieurs donnent double, triple, quadruple ou quintuple trophée.
         </p>
-    
+
         <div id="trophyGrid" class="trophy-grid"></div>
       </section>
-    
+
       <section class="rules-card">
         <h2>Trophées spéciaux</h2>
         <p class="rules-note">
           Ces trophées récompensent la progression générale du combattant.
         </p>
-    
+
         <div id="specialTrophyGrid" class="trophy-grid"></div>
       </section>
     </section>
 
-    <div class="home-actions sheet-actions">
-  <button type="button" class="button-link" onclick="goBackToDuel()">
-    Retour au duel
-  </button>
-
-  
+    <div class="home-actions">
+      <button type="button" class="button-link" onclick="goBackToDuel()">
+        Retour au duel
+      </button>
+    </div>
   </main>
 
   <div id="renameModal" class="rename-modal" style="display:none;" role="dialog" aria-modal="true">
@@ -182,6 +178,6 @@
     </div>
   </div>
 
-  <script src="fiche-pj.js?v=6"></script>
+  <script src="fiche-pj.js?v=7"></script>
 </body>
 </html>
