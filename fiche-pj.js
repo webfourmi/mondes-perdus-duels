@@ -244,8 +244,9 @@ function renderHeader(character, profile, fighter) {
   const xpAvailable = Number(profile.experience || 0);
   const xpSpent = Number(profile.spentExperience || 0);
   const xpTotal = xpAvailable + xpSpent;
+
   const bodyBonus = Number(profile.bodyBonus || 0);
-  const bodyStart = Number(fighter.bodyPointsStart || 0) + bodyBonus;
+  const bodyBase = Number(fighter.bodyPointsStart || 0);
   const bodyMax = bodyBase + bodyBonus;
 
   const fighterName =
@@ -254,33 +255,17 @@ function renderHeader(character, profile, fighter) {
     character.fighterId ||
     "Combattant";
 
-  const nameElement = document.getElementById("sheetCharacterName");
-  if (nameElement) {
-    nameElement.textContent = character.name || "Personnage";
-  }
+  setText("sheetCharacterName", character.name || "Personnage");
+  setText("sheetCharacterType", fighterName);
+  setText("sheetFighterName", fighterName);
 
-  const typeElement = document.getElementById("sheetCharacterType");
-  if (typeElement) {
-    typeElement.textContent = fighterName;
-  }
+  setText("sheetXpAvailable", xpAvailable);
+  setText("sheetXpSpent", xpSpent);
+  setText("sheetXpTotal", xpTotal);
 
-  const fighterNameElement = document.getElementById("sheetFighterName");
-  if (fighterNameElement) {
-    fighterNameElement.textContent = fighterName;
-  }
-
-  document.getElementById("sheetXpAvailable").textContent = xpAvailable;
-  document.getElementById("sheetXpSpent").textContent = xpSpent;
-  document.getElementById("sheetXpTotal").textContent = xpTotal;
-
- document.getElementById("sheetBodyBonus").textContent =
-  bodyBonus >= 0 ? "+" + bodyBonus : String(bodyBonus);
-
-document.getElementById("sheetBodyStart").textContent = bodyBase;
-
-const currentPvElement = document.getElementById("sheetCurrentPv");
-if (currentPvElement) {
-  currentPvElement.textContent = bodyMax;
+  setText("sheetBodyStart", bodyBase);
+  setText("sheetBodyBonus", bodyBonus >= 0 ? "+" + bodyBonus : bodyBonus);
+  setText("sheetCurrentPv", bodyMax);
 }
   
 function renderColorSummary(actions, profile) {
