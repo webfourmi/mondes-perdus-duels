@@ -1,6 +1,7 @@
 /* ============================================================
    MONDES PERDUS - DUELS
-   Style global corrige et nettoye
+   style.css complet corrige
+   Version conseillee : style.css?v=126
    ============================================================ */
 
 /* ============================================================
@@ -24,6 +25,7 @@
 
   --text-main: #f5e6c8;
   --text-dark: #120b05;
+
   --input-bg: #f8ecd0;
   --input-text: #1e1309;
 
@@ -32,15 +34,16 @@
 
   --red: #ff7777;
   --orange: #ffae4f;
-  --blue: #66aaff;
-  --yellow: #ffe066;
   --green: #72d672;
+  --yellow: #ffe066;
+  --blue: #66aaff;
   --brown: #c49a6c;
   --pink: #ff88aa;
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
+  --radius-xl: 24px;
 
   --shadow-main: 0 0 30px rgba(0, 0, 0, 0.8);
   --shadow-sticky: 0 6px 18px rgba(0, 0, 0, 0.55);
@@ -65,6 +68,7 @@ body {
   margin: 0;
   min-height: 100vh;
   padding: 20px;
+
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -110,6 +114,10 @@ h2 {
 
 h3 {
   color: var(--gold-light);
+}
+
+p {
+  line-height: 1.4;
 }
 
 label {
@@ -212,39 +220,118 @@ a {
 }
 
 /* ============================================================
-   PAGE ACCUEIL
+   PAGE D'ACCUEIL / SPLASH
    ============================================================ */
 
-body:not(.duel-active) .app {
-  max-width: var(--max-width);
+.splash {
+  width: 100%;
+  max-width: 760px;
+  padding: 24px;
+  border: 3px solid var(--gold);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 138, 0.16), transparent 55%),
+    rgba(20, 12, 6, 0.96);
+  box-shadow: 0 0 36px rgba(0, 0, 0, 0.85);
+  text-align: center;
 }
 
+.badge,
+.home-badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 5px 14px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--gold-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.splash h1 {
+  margin: 0;
+  color: var(--gold-light);
+  font-size: 3rem;
+  text-shadow: 0 0 14px rgba(255, 217, 138, 0.35);
+}
+
+.splash h2 {
+  margin: 8px 0 14px;
+  color: #f3d7a0;
+  font-size: 1.35rem;
+  font-weight: normal;
+  border-bottom: 0;
+}
+
+.splash p {
+  max-width: 520px;
+  margin: 0 auto 18px;
+  line-height: 1.45;
+  font-size: 1rem;
+  opacity: 0.95;
+}
+
+.cover {
+  margin: 18px auto 22px;
+  max-width: 560px;
+  padding: 8px;
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-lg);
+  background: var(--panel-softer);
+}
+
+.cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+.arena-button {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 15px 18px;
+  border: 2px solid var(--gold);
+  border-radius: 16px;
+  background: linear-gradient(#d8aa55, #9b6827);
+  color: var(--text-dark);
+  font-weight: bold;
+  font-size: 1.12rem;
+  text-decoration: none;
+}
+
+.arena-button:hover {
+  filter: brightness(1.1);
+}
+
+.secondary-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--gold-soft);
+  text-decoration: none;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.secondary-link:hover {
+  text-decoration: underline;
+}
+
+/* Ancien accueil dans duel.html, conservé si présent */
 .home-hero {
   text-align: center;
   padding: 18px 12px 14px;
   margin-bottom: 16px;
-
   border: 2px solid var(--gold);
   border-radius: var(--radius-lg);
   background:
     radial-gradient(circle at top, rgba(255, 217, 138, 0.18), transparent 55%),
     linear-gradient(rgba(60, 38, 18, 0.8), rgba(16, 10, 5, 0.95));
   box-shadow: inset 0 0 20px rgba(255, 217, 138, 0.08);
-}
-
-.home-badge {
-  display: inline-block;
-  margin-bottom: 8px;
-  padding: 4px 10px;
-
-  border: 1px solid var(--gold);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.24);
-
-  color: var(--gold-soft);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .home-hero h1 {
@@ -259,6 +346,14 @@ body:not(.duel-active) .app {
   font-size: 0.98rem;
   opacity: 0.92;
 }
+
+body.duel-active .home-hero {
+  display: none !important;
+}
+
+/* ============================================================
+   CARTES ACCUEIL DUEL
+   ============================================================ */
 
 .home-card {
   margin-top: 12px;
@@ -277,7 +372,6 @@ body:not(.duel-active) .app {
 .home-start-card {
   margin-top: 14px;
   padding: 10px;
-
   border: 2px solid var(--gold);
   border-radius: 16px;
   background:
@@ -311,6 +405,34 @@ body:not(.duel-active) #loadMessage {
 }
 
 /* ============================================================
+   TITRE PAGE DUEL
+   ============================================================ */
+
+.duel-page-title {
+  text-align: center;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(201, 164, 91, 0.45);
+}
+
+.duel-page-title h1 {
+  margin: 0;
+  color: var(--gold-light);
+  font-size: 1.65rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 10px rgba(255, 217, 138, 0.25);
+}
+
+body.duel-active .duel-page-title {
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+}
+
+body.duel-active .duel-page-title h1 {
+  font-size: 1.05rem;
+}
+
+/* ============================================================
    BOUTONS ET LIENS
    ============================================================ */
 
@@ -318,11 +440,9 @@ body:not(.duel-active) #loadMessage {
   display: block;
   width: 100%;
   padding: 10px;
-
   border: 2px solid var(--gold);
   border-radius: var(--radius-md);
   background: linear-gradient(#3c2f1e, #1f1810);
-
   color: var(--gold-soft);
   text-align: center;
   text-decoration: none;
@@ -423,11 +543,9 @@ button.button-link {
   height: 34px;
   margin: 0;
   padding: 6px;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 10px;
   border: 1px solid var(--gold);
   background: linear-gradient(#3c2f1e, #1f1810);
@@ -465,7 +583,7 @@ button.button-link {
 
 body.duel-active {
   display: block !important;
-  padding: 6px;
+  padding: 0 6px 6px !important;
 }
 
 body.duel-active .app {
@@ -533,9 +651,8 @@ body.duel-active #bodyPanel {
    BARRE FIXE PV
    ============================================================ */
 
-/* Par defaut, le bandeau de duel est invisible, meme si une ancienne regle tente de l'afficher. */
 #fixedHpBar,
-.fixed-hp-bar {
+body:not(.duel-active) #fixedHpBar {
   display: none !important;
 }
 
@@ -543,19 +660,20 @@ body.duel-active #fixedHpBar {
   display: grid !important;
   position: sticky;
   top: 0;
-  z-index: 999;
+  z-index: 9999;
 
   width: 100%;
   max-width: var(--max-width-duel);
   margin: 0 auto 6px;
   padding: 6px;
 
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
 
+  background: #100d07;
   border: 2px solid var(--gold);
+  border-top: 0;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
-  background: rgba(12, 7, 3, 0.96);
   box-shadow: var(--shadow-sticky);
 }
 
@@ -563,28 +681,67 @@ body.duel-active #fixedHpBar {
   text-align: center;
   border: 1px solid var(--gold-muted);
   border-radius: var(--radius-sm);
-  padding: 5px;
-  background: var(--panel-soft);
+  padding: 4px;
+  min-height: 34px;
+  background: #18140c;
+}
+
+body.duel-active #fixedHpBar .hp-box:first-child {
+  grid-column: 1 / 3;
+}
+
+body.duel-active #fixedHpBar .hp-box:nth-child(2) {
+  grid-column: 3 / 5;
 }
 
 .hp-box span {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.62rem;
+  line-height: 1;
   opacity: 0.85;
 }
 
 .hp-box strong {
   display: block;
   color: var(--gold-light);
-  font-size: 1.15rem;
+  font-size: 0.88rem;
+  line-height: 1;
 }
 
 .hp-mini-button {
-  grid-column: 1 / -1;
-  margin-top: 0;
-  padding: 5px;
+  width: 100%;
+  margin: 0;
+  padding: 5px 3px;
+  min-height: 30px;
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  font-size: 0.66rem;
+  line-height: 1.05;
+  text-align: center;
+}
+
+/* Ligne boutons : PV / Nouveau / Fiche / Fuite */
+body.duel-active #fixedHpBar .hp-mini-button[onclick="toggleHpTools()"] {
+  grid-column: 1 / 2;
+}
+
+body.duel-active #fixedHpBar .hp-new-duel-button {
+  grid-column: 2 / 3;
+}
+
+body.duel-active #duelCharacterSheetButton {
+  grid-column: 3 / 4;
+}
+
+body.duel-active #fixedHpBar .hp-flee-button {
+  grid-column: 4 / 5;
+}
+
+body.duel-active #combatLogButton {
+  grid-column: 1 / 3;
+}
+
+body.duel-active #duelRulesButton {
+  grid-column: 3 / 5;
 }
 
 .hp-new-duel-button {
@@ -599,12 +756,9 @@ body.duel-active #fixedHpBar {
   border-color: #aaa;
 }
 
-.hp-flee-button:hover {
-  filter: brightness(1.15);
-}
-
 .hp-sheet-button,
 .hp-log-button,
+.hp-rules-button,
 .hp-audio-button {
   background: linear-gradient(#3c2f1e, #1f1810);
   color: var(--gold-soft);
@@ -618,30 +772,30 @@ body.duel-active #fixedHpBar {
   color: var(--text-dark);
 }
 
-.hp-tools {
+.hp-tools,
+body.duel-active #hpTools {
   grid-column: 1 / -1;
+  display: grid;
   grid-template-columns: 1fr auto;
-  gap: 6px;
+  gap: 5px;
 }
 
 .hp-tools input,
-.hp-tools button {
+.hp-tools button,
+body.duel-active #hpTools input,
+body.duel-active #hpTools button {
   margin: 0;
   padding: 6px;
-  font-size: 0.85rem;
+  min-height: 30px;
+  font-size: 0.75rem;
 }
 
-/* Compatibilite si l'ancien wrapper audio existe encore dans le HTML. */
 #fixedHpBar .hp-audio-row {
   display: contents;
 }
 
-#fixedHpBar .hp-audio-row .hp-mini-button {
-  grid-column: auto;
-}
-
 /* ============================================================
-   STATS / XP / EVOLUTION
+   STATS / XP / EVOLUTION DU DUEL
    ============================================================ */
 
 .stat-grid {
@@ -848,11 +1002,6 @@ body.duel-active .pg-card strong {
   font-size: 2rem;
 }
 
-body.duel-active .resolve-row input,
-body.duel-active .resolve-row button {
-  padding: 8px;
-}
-
 /* ============================================================
    RESTRICTIONS
    ============================================================ */
@@ -874,7 +1023,6 @@ body.duel-active .resolve-row button {
 
 .restriction-none {
   border-color: var(--gold);
-  color: var(--text-main);
 }
 
 .restriction-blue {
@@ -1039,12 +1187,6 @@ body.duel-active .instruction-card {
   font-size: 0.85rem;
 }
 
-body.duel-active .result-actions button,
-body.duel-active #nextTurnButton {
-  margin-top: 5px;
-  padding: 8px;
-}
-
 /* ============================================================
    IMAGES ET ZOOM
    ============================================================ */
@@ -1076,18 +1218,6 @@ body.duel-active #nextTurnButton {
   cursor: zoom-in;
 }
 
-.priority-image.zoomed-image {
-  max-height: none;
-  cursor: zoom-out;
-}
-
-.image-hint {
-  text-align: center;
-  font-size: 0.72rem;
-  opacity: 0.65;
-  margin-top: 3px;
-}
-
 .image-zoom-button {
   margin-top: 5px;
   padding: 7px;
@@ -1104,16 +1234,11 @@ body.duel-active .page-image {
   object-fit: contain;
 }
 
-/* ============================================================
-   ZOOM IMAGE - OVERLAY CORRIGÉ
-   ============================================================ */
-
-/* Caché par défaut */
+/* Overlay caché par défaut */
 #imageOverlay {
   display: none !important;
 }
 
-/* Visible uniquement quand JS ajoute cette classe */
 #imageOverlay.image-overlay-open {
   display: flex !important;
 }
@@ -1125,8 +1250,6 @@ body.duel-active .page-image {
 
   flex-direction: column;
   padding: 8px;
-  box-sizing: border-box;
-
   background: #050301;
 }
 
@@ -1138,11 +1261,10 @@ body.duel-active .page-image {
   justify-content: center;
   align-items: center;
 
-  border: 2px solid #c9a45b;
-  border-radius: 12px;
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.45);
   padding: 6px;
-  box-sizing: border-box;
 }
 
 #overlayImage {
@@ -1150,7 +1272,7 @@ body.duel-active .page-image {
   width: 100%;
   max-width: none;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .image-overlay-toolbar {
@@ -1170,11 +1292,6 @@ body.duel-active .page-image {
   min-height: 42px;
   font-size: 0.9rem;
 }
-
-
-
-
-
 
 /* ============================================================
    FIN DE COMBAT
@@ -1297,53 +1414,61 @@ body.duel-active .page-image {
 }
 
 /* ============================================================
-   MODALE
+   MODALE GENERALE
    ============================================================ */
 
-.app-modal {
+.app-modal,
+.rename-modal {
   position: fixed;
   inset: 0;
-  z-index: 6000;
+  z-index: 7000;
 
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
 
-  background: rgba(5, 3, 1, 0.82);
+  background: rgba(5, 3, 1, 0.86);
 }
 
-.app-modal-card {
+.app-modal-card,
+.rename-modal-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 430px;
   padding: 18px;
 
   border: 3px solid var(--gold);
   border-radius: var(--radius-lg);
-  background: rgba(20, 12, 6, 0.98);
-  box-shadow: 0 0 32px rgba(0, 0, 0, 0.9);
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 138, 0.14), transparent 55%),
+    rgba(20, 12, 6, 0.98);
+  box-shadow: 0 0 34px rgba(0, 0, 0, 0.9);
 }
 
-.app-modal-card h2 {
+.app-modal-card h2,
+.rename-modal-card h2 {
   margin-top: 0;
   color: var(--gold-light);
   text-align: center;
 }
 
-.app-modal-card p {
+.app-modal-card p,
+.rename-modal-text {
   white-space: pre-line;
   line-height: 1.35;
   text-align: center;
 }
 
-.app-modal-actions {
+.app-modal-actions,
+.rename-modal-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 14px;
 }
 
-.app-modal-actions button {
+.app-modal-actions button,
+.rename-modal-actions button {
   margin-top: 0;
 }
 
@@ -1353,44 +1478,146 @@ body.duel-active .page-image {
   border-color: #c95b5b;
 }
 
-#appModalOkButton {
-  background: linear-gradient(#d8aa55, #9b6827);
-  color: var(--text-dark);
+.rename-modal-badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 12px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  color: var(--gold-light);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.rename-modal-error {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-weight: bold;
+  text-align: center;
 }
 
 /* ============================================================
-   FICHE PJ
+   FICHE PJ - BANNIERE
    ============================================================ */
 
-.pj-summary-grid {
+.pj-banner {
+  margin-bottom: 14px;
+  padding: 18px 16px 14px;
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 138, 0.12), transparent 60%),
+    linear-gradient(90deg, rgba(30, 18, 8, 0.95), rgba(70, 45, 20, 0.55), rgba(30, 18, 8, 0.95));
+  text-align: center;
+  box-shadow: inset 0 0 18px rgba(255, 217, 138, 0.05);
+}
+
+.pj-banner-type {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 12px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  color: var(--gold-soft);
+  font-size: 0.9rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.pj-banner-name {
+  margin: 0;
+  color: var(--gold-light);
+  font-size: 2.4rem;
+  text-shadow: 0 0 14px rgba(255, 217, 138, 0.35);
+}
+
+.pj-rename-button {
+  width: auto;
+  margin: 12px auto 0;
+  padding: 7px 12px;
+  display: inline-block;
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   FICHE PJ - RESUME COMPACT EN 3 LIGNES
+   ============================================================ */
+
+.pj-compact-summary-card {
+  padding-bottom: 12px;
+  border: 2px solid var(--gold);
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 138, 0.10), transparent 65%),
+    var(--panel-softer);
+}
+
+.pj-compact-summary {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 10px;
 }
 
-.pj-summary-box {
+.pj-summary-line {
+  padding: 10px;
   border: 1px solid var(--gold-muted);
   border-radius: var(--radius-md);
-  padding: 10px;
-  background: var(--panel-soft);
+  background: rgba(0, 0, 0, 0.20);
+  box-shadow: inset 0 0 10px rgba(255, 217, 138, 0.04);
+}
+
+.pj-summary-line > span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.82;
   text-align: center;
 }
 
-.pj-summary-box span {
+.pj-summary-line > strong {
   display: block;
-  font-size: 0.78rem;
-  opacity: 0.85;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.pj-summary-box strong {
-  display: block;
-  margin-top: 4px;
   color: var(--gold-light);
   font-size: 1.25rem;
+  text-align: center;
 }
+
+.pj-summary-line-three {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.pj-summary-line-three div {
+  padding: 7px 6px;
+  border-radius: 10px;
+  background: var(--panel-softer);
+  text-align: center;
+}
+
+.pj-summary-line-three span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.78;
+}
+
+.pj-summary-line-three strong {
+  display: block;
+  color: var(--gold-light);
+  font-size: 1.1rem;
+}
+
+/* ============================================================
+   FICHE PJ - RESUME PAR COULEUR
+   ============================================================ */
 
 .color-summary-grid {
   display: grid;
@@ -1422,6 +1649,10 @@ body.duel-active .page-image {
   opacity: 0.9;
 }
 
+/* ============================================================
+   FICHE PJ - TABLE EVOLUTIONS
+   ============================================================ */
+
 .table-scroll {
   overflow-x: auto;
 }
@@ -1452,75 +1683,244 @@ body.duel-active .page-image {
   accent-color: #d8aa55;
 }
 
+.evolution-table th:nth-child(1),
+.evolution-table td:nth-child(1) {
+  width: 44px;
+  text-align: center;
+}
+
+.evolution-table th:nth-child(3),
+.evolution-table td:nth-child(3),
+.evolution-table th:nth-child(4),
+.evolution-table td:nth-child(4) {
+  width: 70px;
+  text-align: center;
+}
+
+.evolution-row {
+  border-left: 5px solid transparent;
+}
+
+.evolution-row-rouge {
+  border-left-color: var(--red);
+}
+
+.evolution-row-orange {
+  border-left-color: var(--orange);
+}
+
+.evolution-row-vert {
+  border-left-color: var(--green);
+}
+
+.evolution-row-jaune {
+  border-left-color: var(--yellow);
+}
+
+.evolution-row-bleu {
+  border-left-color: var(--blue);
+}
+
+.evolution-row-marron {
+  border-left-color: var(--brown);
+}
+
+.evo-action-name {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: bold;
+  line-height: 1.2;
+  color: var(--text-dark);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+
+.evo-text-rouge {
+  background: var(--red);
+  color: var(--text-dark);
+}
+
+.evo-text-orange {
+  background: var(--orange);
+  color: var(--text-dark);
+}
+
+.evo-text-vert {
+  background: var(--green);
+  color: var(--text-dark);
+}
+
+.evo-text-jaune {
+  background: var(--yellow);
+  color: var(--text-dark);
+}
+
+.evo-text-bleu {
+  background: var(--blue);
+  color: var(--text-dark);
+}
+
+.evo-text-marron {
+  background: var(--brown);
+  color: var(--text-dark);
+}
+
+.evo-text-none {
+  background: var(--gold-muted);
+  color: var(--text-dark);
+}
+
 .evo-mode-label {
   display: block;
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 0.72rem;
   opacity: 0.75;
 }
 
-.evo-color-pill {
-  display: inline-block;
-  min-width: 70px;
-  text-align: center;
-  padding: 4px 7px;
+/* ============================================================
+   FICHE PJ - TROPHEES
+   ============================================================ */
+
+.sheet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.trophy-toggle-button {
+  background: linear-gradient(#5c4724, #2d2112);
+  color: var(--gold-soft);
+  border-color: var(--gold-light);
+}
+
+.trophy-panel {
+  margin-top: 12px;
+}
+
+.trophy-panel .rules-card {
+  border-color: var(--gold);
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 138, 0.08), transparent 60%),
+    var(--panel-softer);
+}
+
+.trophy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.trophy-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+
+  padding: 10px;
+  border: 2px solid var(--gold-muted);
+  border-radius: 14px;
+  background: var(--panel-softer);
+}
+
+.trophy-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
   border-radius: 999px;
-  font-weight: bold;
-  color: var(--text-dark);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1.15rem;
+  line-height: 1.2;
+  text-align: center;
+
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid var(--gold);
 }
 
-.evo-color-rouge {
+.trophy-content strong {
+  display: block;
+  color: var(--gold-light);
+  font-size: 1rem;
+}
+
+.trophy-content span {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.86rem;
+  opacity: 0.92;
+}
+
+.trophy-content em {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.76rem;
+  opacity: 0.75;
+}
+
+.trophy-unlocked {
+  border-color: var(--gold-light);
+  background:
+    radial-gradient(circle at top left, rgba(255, 217, 138, 0.18), transparent 55%),
+    var(--panel-soft);
+  box-shadow: inset 0 0 14px rgba(255, 217, 138, 0.06);
+}
+
+.trophy-locked {
+  opacity: 0.48;
+  filter: grayscale(0.75);
+}
+
+.trophy-rouge {
   border-color: var(--red);
-  background: rgba(180, 40, 40, 0.34);
 }
 
-.evo-color-orange {
+.trophy-orange {
   border-color: var(--orange);
-  background: rgba(220, 120, 30, 0.34);
 }
 
-.evo-color-bleu {
-  border-color: var(--blue);
-  background: rgba(60, 120, 220, 0.34);
-}
-
-.evo-color-jaune {
-  border-color: var(--yellow);
-  background: rgba(190, 160, 40, 0.34);
-}
-
-.evo-color-vert {
+.trophy-vert {
   border-color: var(--green);
-  background: rgba(60, 150, 60, 0.34);
 }
 
-.evo-color-marron {
+.trophy-jaune {
+  border-color: var(--yellow);
+}
+
+.trophy-bleu {
+  border-color: var(--blue);
+}
+
+.trophy-marron {
   border-color: var(--brown);
-  background: rgba(130, 80, 35, 0.42);
 }
 
-.evo-color-pill.evo-color-rouge {
-  background: var(--red);
+.special-trophy-card {
+  border-color: var(--gold);
 }
 
-.evo-color-pill.evo-color-orange {
-  background: var(--orange);
+.trophy-level {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 217, 138, 0.55);
+  background: rgba(255, 217, 138, 0.10);
 }
 
-.evo-color-pill.evo-color-bleu {
-  background: var(--blue);
+.trophy-level strong {
+  display: block;
+  color: var(--gold-light);
+  font-size: 0.82rem;
 }
 
-.evo-color-pill.evo-color-jaune {
-  background: var(--yellow);
-}
-
-.evo-color-pill.evo-color-vert {
-  background: var(--green);
-}
-
-.evo-color-pill.evo-color-marron {
-  background: var(--brown);
+.trophy-level span {
+  display: block;
+  margin-top: 3px;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
 }
 
 /* ============================================================
@@ -1649,7 +2049,28 @@ body.duel-active .page-image {
 }
 
 /* ============================================================
-   RESPONSIVE GENERAL
+   DIFFICULTE SOLO
+   ============================================================ */
+
+.solo-difficulty-block {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--gold-muted);
+  border-radius: var(--radius-md);
+  background: var(--panel-soft);
+}
+
+.solo-difficulty-block label {
+  margin-top: 0;
+}
+
+.solo-difficulty-block .small {
+  margin-bottom: 0;
+  color: var(--gold-soft);
+}
+
+/* ============================================================
+   RESPONSIVE
    ============================================================ */
 
 @media (max-width: 560px) {
@@ -1661,6 +2082,28 @@ body.duel-active .page-image {
     padding: 14px;
     margin-top: 10px;
     border-radius: 14px;
+  }
+
+  .splash {
+    padding: 18px 14px;
+    border-radius: var(--radius-lg);
+  }
+
+  .splash h1 {
+    font-size: 2.2rem;
+  }
+
+  .splash h2 {
+    font-size: 1.1rem;
+  }
+
+  .splash p {
+    font-size: 0.95rem;
+  }
+
+  .arena-button {
+    font-size: 1rem;
+    padding: 13px 14px;
   }
 
   .character-title-row {
@@ -1676,8 +2119,13 @@ body.duel-active .page-image {
 
   .character-buttons,
   .import-export-buttons,
-  .pj-summary-grid,
-  .color-summary-grid {
+  .color-summary-grid,
+  .trophy-grid,
+  .audio-control-row {
+    grid-template-columns: 1fr;
+  }
+
+  .sheet-actions {
     grid-template-columns: 1fr;
   }
 
@@ -1698,8 +2146,33 @@ body.duel-active .page-image {
     font-size: 1.75rem;
   }
 
-  .audio-control-row {
-    grid-template-columns: 1fr;
+  .pj-banner {
+    padding: 14px 10px 12px;
+  }
+
+  .pj-banner-type {
+    font-size: 0.78rem;
+    padding: 4px 10px;
+  }
+
+  .pj-banner-name {
+    font-size: 1.9rem;
+  }
+
+  .pj-summary-line-three {
+    gap: 4px;
+  }
+
+  .pj-summary-line-three div {
+    padding: 6px 4px;
+  }
+
+  .pj-summary-line-three span {
+    font-size: 0.62rem;
+  }
+
+  .pj-summary-line-three strong {
+    font-size: 0.95rem;
   }
 
   .evolution-table {
@@ -1709,6 +2182,23 @@ body.duel-active .page-image {
   .evolution-table th,
   .evolution-table td {
     padding: 5px;
+  }
+
+  .evo-action-name {
+    padding: 5px 8px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+  }
+
+  .trophy-card {
+    padding: 9px;
+  }
+
+  .trophy-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    font-size: 1.05rem;
   }
 
   .combat-log-header {
@@ -1723,220 +2213,6 @@ body.duel-active .page-image {
   .combat-log-actions button {
     width: 100%;
   }
-}
-
-@media (max-height: 720px) {
-  .priority-image {
-    max-height: 48vh;
-  }
-
-  body.duel-active .instruction-card {
-    font-size: 0.8rem;
-  }
-}
-
-
-
-body.duel-active #fixedHpBar .hp-box strong {
-  font-size: 0.95rem;
-  line-height: 1;
-}
-
-/* Tous les boutons du bandeau */
-body.duel-active #fixedHpBar .hp-mini-button {
-  width: 100%;
-  margin: 0;
-  padding: 5px 3px;
-  min-height: 30px;
-
-  border-radius: 8px;
-  font-size: 0.66rem;
-  line-height: 1.05;
-  text-align: center;
-}
-
-/* Placement des boutons */
-body.duel-active #fixedHpBar .hp-mini-button[onclick="toggleHpTools()"] {
-  grid-column: 1 / 2;
-}
-
-body.duel-active #duelAudioToggleButton {
-  grid-column: 2 / 3;
-}
-
-body.duel-active #duelMusicToggleButton {
-  grid-column: 3 / 4;
-}
-
-body.duel-active #duelCharacterSheetButton {
-  grid-column: 4 / 5;
-}
-
-body.duel-active #fixedHpBar .hp-new-duel-button {
-  grid-column: 1 / 2;
-}
-
-body.duel-active #fixedHpBar .hp-flee-button {
-  grid-column: 2 / 3;
-}
-
-body.duel-active #combatLogButton {
-  grid-column: 1 / 3;
-}
-
-body.duel-active #duelRulesButton {
-  grid-column: 3 / 5;
-}
-
-/* Champ de correction PV */
-body.duel-active #hpTools {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 5px;
-}
-
-body.duel-active #hpTools input,
-body.duel-active #hpTools button {
-  margin: 0;
-  padding: 6px;
-  min-height: 30px;
-  font-size: 0.75rem;
-}
-
-/* Sur très petits écrans : encore plus compact */
-@media (max-width: 420px) {
-  body.duel-active #fixedHpBar {
-    gap: 4px;
-    padding: 4px;
-  }
-
-  body.duel-active #fixedHpBar .hp-mini-button {
-    font-size: 0.6rem;
-    min-height: 28px;
-    padding: 4px 2px;
-  }
-
-  body.duel-active #fixedHpBar .hp-box {
-    min-height: 34px;
-  }
-
-  body.duel-active #fixedHpBar .hp-box span {
-    font-size: 0.6rem;
-  }
-
-  body.duel-active #fixedHpBar .hp-box strong {
-    font-size: 0.85rem;
-  }
-}
-/* ============================================================
-   BANDEAU DUEL MOBILE SANS AUDIO
-   ============================================================ */
-
-#fixedHpBar,
-body:not(.duel-active) #fixedHpBar {
-  display: none !important;
-}
-
-body.duel-active {
-  display: block !important;
-  padding: 0 6px 6px !important;
-}
-
-body.duel-active #fixedHpBar {
-  display: grid !important;
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-
-  width: 100%;
-  max-width: 680px;
-  margin: 0 auto 6px auto;
-  padding: 6px;
-
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-
-  background: #100d07;
-  border: 2px solid #c9a45b;
-  border-top: 0;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
-  box-sizing: border-box;
-}
-
-body.duel-active #fixedHpBar .hp-box {
-  padding: 4px;
-  min-height: 34px;
-  border-radius: 8px;
-  background: #18140c;
-}
-
-body.duel-active #fixedHpBar .hp-box:first-child {
-  grid-column: 1 / 3;
-}
-
-body.duel-active #fixedHpBar .hp-box:nth-child(2) {
-  grid-column: 3 / 5;
-}
-
-body.duel-active #fixedHpBar .hp-box span {
-  font-size: 0.62rem;
-  line-height: 1;
-}
-
-body.duel-active #fixedHpBar .hp-box strong {
-  font-size: 0.88rem;
-  line-height: 1;
-}
-
-body.duel-active #fixedHpBar .hp-mini-button {
-  width: 100%;
-  margin: 0;
-  padding: 5px 3px;
-  min-height: 30px;
-  border-radius: 8px;
-  font-size: 0.66rem;
-  line-height: 1.05;
-  text-align: center;
-}
-
-/* Ligne boutons : PV / Nouveau / Fiche / Fuite */
-body.duel-active #fixedHpBar .hp-mini-button[onclick="toggleHpTools()"] {
-  grid-column: 1 / 2;
-}
-
-body.duel-active #fixedHpBar .hp-new-duel-button {
-  grid-column: 2 / 3;
-}
-
-body.duel-active #duelCharacterSheetButton {
-  grid-column: 3 / 4;
-}
-
-body.duel-active #fixedHpBar .hp-flee-button {
-  grid-column: 4 / 5;
-}
-
-/* Journal en ligne complète */
-body.duel-active #combatLogButton {
-  grid-column: 1 / 3;
-}
-
-/* Champ correction PV */
-body.duel-active #hpTools {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 5px;
-}
-
-body.duel-active #hpTools input,
-body.duel-active #hpTools button {
-  margin: 0;
-  padding: 6px;
-  min-height: 30px;
-  font-size: 0.75rem;
 }
 
 @media (max-width: 420px) {
@@ -1963,729 +2239,13 @@ body.duel-active #hpTools button {
     font-size: 0.82rem;
   }
 }
-.hp-rules-button {
-  background: linear-gradient(#3c2f1e, #1f1810);
-  color: #ffe7a6;
-  border-color: #c9a45b;
-}
 
-.hp-rules-button:hover {
-  filter: brightness(1.15);
-}
-/* ============================================================
-   ACCUEIL MASQUÉ PENDANT LE DUEL
-   ============================================================ */
-
-body.duel-active .home-hero {
-  display: none !important;
-}
-/* ============================================================
-   TITRE SIMPLE PAGE DUEL
-   ============================================================ */
-
-.duel-page-title {
-  text-align: center;
-  margin: 0 0 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(201, 164, 91, 0.45);
-}
-
-.duel-page-title h1 {
-  margin: 0;
-  color: #ffd98a;
-  font-size: 1.65rem;
-  letter-spacing: 0.04em;
-  text-shadow: 0 0 10px rgba(255, 217, 138, 0.25);
-}
-
-/* En plein duel, titre très discret */
-body.duel-active .duel-page-title {
-  margin-bottom: 4px;
-  padding-bottom: 4px;
-}
-
-body.duel-active .duel-page-title h1 {
-  font-size: 1.05rem;
-}
-/* ============================================================
-   ACCUEIL
-   ============================================================ */
-   body.splash-page {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Georgia, "Times New Roman", serif;
-      background:
-        radial-gradient(circle at top, #4b3725 0, #1c130c 45%, #090604 100%);
-      color: #f5e6c8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      box-sizing: border-box;
-    }
-
-    .splash {
-      width: 100%;
-      max-width: 760px;
-      padding: 24px;
-      border: 3px solid #c9a45b;
-      border-radius: 24px;
-      background:
-        radial-gradient(circle at top, rgba(255, 217, 138, 0.16), transparent 55%),
-        rgba(20, 12, 6, 0.96);
-      box-shadow: 0 0 36px rgba(0, 0, 0, 0.85);
-      text-align: center;
-    }
-
-    .badge {
-      display: inline-block;
-      margin-bottom: 12px;
-      padding: 5px 14px;
-      border: 1px solid #c9a45b;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.25);
-      color: #ffe7a6;
-      font-size: 0.78rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0;
-      color: #ffd98a;
-      font-size: 3rem;
-      text-shadow: 0 0 14px rgba(255, 217, 138, 0.35);
-    }
-
-    h2 {
-      margin: 8px 0 14px;
-      color: #f3d7a0;
-      font-size: 1.35rem;
-      font-weight: normal;
-    }
-
-    p {
-      max-width: 520px;
-      margin: 0 auto 18px;
-      line-height: 1.45;
-      font-size: 1rem;
-      opacity: 0.95;
-    }
-
-    .cover {
-      margin: 18px auto 22px;
-      max-width: 560px;
-      padding: 8px;
-      border: 2px solid #c9a45b;
-      border-radius: 18px;
-      background: rgba(255, 244, 210, 0.06);
-    }
-
-    .cover img {
-      display: block;
-      width: 100%;
-      height: auto;
-      border-radius: 12px;
-    }
-
-    .arena-button {
-      display: block;
-      width: 100%;
-      max-width: 340px;
-      margin: 0 auto;
-      padding: 15px 18px;
-      border: 2px solid #c9a45b;
-      border-radius: 16px;
-      background: linear-gradient(#d8aa55, #9b6827);
-      color: #120b05;
-      font-weight: bold;
-      font-size: 1.12rem;
-      text-decoration: none;
-      box-sizing: border-box;
-    }
-
-    .arena-button:hover {
-      filter: brightness(1.1);
-    }
-
-    .secondary-link {
-      display: inline-block;
-      margin-top: 14px;
-      color: #ffe7a6;
-      text-decoration: none;
-      font-size: 0.95rem;
-      opacity: 0.9;
-    }
-
-    .secondary-link:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 560px) {
-      .splash {
-        padding: 18px 14px;
-        border-radius: 18px;
-      }
-
-      h1 {
-        font-size: 2.2rem;
-      }
-
-      h2 {
-        font-size: 1.1rem;
-      }
-
-      p {
-        font-size: 0.95rem;
-      }
-
-      .arena-button {
-        font-size: 1rem;
-        padding: 13px 14px;
-      }
-
-   /* ============================================================
-   FICHE PJ - EN-TÊTE AMÉLIORÉ
-   ============================================================ */
-
-.pj-hero-card {
-  margin-bottom: 14px;
-  padding: 16px;
-  border: 2px solid #c9a45b;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at top, rgba(255, 217, 138, 0.16), transparent 60%),
-    rgba(0, 0, 0, 0.25);
-  text-align: center;
-}
-
-.pj-hero-card h1 {
-  margin: 0;
-  color: #ffd98a;
-  font-size: 2rem;
-  letter-spacing: 0.04em;
-}
-
-.pj-hero-card p {
-  margin: 6px 0 0;
-  color: #f5e6c8;
-  opacity: 0.9;
-}
-    }
- 
-/* ============================================================
-   FICHE PJ - BANNIERE NOM + TYPE
-   ============================================================ */
-
-.pj-banner {
-  margin-bottom: 14px;
-  padding: 18px 16px 14px;
-  border: 2px solid #c9a45b;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at top, rgba(255, 217, 138, 0.12), transparent 60%),
-    linear-gradient(90deg, rgba(30, 18, 8, 0.95), rgba(70, 45, 20, 0.55), rgba(30, 18, 8, 0.95));
-  text-align: center;
-  box-shadow: inset 0 0 18px rgba(255, 217, 138, 0.05);
-}
-
-.pj-banner-type {
-  display: inline-block;
-  margin-bottom: 8px;
-  padding: 4px 12px;
-  border: 1px solid #c9a45b;
-  border-radius: 999px;
-  color: #ffe7a6;
-  font-size: 0.9rem;
-  font-weight: bold;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  background: rgba(0, 0, 0, 0.22);
-}
-
-.pj-banner-name {
-  margin: 0;
-  color: #ffd98a;
-  font-size: 2.4rem;
-  text-shadow: 0 0 14px rgba(255, 217, 138, 0.35);
-}
-
-@media (max-width: 560px) {
-  .pj-banner {
-    padding: 14px 10px 12px;
+@media (max-height: 720px) {
+  .priority-image {
+    max-height: 48vh;
   }
 
-  .pj-banner-type {
-    font-size: 0.78rem;
-    padding: 4px 10px;
+  body.duel-active .instruction-card {
+    font-size: 0.8rem;
   }
-
-  .pj-banner-name {
-    font-size: 1.9rem;
-  }
-}
-/* ============================================================
-   MODALE RENOMMER PJ
-   ============================================================ */
-
-.rename-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 7000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  box-sizing: border-box;
-  background: rgba(5, 3, 1, 0.86);
-}
-
-.rename-modal-card {
-  width: 100%;
-  max-width: 430px;
-  padding: 18px;
-  border: 3px solid var(--gold);
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at top, rgba(255, 217, 138, 0.14), transparent 55%),
-    rgba(20, 12, 6, 0.98);
-  box-shadow: 0 0 34px rgba(0, 0, 0, 0.9);
-}
-
-.rename-modal-badge {
-  display: inline-block;
-  margin-bottom: 10px;
-  padding: 4px 12px;
-  border: 1px solid var(--gold);
-  border-radius: 999px;
-  color: var(--gold-light);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.rename-modal-card h2 {
-  margin: 0 0 8px;
-  color: var(--gold-light);
-  text-align: center;
-}
-
-.rename-modal-text {
-  margin: 0 0 14px;
-  text-align: center;
-  line-height: 1.35;
-  opacity: 0.9;
-}
-
-.rename-modal-card label {
-  margin-top: 10px;
-}
-
-.rename-modal-error {
-  min-height: 1.2em;
-  margin: 8px 0 0;
-  color: #ffb3a7;
-  font-weight: bold;
-  text-align: center;
-}
-
-.rename-modal-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.rename-modal-actions button {
-  margin-top: 0;
-}
-/* ============================================================
-   TROPHEES PJ
-   ============================================================ */
-
-.trophy-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.trophy-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px;
-  align-items: center;
-
-  padding: 10px;
-  border: 2px solid #8d6b36;
-  border-radius: 14px;
-  background: rgba(255, 244, 210, 0.06);
-}
-
-.trophy-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 1.45rem;
-  background: rgba(0, 0, 0, 0.26);
-  border: 1px solid #c9a45b;
-}
-
-.trophy-content strong {
-  display: block;
-  color: #ffd98a;
-  font-size: 1rem;
-}
-
-.trophy-content span {
-  display: block;
-  margin-top: 3px;
-  font-size: 0.86rem;
-  opacity: 0.92;
-}
-
-.trophy-content em {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.76rem;
-  opacity: 0.75;
-}
-
-.trophy-unlocked {
-  border-color: #ffd98a;
-  background:
-    radial-gradient(circle at top left, rgba(255, 217, 138, 0.18), transparent 55%),
-    rgba(255, 244, 210, 0.08);
-  box-shadow: inset 0 0 14px rgba(255, 217, 138, 0.06);
-}
-
-.trophy-locked {
-  opacity: 0.48;
-  filter: grayscale(0.75);
-}
-
-.trophy-rouge { border-color: #ff7777; }
-.trophy-orange { border-color: #ffae4f; }
-.trophy-bleu { border-color: #66aaff; }
-.trophy-jaune { border-color: #ffe066; }
-.trophy-vert { border-color: #72d672; }
-.trophy-marron { border-color: #c49a6c; }
-
-@media (max-width: 560px) {
-  .trophy-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .trophy-card {
-    padding: 9px;
-  }
-
-  .trophy-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 1.25rem;
-  }
-   .special-trophy-card {
-  border-color: #c9a45b;
-}
-/* Niveau de trophée couleur */
-
-.trophy-level {
-  margin-top: 6px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 217, 138, 0.55);
-  background: rgba(255, 217, 138, 0.10);
-}
-
-.trophy-level strong {
-  display: block;
-  color: #ffd98a;
-  font-size: 0.82rem;
-}
-
-.trophy-level span {
-  display: block;
-  margin-top: 3px;
-  font-size: 1rem;
-  letter-spacing: 0.08em;
-}
-
-.trophy-card .trophy-icon {
-  min-width: 42px;
-  text-align: center;
-  font-size: 1.15rem;
-  line-height: 1.2;
-}
-/* ============================================================
-   FICHE PJ - BOUTON ET PANNEAU TROPHEES
-   ============================================================ */
-
-.sheet-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.trophy-toggle-button {
-  background: linear-gradient(#5c4724, #2d2112);
-  color: #ffe7a6;
-  border-color: #ffd98a;
-}
-
-.trophy-panel {
-  margin-top: 12px;
-}
-
-.trophy-panel .rules-card {
-  border-color: #c9a45b;
-  background:
-    radial-gradient(circle at top, rgba(255, 217, 138, 0.08), transparent 60%),
-    rgba(255, 244, 210, 0.05);
-}
-
-@media (max-width: 560px) {
-  .sheet-actions {
-    grid-template-columns: 1fr;
-  }
-}
-/* ============================================================
-   FICHE PJ - RESUME COMPACT
-   ============================================================ */
-
-.pj-compact-summary-card {
-  padding-bottom: 12px;
-}
-
-.pj-compact-summary {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.pj-summary-line {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  align-items: center;
-  gap: 8px;
-
-  padding: 9px 10px;
-  border: 1px solid #8d6b36;
-  border-radius: 12px;
-  background: rgba(255, 244, 210, 0.07);
-}
-
-.pj-summary-line span {
-  font-size: 0.76rem;
-  opacity: 0.82;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.pj-summary-line strong {
-  color: #ffd98a;
-  font-size: 1.05rem;
-}
-
-.pj-summary-line-three {
-  grid-template-columns: repeat(3, 1fr);
-  text-align: center;
-}
-
-.pj-summary-line-three div {
-  padding: 2px 4px;
-}
-
-.pj-summary-line-three span,
-.pj-summary-line-three strong {
-  display: block;
-}
-
-@media (max-width: 560px) {
-  .pj-summary-line {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .pj-summary-line-three {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .pj-summary-line-three span {
-    font-size: 0.68rem;
-  }
-
-  .pj-summary-line-three strong {
-    font-size: 0.95rem;
-  }
-}
-   /* ============================================================
-   FICHE PJ - TABLE EVOLUTIONS COMPACTE
-   ============================================================ */
-
-.evolution-table th:nth-child(1),
-.evolution-table td:nth-child(1) {
-  width: 44px;
-  text-align: center;
-}
-
-.evolution-table th:nth-child(3),
-.evolution-table td:nth-child(3),
-.evolution-table th:nth-child(4),
-.evolution-table td:nth-child(4) {
-  text-align: center;
-  width: 70px;
-}
-
-.evolution-row {
-  border-left: 4px solid transparent;
-}
-
-.evolution-row-rouge {
-  border-left-color: #ff7777;
-}
-
-.evolution-row-orange {
-  border-left-color: #ffae4f;
-}
-
-.evolution-row-vert {
-  border-left-color: #72d672;
-}
-
-.evolution-row-jaune {
-  border-left-color: #ffe066;
-}
-
-.evolution-row-bleu {
-  border-left-color: #66aaff;
-}
-
-.evolution-row-marron {
-  border-left-color: #c49a6c;
-}
-
-.evo-action-name {
-  display: block;
-  font-weight: bold;
-}
-
-.evo-text-rouge {
-  color: #ff8f8f;
-}
-
-.evo-text-orange {
-  color: #ffbd69;
-}
-
-.evo-text-vert {
-  color: #96ef96;
-}
-
-.evo-text-jaune {
-  color: #ffe066;
-}
-
-.evo-text-bleu {
-  color: #91c6ff;
-}
-
-.evo-text-marron {
-  color: #d7ae7f;
-}
-/* ============================================================
-   FICHE PJ - ACTIONS AVEC FOND COULEUR
-   ============================================================ */
-
-.evo-action-name {
-  display: inline-block;
-  padding: 5px 9px;
-  border-radius: 999px;
-  font-weight: bold;
-  color: #120b05;
-  line-height: 1.2;
-}
-
-/* Fonds colorés des actions */
-.evo-text-rouge {
-  background: #ff7777;
-  color: #120b05;
-}
-
-.evo-text-orange {
-  background: #ffae4f;
-  color: #120b05;
-}
-
-.evo-text-vert {
-  background: #72d672;
-  color: #120b05;
-}
-
-.evo-text-jaune {
-  background: #ffe066;
-  color: #120b05;
-}
-
-.evo-text-bleu {
-  background: #66aaff;
-  color: #120b05;
-}
-
-.evo-text-marron {
-  background: #c49a6c;
-  color: #120b05;
-}
-
-/* Le mode reste discret sous le badge */
-.evo-mode-label {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.72rem;
-  opacity: 0.75;
-}
-
-/* Un peu plus d'air dans la colonne Action */
-.evolution-table td:nth-child(2) {
-  min-width: 190px;
-}
-
-/* Mobile */
-@media (max-width: 560px) {
-  .evo-action-name {
-    padding: 4px 7px;
-    font-size: 0.78rem;
-    border-radius: 10px;
-  }
-
-  .evolution-table td:nth-child(2) {
-    min-width: 150px;
-  }
-}
-
-/* ============================================================
-   DIFFICULTE SOLO
-   ============================================================ */
-
-.solo-difficulty-block {
-  margin-top: 12px;
-  padding: 10px;
-  border: 1px solid #8d6b36;
-  border-radius: 12px;
-  background: rgba(255, 244, 210, 0.07);
-}
-
-.solo-difficulty-block label {
-  margin-top: 0;
-}
-
-.solo-difficulty-block .small {
-  margin-bottom: 0;
-  color: #ffe7a6;
 }
