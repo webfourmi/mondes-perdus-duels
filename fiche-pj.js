@@ -41,7 +41,8 @@ function setText(id, value) {
 }
 
 function goBackToDuel() {
-  window.location.href = "duel.html";
+   localStorage.setItem("lw_resume_duel_after_sheet", "1");
+   window.location.href = "duel.html?resume=1";
 }
 
 function normalizeProfileName(name) {
