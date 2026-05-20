@@ -353,22 +353,55 @@ function renderColorSummary(actions, profile) {
     container.appendChild(item);
   });
 }
+const evolutionColorOrder = ["rouge", "orange", "vert", "jaune", "bleu", "marron"];
 
+function getEvolutionColorRank(color) {
+  const index = evolutionColorOrder.indexOf(color);
+
+  if (index === -1) {
+    return 999;
+  }
+
+  return index;
+}
+
+function getSortedEvolutionActions(actions) {
+  return actions
+    .map(function(action, index) {
+      return {
+        action: action,
+        originalIndex: index
+      };
+    })
+    .sort(function(a, b) {
+      const colorDifference =
+        getEvolutionColorRank(a.action.color) -
+        getEvolutionColorRank(b.action.color);
+
+      if (colorDifference !== 0) {
+        return colorDifference;
+      }
+
+      return a.originalIndex - b.originalIndex;
+    })
+    .map(function(item) {
+      return item.action;
+    });
+}
 function renderEvolutionTable(actions, profile) {
   const tbody = document.getElementById("evolutionTableBody");
   if (!tbody) return;
 
+  const sortedActions = getSortedEvolutionActions(actions);
+
   tbody.innerHTML = "";
 
-  actions.forEach(function(action) {
+  sortedActions.forEach(function(action) {
     const bonus = getBonus(profile, action.id);
     const checked = bonus > 0 ? "checked" : "";
-    const pgText =
-      action.da !== undefined && action.da !== null
-        ? action.pg + " / DA " + action.da
-        : action.pg;
 
     const row = document.createElement("tr");
+    row.className = "evolution-row evolution-row-" + (action.color || "none");
 
     row.innerHTML =
       "<td>" +
@@ -377,22 +410,14 @@ function renderEvolutionTable(actions, profile) {
       ">" +
       "</td>" +
       "<td>" +
-      '<span class="evo-color-pill evo-color-' +
+      '<strong class="evo-action-name evo-text-' +
       action.color +
       '">' +
-      getColorLabel(action.color) +
-      "</span>" +
-      "</td>" +
-      "<td>" +
-      "<strong>" +
       actionLabel(action) +
       "</strong>" +
       '<span class="evo-mode-label">' +
       action.modeLabel +
       "</span>" +
-      "</td>" +
-      "<td>" +
-      pgText +
       "</td>" +
       "<td>" +
       action.mod +
@@ -404,7 +429,6 @@ function renderEvolutionTable(actions, profile) {
     tbody.appendChild(row);
   });
 }
-
 function renderTrophies(actions, profile) {
   const container = document.getElementById("trophyGrid");
   if (!container) return;
@@ -802,7 +826,7 @@ async function initSheetPage() {
 
     const tbody = document.getElementById("evolutionTableBody");
     if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="6">Aucun PJ trouvé.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4">Aucun PJ trouvé.</td></tr>';
     }
 
     return;
