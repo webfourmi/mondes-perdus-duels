@@ -61,6 +61,7 @@ let currentTurnNumber = 1;
 
 const charactersIndexKey = "lw_saved_characters_index";
 const lastCharacterKey = "lw_last_character_id";
+const resumeDuelAfterSheetKey = "lw_resume_duel_after_sheet";
 
 
 let combatLog = [];
@@ -594,9 +595,14 @@ function loadSavedCharacterFromSelect() {
 
 function openCharacterSheetPage() {
   const select = document.getElementById("savedCharacterSelect");
-
+  if (currentFighter && currentOpponentFighter) {
+    saveCurrentDuelState();
+  }
   let characterId = "";
-
+  
+  if (currentFighter && currentOpponentFighter) {
+      saveCurrentDuelState();
+    }
   if (select && select.value) {
     characterId = select.value;
   } else if (currentFighter && currentPlayerName) {
@@ -1358,6 +1364,14 @@ async function initApp() {
 
   try {
     refreshSavedCharactersSelect();
+
+    if (shouldResumeDuelAfterSheet()) {
+      localStorage.removeItem(resumeDuelAfterSheetKey);
+    
+      setTimeout(function() {
+        startDuel();
+      }, 50);
+    }
   } catch (error) {
     console.error("Erreur chargement PJ sauvegardés :", error);
 
@@ -1370,6 +1384,15 @@ async function initApp() {
   }
 
   updateAudioButtons();
+}
+
+function shouldResumeDuelAfterSheet() {
+  const params = new URLSearchParams(window.location.search);
+
+  return (
+    params.get("resume") === "1" ||
+    localStorage.getItem(resumeDuelAfterSheetKey) === "1"
+  );
 }
 /* ============================================================
    SAUVEGARDE DU DUEL EN COURS
