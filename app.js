@@ -441,9 +441,6 @@ function refreshSavedCharactersSelect() {
   const creationFields = document.getElementById("characterCreationFields");
   const sheetButton = document.getElementById("characterSheetButton");
 
-  if (sheetButton) sheetButton.style.display = "none";
-  if (sheetButton) sheetButton.style.display = "inline-block";
-
   if (!select) return;
 
   const characters = getSavedCharacters();
@@ -459,7 +456,8 @@ function refreshSavedCharactersSelect() {
     if (newButton) newButton.style.display = "none";
     if (deleteButton) deleteButton.style.display = "none";
     if (creationFields) creationFields.style.display = "block";
-
+    if (sheetButton) sheetButton.style.display = "none";
+    
     const playerNameInput = document.getElementById("playerName");
     if (playerNameInput) playerNameInput.value = "";
 
@@ -468,6 +466,7 @@ function refreshSavedCharactersSelect() {
 
   if (newButton) newButton.style.display = "inline-block";
   if (deleteButton) deleteButton.style.display = "block";
+  if (sheetButton) sheetButton.style.display = "inline-block";
   if (creationFields) creationFields.style.display = "none";
 
   characters.forEach(function(character) {
@@ -594,21 +593,22 @@ function loadSavedCharacterFromSelect() {
 }
 
 function openCharacterSheetPage() {
-  const select = document.getElementById("savedCharacterSelect");
   if (currentFighter && currentOpponentFighter) {
     saveCurrentDuelState();
   }
+
   let characterId = "";
-  
-  if (currentFighter && currentOpponentFighter) {
-      saveCurrentDuelState();
-    }
-  if (select && select.value) {
-    characterId = select.value;
-  } else if (currentFighter && currentPlayerName) {
+
+  if (currentFighter && currentPlayerName) {
     characterId = makeCharacterId(currentFighter.id, currentPlayerName);
   } else {
-    characterId = localStorage.getItem(lastCharacterKey) || "";
+    const select = document.getElementById("savedCharacterSelect");
+
+    if (select && select.value) {
+      characterId = select.value;
+    } else {
+      characterId = localStorage.getItem(lastCharacterKey) || "";
+    }
   }
 
   if (!characterId) {
@@ -1363,30 +1363,21 @@ async function initApp() {
       APP_VERSION;
   }
 
-  try {
-    refreshSavedCharactersSelect();
+try {
+  refreshSavedCharactersSelect();
+} catch (error) {
+  console.error("Erreur chargement PJ sauvegardés :", error);
 
-    if (shouldResumeDuelAfterSheet()) {
-      localStorage.removeItem(resumeDuelAfterSheetKey);
-    
-      setTimeout(function() {
-        startDuel();
-      }, 50);
-    }
-  } catch (error) {
-    console.error("Erreur chargement PJ sauvegardés :", error);
-
-    if (message) {
-      message.innerHTML =
-        '<span class="error">Catalogue chargé, mais erreur avec les PJ sauvegardés. Version ' +
-        APP_VERSION +
-        ".</span>";
-    }
+  if (message) {
+    message.innerHTML =
+      '<span class="error">Catalogue chargé, mais erreur avec les PJ sauvegardés. Version ' +
+      APP_VERSION +
+      ".</span>";
   }
-
-  updateAudioButtons();
-  resumeDuelAfterSheetIfNeeded();
 }
+
+updateAudioButtons();
+resumeDuelAfterSheetIfNeeded();
 
 function getSavedDuelState() {
   const raw = localStorage.getItem(currentDuelSaveKey);
@@ -1483,24 +1474,25 @@ function saveCurrentDuelState() {
     myMaxBody: myMaxBody,
     opponentCurrentBody: opponentCurrentBody,
     opponentMaxBody: opponentMaxBody,
-    
+
     playerName: currentPlayerName,
     fighterId: currentFighter.id,
     opponentId: currentOpponentFighter.id,
-    
-    
-    combatLog: combatLog
+
     gameMode: gameMode,
     soloDifficultyLevel:
-      typeof soloDifficultyLevel !== "undefined" ? Number(soloDifficultyLevel || 0) : 0,
+      typeof soloDifficultyLevel !== "undefined"
+        ? Number(soloDifficultyLevel || 0)
+        : 0,
     soloOpponentRestriction: soloOpponentRestriction || "none",
     pendingOpponentInstruction: pendingOpponentInstruction || "",
     pendingPlayerInstruction: pendingPlayerInstruction || "",
-    turnNumber: currentTurnNumber
+
+    combatLog: combatLog,
 
     duelFinished: duelFinished,
     victoryXpAwarded: victoryXpAwarded,
-    turnNumber: currentTurnNumber,
+    turnNumber: currentTurnNumber
   };
 
   localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
