@@ -1720,6 +1720,67 @@ function updateBodyDisplays() {
   }
 }
 
+function showPlayerDamageFeedback(damage) {
+  const amount = Number(damage || 0);
+
+  if (amount <= 0) return;
+
+  const fixedBar = document.getElementById("fixedHpBar");
+  const playerHpBox = fixedBar
+    ? fixedBar.querySelector(".hp-box:first-child")
+    : null;
+
+  if (fixedBar) {
+    fixedBar.classList.remove("hp-bar-shake");
+    void fixedBar.offsetWidth;
+    fixedBar.classList.add("hp-bar-shake");
+  }
+
+  if (playerHpBox) {
+    playerHpBox.classList.remove("hp-damage-flash");
+    void playerHpBox.offsetWidth;
+    playerHpBox.classList.add("hp-damage-flash");
+
+    const float = document.createElement("div");
+    float.className = "damage-float";
+    float.textContent = "-" + amount + " PV";
+
+    playerHpBox.appendChild(float);
+
+    setTimeout(function() {
+      if (float.parentNode) {
+        float.parentNode.removeChild(float);
+      }
+    }, 1200);
+  }
+
+  showDamageAlert(amount);
+}
+
+function showDamageAlert(damage) {
+  const resultPanel = document.getElementById("resultPanel");
+  if (!resultPanel) return;
+
+  const oldAlert = document.getElementById("playerDamageAlert");
+
+  if (oldAlert) {
+    oldAlert.remove();
+  }
+
+  const alert = document.createElement("div");
+  alert.id = "playerDamageAlert";
+  alert.className = "damage-alert";
+  alert.textContent = "Tu perds " + damage + " PV !";
+
+  resultPanel.prepend(alert);
+
+  setTimeout(function() {
+    if (alert.parentNode) {
+      alert.parentNode.removeChild(alert);
+    }
+  }, 2500);
+}
+
 function adjustMyBody() {
   const input = document.getElementById("myBodyManual");
   if (!input) return;
@@ -3040,6 +3101,8 @@ function resolveTurn() {
   ) {
     myCurrentBody -= Number(soloOpponentResult.damage);
     updateBodyDisplays();
+    showPlayerDamageFeedback(soloOpponentResult.damage);
+    playSfx("hit");
     saveCurrentDuelState();
   }
 
