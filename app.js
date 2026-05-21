@@ -2835,14 +2835,37 @@ function isDistancePg(pg) {
   return value >= 50;
 }
 
+function hasDaValue(action) {
+  return (
+    action &&
+    action.da !== undefined &&
+    action.da !== null &&
+    action.da !== ""
+  );
+}
+
+function isDistancePg(pg) {
+  const value = Number(pg);
+  return value >= 50;
+}
 function getMovementPageForAction(action, enemyPg) {
   if (!action) return "";
 
-  if (isDistancePg(enemyPg) && action.da !== undefined && action.da !== null) {
+  const actionPg = String(action.pg);
+
+  // Si l'action choisie est déjà une action de Distance Accrue,
+  // comme PG 58, on garde son PG normal.
+  if (isDistancePg(actionPg)) {
+    return actionPg;
+  }
+
+  // Si l'adversaire utilise un PG de distance,
+  // une action rapprochée utilise sa valeur DA.
+  if (isDistancePg(enemyPg) && hasDaValue(action)) {
     return String(action.da);
   }
 
-  return String(action.pg);
+  return actionPg;
 }
 
 function getPgDisplayForAction(action, enemyPg) {
@@ -2850,16 +2873,22 @@ function getPgDisplayForAction(action, enemyPg) {
 
   const normalPg = String(action.pg);
 
-  if (isDistancePg(enemyPg) && action.da !== undefined && action.da !== null) {
+  // Une action déjà en PG 50+ reste affichée telle quelle.
+  if (isDistancePg(normalPg)) {
+    return normalPg;
+  }
+
+  if (isDistancePg(enemyPg) && hasDaValue(action)) {
     return String(action.da) + " (DA, depuis " + normalPg + ")";
   }
 
-  if (action.da !== undefined && action.da !== null) {
+  if (hasDaValue(action)) {
     return normalPg + " / DA " + action.da;
   }
 
   return normalPg;
 }
+
 
 function getBookPage(book, pageNumber) {
   if (!book || !book.pages) return null;
