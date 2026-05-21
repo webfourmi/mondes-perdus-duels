@@ -1435,6 +1435,7 @@ async function initApp() {
   }
 
   refreshSoloDifficultyOptions();
+  refreshSoloIntroText();
 
   if (message && catalog !== fallbackCatalog) {
     message.textContent =
