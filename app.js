@@ -2308,6 +2308,70 @@ const soloDifficultyTitles = {
   ]
 };
 
+const soloIntroTexts = {
+  chevalier: [
+    "Un apprenti chevalier entre dans l’arène, la main un peu trop serrée sur son épée neuve. Il a peur, mais il avance.",
+    "Un écuyer baisse la tête derrière son bouclier. Il a vu assez de coups pour savoir que le premier est souvent le pire.",
+    "Un homme d’armes s’avance d’un pas lourd. Son armure grince et porte la marque de ses combats.",
+    "Le chevalier abaisse sa visière. Il vient te défier . Il vient vaincre.",
+    "Un champion entre dans le cercle. La foule se tait et retient son souffle.",
+    "Un vétéran de mille duels lève sa lame. Son regard dur se pose sur toi et tu sens qu'il a déjà enterré des adversaires plus braves que toi."
+  ],
+
+  squelette: [
+    "Un amas d’os se redresse dans un cliquetis sec. Il tient encore debout par pure rancune.",
+    "Un serviteur d’os avance, cimeterre levé. Ses orbites vides semblent chercher une faute dans ta garde.",
+    "Un guerrier squelette frappe son bouclier. Le son est creux, mais l’intention ne l’est pas.",
+    "Un garde des cryptes surgit de l’ombre. Il porte la patience des morts et la brutalité des vivants.",
+    "Un champion d’os entre dans l’arène. Chaque pas laisse sa marque sur le sable de l'arène.",
+    "Un vétéran des tombes relève son cimeterre. Il a oublié son nom, mais pas comment tuer."
+  ],
+
+  default: [
+    "Un adversaire inconnu entre dans l’arène.",
+    "Une silhouette s’avance, prête au combat.",
+    "Le duel commence à sentir la poussière, le fer et le sang.",
+    "L’ennemi prend place. Le silence se resserre.",
+    "La foule recule d’un pas. Ton adversaire te fixe msans ciller.",
+    "L’adversaire te fixe. Ce combat sera au dernier sang."
+  ]
+};
+
+function getSoloIntroText(fighterId, level) {
+  const texts = soloIntroTexts[fighterId] || soloIntroTexts.default;
+  const safeLevel = Math.max(0, Math.min(5, Number(level || 0)));
+
+  return texts[safeLevel] || texts[0];
+}
+
+function refreshSoloIntroText() {
+  const block = document.getElementById("soloIntroBlock");
+  const title = document.getElementById("soloIntroTitle");
+  const text = document.getElementById("soloIntroText");
+
+  const modeSelect = document.getElementById("gameMode");
+  const opponentSelect = document.getElementById("opponentBook");
+  const difficultySelect = document.getElementById("soloDifficultyLevel");
+
+  if (!block || !title || !text || !modeSelect || !opponentSelect) return;
+
+  const isSolo = modeSelect.value === "solo";
+
+  block.style.display = isSolo ? "block" : "none";
+
+  if (!isSolo) return;
+
+  const opponentId = opponentSelect.value || "default";
+  const level = difficultySelect ? Number(difficultySelect.value || 0) : 0;
+
+  title.textContent =
+    getSoloDifficultyTitle(opponentId, level) +
+    " — " +
+    (opponentId === "squelette" ? "Squelette" : "Chevalier");
+
+  text.textContent = getSoloIntroText(opponentId, level);
+}
+
 function getSoloDifficultyTitle(fighterId, level) {
   const titles = soloDifficultyTitles[fighterId] || soloDifficultyTitles.default;
   return titles[level] || titles[0];
@@ -2373,6 +2437,7 @@ function refreshSoloDifficultyOptions() {
       level * 8 +
       " PV.";
   }
+  refreshSoloIntroText();
 }
 
 function getSoloOpponentActions() {
