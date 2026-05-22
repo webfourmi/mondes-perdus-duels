@@ -1,4 +1,4 @@
-const APP_VERSION = "0.6.6";
+const APP_VERSION = "0.7.1";
 
 let catalog = null;
 
@@ -2743,24 +2743,13 @@ function updateSoloOpponentDisplay(action) {
 }
 
 function calculateOpponentDamage(page, action) {
-  if (page.score === null || page.score === undefined) {
+  const detail = getOpponentDamageDetail(page, action);
+
+  if (!detail) {
     return null;
   }
 
-  const score = Number(page.score);
-  const mod = Number(action.mod || 0);
-  const bonus = Number(action.bonus || 0);
-  const difficultyBonus = gameMode === "solo" ? Number(soloDifficultyLevel || 0) : 0;
-
-  let total = score + mod + bonus + difficultyBonus;
-
-  const opponentSizeModifier = -sizeModifier;
-
-  if (action.color === "orange" || action.color === "rouge") {
-    total += opponentSizeModifier;
-  }
-
-  return Math.max(0, total);
+  return detail.total;
 }
 
 function resolveSoloOpponentAttack() {
@@ -2805,11 +2794,13 @@ function resolveSoloOpponentAttack() {
   }
 
   const damage = calculateOpponentDamage(page, soloOpponentAction);
+  const damageDetail = getOpponentDamageDetail(page, soloOpponentAction);
 
   return {
     pageNumber: resultPageNumber,
     page: page,
-    damage: damage
+    damage: damage,
+    damageDetail: damageDetail
   };
 }
 
@@ -2835,79 +2826,65 @@ function buildSoloOpponentResultHtml(soloResult) {
     damageText = "L’adversaire te fait " + soloResult.damage + " dégât(s).";
   }
 
-  const nextInstruction = soloResult.page.instruction || "Aucune restriction particulière.";
-  const soloImageHtml = buildPageImageHtml(
-    currentPlayerBook,
-    soloResult.pageNumber,
-    "Riposte adverse"
+  const nextInstruction =
+    soloResult.page.instruction || "Aucune restriction particulière.";
+
+  const difficultyTitle = getSoloDifficultyTitle(
+    currentOpponentFighter ? currentOpponentFighter.id : "default",
+    soloDifficultyLevel
   );
-  const damageDetail = getSoloOpponentDamageDetail(soloResult);
+
+  const soloSummaryHtml =
+    '<div class="instruction-card result-summary-card">' +
+    "<strong>Lecture de la riposte</strong><br>" +
+    "Action adverse : " +
+    escapeHtml(actionLabel(soloOpponentAction)) +
+    "<br>" +
+    "PG adverse : " +
+    escapeHtml(soloOpponentAction ? soloOpponentAction.pg : "-") +
+    "<br>" +
+    "Ton PG utilisé contre lui : " +
+    escapeHtml(
+      selectedAction
+        ? getMovementPageForAction(selectedAction, soloOpponentAction.pg)
+        : "-"
+    ) +
+    "<br>" +
+    "Page résultat : " +
+    escapeHtml(soloResult.pageNumber) +
+    "</div>";
 
   return (
     '<div class="instruction-card solo-result-card">' +
-    soloImageHtml +
     "<strong>Riposte adverse</strong><br>" +
-    "Action adverse : " +
-    actionLabel(soloOpponentAction) +
-    "<br>" +
     "Niveau solo : " +
-    getSoloDifficultyTitle(
-      currentOpponentFighter ? currentOpponentFighter.id : "default",
-      soloDifficultyLevel
-    ) +
+    escapeHtml(difficultyTitle) +
     " (+" +
     soloDifficultyLevel +
-    " dégâts)" +
+    " dégâts, +" +
+    soloDifficultyLevel * 8 +
+    " PV)" +
     "<br>" +
     "Restriction appliquée à l’adversaire solo : " +
-    getRestrictionInfo(soloOpponentRestriction).label +
-    "<br>" +
-    "Page résultat : " +
-    soloResult.pageNumber +
-    "<br>" +
-    damageText +
-    damageDetail +
+    escapeHtml(getRestrictionInfo(soloOpponentRestriction).label) +
     "<br><br>" +
-    "<strong>Restriction à appliquer à votre prochain tour</strong><br>" +
-    nextInstruction +
+    soloSummaryHtml +
+    '<div class="damage-pill ' +
+    (soloResult.damage === null ? "no-damage" : "") +
+    '">' +
+    "<span>Dégâts reçus</span>" +
+    "<strong>" +
+    (soloResult.damage === null ? "Aucun SCORE" : soloResult.damage) +
+    "</strong>" +
+    "</div>" +
+    buildDamageFormulaHtml(soloResult.damageDetail) +
+    '<div class="score-detail">' +
+    escapeHtml(damageText) +
+    "</div>" +
+    "<br>" +
+    "<strong>Restriction à appliquer à ton prochain tour</strong><br>" +
+    escapeHtml(nextInstruction) +
     "</div>"
-  );
-}
-
-function getSoloOpponentDamageDetail(soloResult) {
-  if (!soloResult || !soloOpponentAction || soloResult.damage === null) {
-    return "";
-  }
-
-  const score = Number(soloResult.page.score || 0);
-  const mod = Number(soloOpponentAction.mod || 0);
-  const bonus = Number(soloOpponentAction.bonus || 0);
-  const difficultyBonus = gameMode === "solo" ? Number(soloDifficultyLevel || 0) : 0;
-
-  let sizeText = "";
-  let opponentSizeModifier = 0;
-
-  if (
-    soloOpponentAction.color === "orange" ||
-    soloOpponentAction.color === "rouge"
-  ) {
-    opponentSizeModifier = -sizeModifier;
-    sizeText = " + taille " + opponentSizeModifier;
-  }
-
-  return (
-    "<br><em>Détail : SCORE " +
-    score +
-    " + MOD " +
-    mod +
-    " + bonus " +
-    bonus +
-    " + difficulté " +
-    difficultyBonus +
-    sizeText +
-    " = " +
-    soloResult.damage +
-    "</em>"
   );
 }
 
@@ -2985,25 +2962,174 @@ function calculateTemporaryBonus(page, action) {
   }
 }
 
-function calculateDamage(page, action) {
-  if (page.score === null || page.score === undefined) {
+/* ============================================================
+   RESULTATS LIMPIDES - DETAILS DES CALCULS
+   ============================================================ */
+
+function formatSignedNumber(value) {
+  const number = Number(value || 0);
+
+  if (number > 0) {
+    return "+" + number;
+  }
+
+  return String(number);
+}
+
+function getSizeDamageModifierForAction(action, perspective) {
+  if (!action) return 0;
+
+  if (action.color !== "orange" && action.color !== "rouge") {
+    return 0;
+  }
+
+  if (perspective === "opponent") {
+    return -sizeModifier;
+  }
+
+  return sizeModifier;
+}
+
+function getPlayerDamageDetail(page, action) {
+  if (!page || page.score === null || page.score === undefined) {
     return null;
   }
 
-  const score = Number(page.score);
+  const score = Number(page.score || 0);
   const mod = Number(action.mod || 0);
-  const bonus =
-    Number(action.bonus || 0) +
-    getActionUpgradeBonus(action.id) +
-    calculateTemporaryBonus(page, action);
+  const actionBonus = Number(action.bonus || 0);
+  const evolutionBonus = getActionUpgradeBonus(action.id);
+  const temporaryBonus = calculateTemporaryBonus(page, action);
+  const sizeBonus = getSizeDamageModifierForAction(action, "player");
 
-  let total = score + mod + bonus;
+  const rawTotal =
+    score +
+    mod +
+    actionBonus +
+    evolutionBonus +
+    temporaryBonus +
+    sizeBonus;
 
-  if (action.color === "orange" || action.color === "rouge") {
-    total += sizeModifier;
+  return {
+    label: "Ton calcul",
+    score: score,
+    mod: mod,
+    actionBonus: actionBonus,
+    evolutionBonus: evolutionBonus,
+    temporaryBonus: temporaryBonus,
+    difficultyBonus: 0,
+    sizeBonus: sizeBonus,
+    rawTotal: rawTotal,
+    total: Math.max(0, rawTotal)
+  };
+}
+
+function getOpponentDamageDetail(page, action) {
+  if (!page || page.score === null || page.score === undefined) {
+    return null;
   }
 
-  return Math.max(0, total);
+  const score = Number(page.score || 0);
+  const mod = Number(action.mod || 0);
+  const actionBonus = Number(action.bonus || 0);
+  const difficultyBonus =
+    gameMode === "solo" ? Number(soloDifficultyLevel || 0) : 0;
+  const sizeBonus = getSizeDamageModifierForAction(action, "opponent");
+
+  const rawTotal =
+    score +
+    mod +
+    actionBonus +
+    difficultyBonus +
+    sizeBonus;
+
+  return {
+    label: "Calcul adverse",
+    score: score,
+    mod: mod,
+    actionBonus: actionBonus,
+    evolutionBonus: 0,
+    temporaryBonus: 0,
+    difficultyBonus: difficultyBonus,
+    sizeBonus: sizeBonus,
+    rawTotal: rawTotal,
+    total: Math.max(0, rawTotal)
+  };
+}
+
+function buildDamageFormulaHtml(detail) {
+  if (!detail) return "";
+
+  const parts = [
+    "SCORE " + detail.score,
+    "MOD " + formatSignedNumber(detail.mod)
+  ];
+
+  if (detail.actionBonus !== 0) {
+    parts.push("bonus action " + formatSignedNumber(detail.actionBonus));
+  }
+
+  if (detail.evolutionBonus !== 0) {
+    parts.push("évolution " + formatSignedNumber(detail.evolutionBonus));
+  }
+
+  if (detail.temporaryBonus !== 0) {
+    parts.push("bonus temporaire " + formatSignedNumber(detail.temporaryBonus));
+  }
+
+  if (detail.difficultyBonus !== 0) {
+    parts.push("difficulté " + formatSignedNumber(detail.difficultyBonus));
+  }
+
+  if (detail.sizeBonus !== 0) {
+    parts.push("taille " + formatSignedNumber(detail.sizeBonus));
+  }
+
+  let totalText = String(detail.total);
+
+  if (detail.rawTotal !== detail.total) {
+    totalText = detail.rawTotal + ", ramené à " + detail.total;
+  }
+
+  return (
+    '<div class="score-detail score-detail-clear">' +
+    "<strong>" +
+    detail.label +
+    " :</strong> " +
+    parts.join(" + ") +
+    " = " +
+    totalText +
+    "</div>"
+  );
+}
+
+function buildResolutionSummaryHtml(data) {
+  return (
+    '<div class="instruction-card result-summary-card">' +
+    "<strong>Lecture du résultat</strong><br>" +
+    "Action : " +
+    escapeHtml(data.actionLabel || "-") +
+    "<br>" +
+    "PG utilisé : " +
+    escapeHtml(data.myPg || "-") +
+    "<br>" +
+    "PG reçu : " +
+    escapeHtml(data.enemyPg || "-") +
+    "<br>" +
+    "Page résultat : " +
+    escapeHtml(data.pageNumber || "-") +
+    "</div>"
+  );
+}
+
+function calculateDamage(page, action) {
+  const detail = getPlayerDamageDetail(page, action);
+
+  if (!detail) {
+    return null;
+  }
+
+  return detail.total;
 }
 
 function hasDaValue(action) {
@@ -3312,40 +3438,28 @@ function resolveTurn() {
   lastDamage = damage;
   damageAlreadyApplied = false;
 
+  const playerDamageDetail = getPlayerDamageDetail(page, selectedAction);
+
   let damageHtml = "";
 
-  if (page.score === null || page.score === undefined) {
+  if (!playerDamageDetail) {
     damageHtml =
       '<div class="damage-pill no-damage">' +
       "<span>Résultat</span>" +
       "<strong>Aucun SCORE</strong>" +
+      "</div>" +
+      '<div class="score-detail score-detail-clear">' +
+      "Cette page ne donne aucun SCORE : aucun dégât à appliquer." +
       "</div>";
   } else {
-    const totalBonus =
-      Number(selectedAction.bonus || 0) +
-      getActionUpgradeBonus(selectedAction.id) +
-      calculateTemporaryBonus(page, selectedAction);
-
     damageHtml =
       '<div class="damage-pill">' +
-      "<span>Dégâts</span>" +
+      "<span>Dégâts infligés</span>" +
       "<strong>" +
       damage +
       "</strong>" +
       "</div>" +
-      '<div class="score-detail">' +
-      "SCORE " +
-      page.score +
-      " + MOD " +
-      selectedAction.mod +
-      " + bonus " +
-      totalBonus;
-
-    if (selectedAction.color === "orange" || selectedAction.color === "rouge") {
-      damageHtml += " + taille " + sizeModifier;
-    }
-
-    damageHtml += "</div>";
+      buildDamageFormulaHtml(playerDamageDetail);
   }
 
   const imageHtml = buildPageImageHtml(currentBook, resultPageNumber, "Résultat");
@@ -3373,6 +3487,12 @@ function resolveTurn() {
     enemyPg +
     "</span>" +
     "</div>" +
+    buildResolutionSummaryHtml({
+      actionLabel: actionLabel(selectedAction),
+      myPg: myMovementPage,
+      enemyPg: enemyPg,
+      pageNumber: resultPageNumber
+    }) +
     imageHtml +
     damageHtml +
     buildSoloOpponentResultHtml(soloOpponentResult) +
