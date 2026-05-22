@@ -229,30 +229,29 @@
         <option value="duel">Duel à deux joueurs</option>
         <option value="solo">Solo contre l’appli</option>
       </select>
-      <div id="soloDifficultyBlock" class="solo-difficulty-block">
-        <label for="soloDifficultyLevel">Difficulté de l’adversaire solo</label>
-      
-        <select id="soloDifficultyLevel" class="compact-select">
-          <option value="0">+0</option>
-          <option value="1">+1</option>
-          <option value="2">+2</option>
-          <option value="3">+3</option>
-          <option value="4">+4</option>
-          <option value="5">+5</option>
-        </select>
-      
-        <p id="soloDifficultyHint" class="small"></p>
-      </div>
+     
             </div>
 
       <div class="home-card">
-        <h3>3. Choisir l’adversaire</h3>  
-        
-      <label for="opponentBook">Livret affiché, adversaire</label>
-      <select id="opponentBook">
-        <option value="chevalier">Chevalier</option>
-        <option value="squelette">Squelette</option>
-      </select>
+        <h3>3. Choisir l’adversaire</h3>
+      
+        <label for="opponentBook">Livret affiché, adversaire</label>
+        <select id="opponentBook"></select>
+      
+        <div id="soloDifficultyBlock" class="solo-difficulty-block" style="display:none;">
+          <label for="soloDifficultyLevel">Difficulté de l’adversaire solo</label>
+      
+          <select id="soloDifficultyLevel" class="compact-select">
+            <option value="0">+0</option>
+            <option value="1">+1</option>
+            <option value="2">+2</option>
+            <option value="3">+3</option>
+            <option value="4">+4</option>
+            <option value="5">+5</option>
+          </select>
+      
+          <p id="soloDifficultyHint" class="small"></p>
+        </div>
       </div>
 
     <div id="soloIntroBlock" class="solo-intro-block" style="display:none;">
@@ -487,6 +486,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=70"></script>
+  <script src="app.js?v=71"></script>
 </body>
 </html>
