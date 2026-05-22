@@ -2837,26 +2837,7 @@ function buildSoloOpponentResultHtml(soloResult) {
     soloDifficultyLevel
   );
 
-  const soloSummaryHtml =
-    '<div class="instruction-card result-summary-card">' +
-    "<strong>Lecture de la riposte</strong><br>" +
-    "Action adverse : " +
-    escapeHtml(actionLabel(soloOpponentAction)) +
-    "<br>" +
-    "PG adverse : " +
-    escapeHtml(soloOpponentAction ? soloOpponentAction.pg : "-") +
-    "<br>" +
-    "Ton PG utilisé contre lui : " +
-    escapeHtml(
-      selectedAction
-        ? getMovementPageForAction(selectedAction, soloOpponentAction.pg)
-        : "-"
-    ) +
-    "<br>" +
-    "Page résultat : " +
-    escapeHtml(soloResult.pageNumber) +
-    "</div>";
-
+ 
   return (
     '<div class="instruction-card solo-result-card">' +
     "<strong>Riposte adverse</strong><br>" +
@@ -3287,12 +3268,7 @@ function buildPageImageHtml(book, pageNumber, label) {
     encodedSources +
     '" onclick="openImageOverlay(this.src)" onerror="tryNextPageImage(this)">' +
     '<button type="button" class="image-zoom-button" onclick="openImageOverlay(this.parentElement.querySelector(\'img\').src)">Agrandir l’image</button>' +
-    '<div class="image-hint">' +
-    safeLabel +
-    ' ' +
-    safePage +
-    '</div>' +
-    '</div>'
+        '</div>'
   );
 }
 
