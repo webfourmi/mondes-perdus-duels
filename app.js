@@ -1,4 +1,4 @@
-const APP_VERSION = "0.7.1";
+const APP_VERSION = "0.7.2";
 
 let catalog = null;
 
@@ -2805,6 +2805,9 @@ function resolveSoloOpponentAttack() {
 }
 
 function buildSoloOpponentResultHtml(soloResult) {
+  // IMPORTANT : en mode solo, on n'affiche PAS une seconde image.
+  // L'image visible doit rester celle du livret de l'adversaire choisi.
+  // La riposte solo est seulement affichée en texte + calcul.
   if (!soloResult) return "";
 
   if (soloResult.error) {
