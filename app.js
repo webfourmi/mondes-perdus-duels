@@ -1,4 +1,4 @@
-const APP_VERSION = "0.7.3";
+const APP_VERSION = "0.7.4";
 
 let catalog = null;
 
@@ -2852,7 +2852,6 @@ function buildSoloOpponentResultHtml(soloResult) {
     "Restriction appliquée à l’adversaire solo : " +
     escapeHtml(getRestrictionInfo(soloOpponentRestriction).label) +
     "<br><br>" +
-    soloSummaryHtml +
     '<div class="damage-pill ' +
     (soloResult.damage === null ? "no-damage" : "") +
     '">' +
@@ -3083,25 +3082,6 @@ function buildDamageFormulaHtml(detail) {
     parts.join(" + ") +
     " = " +
     totalText +
-    "</div>"
-  );
-}
-
-function buildResolutionSummaryHtml(data) {
-  return (
-    '<div class="instruction-card result-summary-card">' +
-    "<strong>Lecture du résultat</strong><br>" +
-    "Action : " +
-    escapeHtml(data.actionLabel || "-") +
-    "<br>" +
-    "PG utilisé : " +
-    escapeHtml(data.myPg || "-") +
-    "<br>" +
-    "PG reçu : " +
-    escapeHtml(data.enemyPg || "-") +
-    "<br>" +
-    "Page résultat : " +
-    escapeHtml(data.pageNumber || "-") +
     "</div>"
   );
 }
