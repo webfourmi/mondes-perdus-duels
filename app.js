@@ -1,4 +1,4 @@
-const APP_VERSION = "0.7.2";
+const APP_VERSION = "0.7.3";
 
 let catalog = null;
 
@@ -3490,12 +3490,6 @@ function resolveTurn() {
     enemyPg +
     "</span>" +
     "</div>" +
-    buildResolutionSummaryHtml({
-      actionLabel: actionLabel(selectedAction),
-      myPg: myMovementPage,
-      enemyPg: enemyPg,
-      pageNumber: resultPageNumber
-    }) +
     imageHtml +
     damageHtml +
     buildSoloOpponentResultHtml(soloOpponentResult) +
