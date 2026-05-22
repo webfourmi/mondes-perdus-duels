@@ -1,4 +1,4 @@
-const APP_VERSION = "0.6.5";
+const APP_VERSION = "0.6.6";
 
 let catalog = null;
 
@@ -1512,10 +1512,11 @@ function loadCurrentDuelStateIfMatching(fighterId, opponentId, playerName) {
     ) {
       return false;
     }
+
     if ((state.gameMode || "duel") !== gameMode) {
       return false;
     }
-    
+
     if (
       gameMode === "solo" &&
       Number(state.soloDifficultyLevel || 0) !== Number(soloDifficultyLevel || 0)
@@ -1720,6 +1721,7 @@ function updateBodyDisplays() {
     status.textContent = "";
   }
 }
+
 
 function showPlayerDamageFeedback(damage) {
   const amount = Number(damage || 0);
@@ -2190,11 +2192,11 @@ async function startDuel() {
       myMaxBody = getEffectiveBodyStart();
       myCurrentBody = myMaxBody;
 
-     const opponentBaseBody = Number(currentOpponentFighter.bodyPointsStart || 0);
-     const opponentDifficultyBodyBonus = getSoloDifficultyBodyBonus();
-      
-     opponentMaxBody = opponentBaseBody + opponentDifficultyBodyBonus;
-     opponentCurrentBody = opponentMaxBody;
+      const opponentBaseBody = Number(currentOpponentFighter.bodyPointsStart || 0);
+      const opponentDifficultyBodyBonus = getSoloDifficultyBodyBonus();
+
+      opponentMaxBody = opponentBaseBody + opponentDifficultyBodyBonus;
+      opponentCurrentBody = opponentMaxBody;
 
       duelFinished = false;
       victoryXpAwarded = false;
@@ -2309,14 +2311,15 @@ const soloDifficultyTitles = {
   ]
 };
 
+
 const soloIntroTexts = {
   chevalier: [
     "Un apprenti chevalier entre dans l’arène, la main un peu trop serrée sur son épée neuve. Il a peur, mais il avance.",
     "Un écuyer baisse la tête derrière son bouclier. Il a vu assez de coups pour savoir que le premier est souvent le pire.",
     "Un homme d’armes s’avance d’un pas lourd. Son armure grince et porte la marque de ses combats.",
-    "Le chevalier abaisse sa visière. Il vient te défier . Il vient vaincre.",
+    "Le chevalier abaisse sa visière. Il vient te défier. Il vient vaincre.",
     "Un champion entre dans le cercle. La foule se tait et retient son souffle.",
-    "Un vétéran de mille duels lève sa lame. Son regard dur se pose sur toi et tu sens qu'il a déjà enterré des adversaires plus braves que toi."
+    "Un vétéran de mille duels lève sa lame. Son regard dur se pose sur toi et tu sens qu’il a déjà enterré des adversaires plus braves que toi."
   ],
 
   squelette: [
@@ -2324,7 +2327,7 @@ const soloIntroTexts = {
     "Un serviteur d’os avance, cimeterre levé. Ses orbites vides semblent chercher une faute dans ta garde.",
     "Un guerrier squelette frappe son bouclier. Le son est creux, mais l’intention ne l’est pas.",
     "Un garde des cryptes surgit de l’ombre. Il porte la patience des morts et la brutalité des vivants.",
-    "Un champion d’os entre dans l’arène. Chaque pas laisse sa marque sur le sable de l'arène.",
+    "Un champion d’os entre dans l’arène. Chaque pas laisse sa marque sur le sable de l’arène.",
     "Un vétéran des tombes relève son cimeterre. Il a oublié son nom, mais pas comment tuer."
   ],
 
@@ -2333,7 +2336,7 @@ const soloIntroTexts = {
     "Une silhouette s’avance, prête au combat.",
     "Le duel commence à sentir la poussière, le fer et le sang.",
     "L’ennemi prend place. Le silence se resserre.",
-    "La foule recule d’un pas. Ton adversaire te fixe msans ciller.",
+    "La foule recule d’un pas. Ton adversaire te fixe sans ciller.",
     "L’adversaire te fixe. Ce combat sera au dernier sang."
   ]
 };
@@ -2438,6 +2441,7 @@ function refreshSoloDifficultyOptions() {
       level * 8 +
       " PV.";
   }
+
   refreshSoloIntroText();
 }
 
@@ -2816,7 +2820,7 @@ function buildSoloOpponentResultHtml(soloResult) {
     return (
       '<div class="instruction-card solo-result-card">' +
       "<strong>Riposte adverse</strong><br>" +
-      soloResult.error +
+      escapeHtml(soloResult.error).replace(/\n/g, "<br>") +
       "</div>"
     );
   }
@@ -2832,9 +2836,16 @@ function buildSoloOpponentResultHtml(soloResult) {
   }
 
   const nextInstruction = soloResult.page.instruction || "Aucune restriction particulière.";
+  const soloImageHtml = buildPageImageHtml(
+    currentPlayerBook,
+    soloResult.pageNumber,
+    "Riposte adverse"
+  );
+  const damageDetail = getSoloOpponentDamageDetail(soloResult);
 
   return (
     '<div class="instruction-card solo-result-card">' +
+    soloImageHtml +
     "<strong>Riposte adverse</strong><br>" +
     "Action adverse : " +
     actionLabel(soloOpponentAction) +
@@ -2855,10 +2866,48 @@ function buildSoloOpponentResultHtml(soloResult) {
     soloResult.pageNumber +
     "<br>" +
     damageText +
+    damageDetail +
     "<br><br>" +
     "<strong>Restriction à appliquer à votre prochain tour</strong><br>" +
     nextInstruction +
     "</div>"
+  );
+}
+
+function getSoloOpponentDamageDetail(soloResult) {
+  if (!soloResult || !soloOpponentAction || soloResult.damage === null) {
+    return "";
+  }
+
+  const score = Number(soloResult.page.score || 0);
+  const mod = Number(soloOpponentAction.mod || 0);
+  const bonus = Number(soloOpponentAction.bonus || 0);
+  const difficultyBonus = gameMode === "solo" ? Number(soloDifficultyLevel || 0) : 0;
+
+  let sizeText = "";
+  let opponentSizeModifier = 0;
+
+  if (
+    soloOpponentAction.color === "orange" ||
+    soloOpponentAction.color === "rouge"
+  ) {
+    opponentSizeModifier = -sizeModifier;
+    sizeText = " + taille " + opponentSizeModifier;
+  }
+
+  return (
+    "<br><em>Détail : SCORE " +
+    score +
+    " + MOD " +
+    mod +
+    " + bonus " +
+    bonus +
+    " + difficulté " +
+    difficultyBonus +
+    sizeText +
+    " = " +
+    soloResult.damage +
+    "</em>"
   );
 }
 
@@ -2957,11 +3006,6 @@ function calculateDamage(page, action) {
   return Math.max(0, total);
 }
 
-function isDistancePg(pg) {
-  const value = Number(pg);
-  return value >= 50;
-}
-
 function hasDaValue(action) {
   return (
     action &&
@@ -2975,6 +3019,7 @@ function isDistancePg(pg) {
   const value = Number(pg);
   return value >= 50;
 }
+
 function getMovementPageForAction(action, enemyPg) {
   if (!action) return "";
 
@@ -3016,7 +3061,6 @@ function getPgDisplayForAction(action, enemyPg) {
   return normalPg;
 }
 
-
 function getBookPage(book, pageNumber) {
   if (!book || !book.pages) return null;
 
@@ -3027,6 +3071,99 @@ function getBookPage(book, pageNumber) {
     book.pages[key.padStart(2, "0")] ||
     book.pages[key.padStart(3, "0")] ||
     null
+  );
+}
+
+
+function getPageImageSources(book, pageNumber) {
+  if (!book || !pageNumber) return [];
+
+  const bookId = book.id || book.fighterId || "";
+  const rawPage = String(pageNumber);
+  const page = getBookPage(book, pageNumber);
+  const sources = [];
+
+  if (page && page.image) {
+    sources.push(page.image);
+  }
+
+  if (bookId) {
+    sources.push(
+      "images/" + bookId + "/LW_" + bookId + "_" + rawPage + ".png"
+    );
+    sources.push(
+      "images/" + bookId + "/LW_" + bookId + "_" + rawPage.padStart(2, "0") + ".png"
+    );
+    sources.push(
+      "images/" + bookId + "/LW_" + bookId + "_" + rawPage.padStart(3, "0") + ".png"
+    );
+  }
+
+  return sources.filter(function(source, index) {
+    return source && sources.indexOf(source) === index;
+  });
+}
+
+function addCacheBusterToImage(src) {
+  if (!src) return src;
+
+  const separator = src.includes("?") ? "&" : "?";
+  return src + separator + "v=" + Date.now();
+}
+
+function tryNextPageImage(image) {
+  if (!image) return;
+
+  let sources = [];
+
+  try {
+    sources = JSON.parse(image.dataset.fallbackSources || "[]");
+  } catch (error) {
+    sources = [];
+  }
+
+  const nextIndex = Number(image.dataset.fallbackIndex || 0) + 1;
+
+  if (nextIndex < sources.length) {
+    image.dataset.fallbackIndex = String(nextIndex);
+    image.src = sources[nextIndex];
+    return;
+  }
+
+  if (image.parentElement) {
+    image.parentElement.style.display = "none";
+  }
+}
+
+function buildPageImageHtml(book, pageNumber, label) {
+  const sources = getPageImageSources(book, pageNumber).map(function(source) {
+    return addCacheBusterToImage(source);
+  });
+
+  if (sources.length === 0) return "";
+
+  const safeLabel = escapeHtml(label || "Page résultat");
+  const safePage = escapeHtml(pageNumber);
+  const encodedSources = escapeHtml(JSON.stringify(sources));
+
+  return (
+    '<div class="page-image-box image-priority-box">' +
+    '<img class="page-image priority-image" src="' +
+    escapeHtml(sources[0]) +
+    '" alt="' +
+    safeLabel +
+    ' ' +
+    safePage +
+    '" data-fallback-index="0" data-fallback-sources="' +
+    encodedSources +
+    '" onclick="openImageOverlay(this.src)" onerror="tryNextPageImage(this)">' +
+    '<button type="button" class="image-zoom-button" onclick="openImageOverlay(this.parentElement.querySelector(\'img\').src)">Agrandir l’image</button>' +
+    '<div class="image-hint">' +
+    safeLabel +
+    ' ' +
+    safePage +
+    '</div>' +
+    '</div>'
   );
 }
 
@@ -3211,29 +3348,7 @@ function resolveTurn() {
     damageHtml += "</div>";
   }
 
-  const imagePath =
-    page.image ||
-    "images/" +
-      currentBook.id +
-      "/LW_" +
-      currentBook.id +
-      "_" +
-      resultPageNumber +
-      ".png";
-
-  const imageSrc = imagePath + "?v=" + Date.now();
-
-  const imageHtml =
-    '<div class="page-image-box image-priority-box">' +
-    '<img class="page-image priority-image" src="' +
-    imageSrc +
-    '" alt="Page ' +
-    resultPageNumber +
-    '" onclick="openImageOverlay(this.src)" onerror="this.parentElement.style.display=\'none\'">' +
-    '<button type="button" class="image-zoom-button" onclick="openImageOverlay(\'' +
-    imageSrc +
-    "')\">Agrandir l’image</button>" +
-    "</div>";
+  const imageHtml = buildPageImageHtml(currentBook, resultPageNumber, "Résultat");
 
   let applyButton = "";
 
@@ -3557,6 +3672,7 @@ async function newDuel() {
 
   refreshSavedCharactersSelect();
   refreshSoloDifficultyOptions();
+  refreshSoloIntroText();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
