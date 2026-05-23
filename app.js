@@ -1,4 +1,4 @@
-const APP_VERSION = "0.7.6";
+const APP_VERSION = "0.7.7";
 
 let catalog = null;
 
@@ -2085,12 +2085,52 @@ function refreshActionList() {
   fillActions(actions, restriction);
 }
 
+function selectActionCard(actionId) {
+  const select = document.getElementById("actionChoice");
+  const hint = document.getElementById("selectedActionHint");
+
+  if (!select) return;
+
+  select.value = actionId;
+
+  document.querySelectorAll(".action-card").forEach(function(card) {
+    card.classList.toggle("active", card.dataset.actionId === actionId);
+  });
+
+  const action = currentActions.find(function(item) {
+    return item.id === actionId;
+  });
+
+  if (hint && action) {
+    const upgradeBonus = getActionUpgradeBonus(action.id);
+    const upgradeText = upgradeBonus > 0 ? " / EVO +" + upgradeBonus : "";
+
+    hint.textContent =
+      "Action choisie : " +
+      actionLabel(action) +
+      " — PG " +
+      action.pg +
+      " / MOD " +
+      action.mod +
+      upgradeText +
+      " / " +
+      action.color;
+  }
+}
+
 function fillActions(actions, restriction) {
   const select = document.getElementById("actionChoice");
+  const cardsContainer = document.getElementById("actionCards");
+  const hint = document.getElementById("selectedActionHint");
+
   if (!select) return;
 
   select.innerHTML = "";
   currentActions = [];
+
+  if (cardsContainer) {
+    cardsContainer.innerHTML = "";
+  }
 
   const activeRestriction = restriction || "none";
 
@@ -2115,6 +2155,36 @@ function fillActions(actions, restriction) {
       action.color;
 
     select.appendChild(option);
+
+    if (cardsContainer) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "action-card action-card-" + (action.color || "none");
+      card.dataset.actionId = action.id;
+
+      card.innerHTML =
+        "<strong>" +
+        escapeHtml(actionLabel(action)) +
+        "</strong>" +
+        "<span>PG " +
+        escapeHtml(action.pg) +
+        "</span>" +
+        "<span>MOD " +
+        escapeHtml(action.mod) +
+        "</span>" +
+        (upgradeBonus > 0
+          ? "<span>EVO +" + escapeHtml(upgradeBonus) + "</span>"
+          : "") +
+        "<span>" +
+        escapeHtml(action.color || "-") +
+        "</span>";
+
+      card.addEventListener("click", function() {
+        selectActionCard(action.id);
+      });
+
+      cardsContainer.appendChild(card);
+    }
   });
 
   if (currentActions.length === 0) {
@@ -2122,8 +2192,23 @@ function fillActions(actions, restriction) {
     option.value = "";
     option.textContent = "Aucune action disponible avec cette restriction";
     select.appendChild(option);
+
+    if (cardsContainer) {
+      cardsContainer.innerHTML =
+        '<div class="restriction-banner restriction-danger">Aucune action disponible avec cette restriction</div>';
+    }
+
+    if (hint) {
+      hint.textContent = "Aucune action disponible.";
+    }
+
+    return;
   }
+
+  select.value = currentActions[0].id;
+  selectActionCard(currentActions[0].id);
 }
+
 
 /* ============================================================
    DÉMARRAGE DU DUEL
