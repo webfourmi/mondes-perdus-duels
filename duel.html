@@ -448,8 +448,13 @@
         </select>
 
         <label for="actionChoice">Action choisie</label>
-        <select id="actionChoice" class="action-select"></select>
+        <select id="actionChoice" class="action-select hidden-action-select"></select>
 
+        <div id="actionCards" class="action-card-grid"></div>
+        
+        <p id="selectedActionHint" class="selected-action-hint">
+          Choisis une Action.
+        </p>
         <button type="button" onclick="chooseAction()">Annoncer cette action</button>
       </div>
 
