@@ -1,4 +1,4 @@
-const APP_VERSION = "0.7.5";
+const APP_VERSION = "0.7.6";
 
 let catalog = null;
 
@@ -1119,6 +1119,15 @@ function savePlayerProfile() {
   }
 }
 
+function hideDuelXpPanels() {
+  const xpPanel = document.getElementById("xpPanel");
+  if (xpPanel) xpPanel.style.display = "none";
+
+  document.querySelectorAll(".xp-panel").forEach(function(panel) {
+    panel.style.display = "none";
+  });
+}
+
 function updateExperienceDisplay() {
   const display = document.getElementById("xpDisplay");
   if (display) {
@@ -2076,48 +2085,12 @@ function refreshActionList() {
   fillActions(actions, restriction);
 }
 
-function selectActionCard(actionId) {
-  const select = document.getElementById("actionChoice");
-  const hint = document.getElementById("selectedActionHint");
-
-  if (!select) return;
-
-  select.value = actionId;
-
-  document.querySelectorAll(".action-card").forEach(function(card) {
-    card.classList.toggle("active", card.dataset.actionId === actionId);
-  });
-
-  const action = currentActions.find(function(item) {
-    return item.id === actionId;
-  });
-
-  if (hint && action) {
-    hint.textContent =
-      "Action choisie : " +
-      actionLabel(action) +
-      " — PG " +
-      action.pg +
-      " / MOD " +
-      action.mod +
-      " / " +
-      action.color;
-  }
-}
-
 function fillActions(actions, restriction) {
   const select = document.getElementById("actionChoice");
-  const cardsContainer = document.getElementById("actionCards");
-  const hint = document.getElementById("selectedActionHint");
-
   if (!select) return;
 
   select.innerHTML = "";
   currentActions = [];
-
-  if (cardsContainer) {
-    cardsContainer.innerHTML = "";
-  }
 
   const activeRestriction = restriction || "none";
 
@@ -2142,36 +2115,6 @@ function fillActions(actions, restriction) {
       action.color;
 
     select.appendChild(option);
-
-    if (cardsContainer) {
-      const card = document.createElement("button");
-      card.type = "button";
-      card.className = "action-card action-card-" + (action.color || "none");
-      card.dataset.actionId = action.id;
-
-      card.innerHTML =
-        "<strong>" +
-        escapeHtml(actionLabel(action)) +
-        "</strong>" +
-        "<span>PG " +
-        escapeHtml(action.pg) +
-        "</span>" +
-        "<span>MOD " +
-        escapeHtml(action.mod) +
-        "</span>" +
-        (upgradeBonus > 0
-          ? "<span>EVO +" + escapeHtml(upgradeBonus) + "</span>"
-          : "") +
-        "<span>" +
-        escapeHtml(action.color || "-") +
-        "</span>";
-
-      card.addEventListener("click", function() {
-        selectActionCard(action.id);
-      });
-
-      cardsContainer.appendChild(card);
-    }
   });
 
   if (currentActions.length === 0) {
@@ -2179,21 +2122,7 @@ function fillActions(actions, restriction) {
     option.value = "";
     option.textContent = "Aucune action disponible avec cette restriction";
     select.appendChild(option);
-
-    if (cardsContainer) {
-      cardsContainer.innerHTML =
-        '<div class="restriction-banner restriction-danger">Aucune action disponible avec cette restriction</div>';
-    }
-
-    if (hint) {
-      hint.textContent = "Aucune action disponible.";
-    }
-
-    return;
   }
-
-  select.value = currentActions[0].id;
-  selectActionCard(currentActions[0].id);
 }
 
 /* ============================================================
@@ -2323,6 +2252,7 @@ async function startDuel() {
 
     updateBodyDisplays();
     updateExperienceDisplay();
+    hideDuelXpPanels();
     refreshActionList();
     updateEvolutionPanel();
     renderCombatLog();
@@ -2887,16 +2817,27 @@ function resolveSoloOpponentAttack() {
 function buildSoloOpponentResultHtml(soloResult) {
   // IMPORTANT : en mode solo, on n'affiche PAS une seconde image.
   // L'image visible doit rester celle du livret de l'adversaire choisi.
-  // La riposte solo est seulement affichée en texte + calcul.
+  // La riposte solo est affichée seulement si on clique sur "Dégâts reçus".
   if (!soloResult) return "";
 
   if (soloResult.error) {
-    return (
+    return buildDamageToggleHtml(
+      "Dégâts reçus",
+      "Erreur",
       '<div class="instruction-card solo-result-card">' +
-      "<strong>Riposte adverse</strong><br>" +
-      escapeHtml(soloResult.error).replace(/\n/g, "<br>") +
-      "</div>"
+        "<strong>Riposte adverse</strong><br>" +
+        escapeHtml(soloResult.error).replace(/\n/g, "<br>") +
+      "</div>",
+      "damage-toggle-danger"
     );
+  }
+
+  let damageValue = "";
+
+  if (soloResult.damage === null) {
+    damageValue = "Aucun SCORE";
+  } else {
+    damageValue = String(soloResult.damage);
   }
 
   let damageText = "";
@@ -2917,10 +2858,12 @@ function buildSoloOpponentResultHtml(soloResult) {
     soloDifficultyLevel
   );
 
- 
-  return (
+  const detailHtml =
     '<div class="instruction-card solo-result-card">' +
     "<strong>Riposte adverse</strong><br>" +
+    "Action adverse : " +
+    escapeHtml(actionLabel(soloOpponentAction)) +
+    "<br>" +
     "Niveau solo : " +
     escapeHtml(difficultyTitle) +
     " (+" +
@@ -2932,14 +2875,6 @@ function buildSoloOpponentResultHtml(soloResult) {
     "Restriction appliquée à l’adversaire solo : " +
     escapeHtml(getRestrictionInfo(soloOpponentRestriction).label) +
     "<br><br>" +
-    '<div class="damage-pill ' +
-    (soloResult.damage === null ? "no-damage" : "") +
-    '">' +
-    "<span>Dégâts reçus</span>" +
-    "<strong>" +
-    (soloResult.damage === null ? "Aucun SCORE" : soloResult.damage) +
-    "</strong>" +
-    "</div>" +
     buildDamageFormulaHtml(soloResult.damageDetail) +
     '<div class="score-detail">' +
     escapeHtml(damageText) +
@@ -2947,7 +2882,13 @@ function buildSoloOpponentResultHtml(soloResult) {
     "<br>" +
     "<strong>Restriction à appliquer à ton prochain tour</strong><br>" +
     escapeHtml(nextInstruction) +
-    "</div>"
+    "</div>";
+
+  return buildDamageToggleHtml(
+    "Dégâts reçus",
+    damageValue,
+    detailHtml,
+    soloResult.damage === null ? "no-damage" : ""
   );
 }
 
@@ -3162,6 +3103,50 @@ function buildDamageFormulaHtml(detail) {
     parts.join(" + ") +
     " = " +
     totalText +
+    "</div>"
+  );
+}
+
+
+function toggleDamageDetails(button) {
+  if (!button) return;
+
+  const wrapper = button.closest(".damage-toggle-wrapper");
+  if (!wrapper) return;
+
+  const detail = wrapper.querySelector(".damage-detail-collapsible");
+  if (!detail) return;
+
+  const isOpen = detail.style.display === "block";
+
+  detail.style.display = isOpen ? "none" : "block";
+  button.classList.toggle("damage-toggle-open", !isOpen);
+
+  const hint = button.querySelector(".damage-toggle-hint");
+  if (hint) {
+    hint.textContent = isOpen ? "Afficher le détail" : "Masquer le détail";
+  }
+}
+
+function buildDamageToggleHtml(title, value, detailHtml, cssClass) {
+  const safeCssClass = cssClass || "";
+
+  return (
+    '<div class="damage-toggle-wrapper">' +
+    '<button type="button" class="damage-pill damage-toggle-button ' +
+    safeCssClass +
+    '" onclick="toggleDamageDetails(this)">' +
+    "<span>" +
+    escapeHtml(title || "Dégâts") +
+    "</span>" +
+    "<strong>" +
+    escapeHtml(value) +
+    "</strong>" +
+    '<em class="damage-toggle-hint">Afficher le détail</em>' +
+    "</button>" +
+    '<div class="damage-detail-collapsible" style="display:none;">' +
+    (detailHtml || "") +
+    "</div>" +
     "</div>"
   );
 }
@@ -3482,23 +3467,21 @@ function resolveTurn() {
   let damageHtml = "";
 
   if (!playerDamageDetail) {
-    damageHtml =
-      '<div class="damage-pill no-damage">' +
-      "<span>Résultat</span>" +
-      "<strong>Aucun SCORE</strong>" +
-      "</div>" +
+    damageHtml = buildDamageToggleHtml(
+      "Dégâts infligés",
+      "Aucun SCORE",
       '<div class="score-detail score-detail-clear">' +
-      "Cette page ne donne aucun SCORE : aucun dégât à appliquer." +
-      "</div>";
+        "Cette page ne donne aucun SCORE : aucun dégât à appliquer." +
+      "</div>",
+      "no-damage"
+    );
   } else {
-    damageHtml =
-      '<div class="damage-pill">' +
-      "<span>Dégâts infligés</span>" +
-      "<strong>" +
-      damage +
-      "</strong>" +
-      "</div>" +
-      buildDamageFormulaHtml(playerDamageDetail);
+    damageHtml = buildDamageToggleHtml(
+      "Dégâts infligés",
+      String(damage),
+      buildDamageFormulaHtml(playerDamageDetail),
+      ""
+    );
   }
 
   const imageHtml = buildPageImageHtml(currentBook, resultPageNumber, "Résultat");
