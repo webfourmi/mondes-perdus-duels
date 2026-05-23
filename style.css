@@ -2421,4 +2421,118 @@ body.duel-active .damage-toggle-button strong {
 body.duel-active .damage-toggle-button .damage-toggle-hint {
   font-size: 0.66rem;
 }
+.hidden-action-select {
+  display: none !important;
+}
 
+.action-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.action-card {
+  width: 100%;
+  min-height: 82px;
+  margin: 0;
+  padding: 8px 6px;
+  border: 2px solid var(--gold-muted, #8d6b36);
+  border-radius: 12px;
+  background: rgba(255, 244, 210, 0.06);
+  color: var(--text-main, #f5e6c8);
+  text-align: center;
+  cursor: pointer;
+}
+
+.action-card strong {
+  display: block;
+  min-height: 2.2em;
+  color: var(--gold-light, #ffd98a);
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.action-card span {
+  display: inline-block;
+  margin-top: 5px;
+  margin-right: 3px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 0.68rem;
+  line-height: 1.1;
+}
+
+.action-card.active {
+  border-color: var(--gold-light, #ffd98a);
+  box-shadow: 0 0 0 2px rgba(255, 217, 138, 0.22);
+  transform: scale(1.01);
+}
+.action-card-rouge {
+  border-color: var(--red, #ff7777);
+}
+
+.action-card-orange {
+  border-color: var(--orange, #ffae4f);
+}
+
+.action-card-vert {
+  border-color: var(--green, #72d672);
+}
+
+.action-card-jaune {
+  border-color: var(--yellow, #ffe066);
+}
+
+.action-card-bleu {
+  border-color: var(--blue, #66aaff);
+}
+
+.action-card-marron {
+  border-color: var(--brown, #c49a6c);
+}
+
+.action-card.active.action-card-rouge {
+  background: rgba(180, 40, 40, 0.26);
+}
+
+.action-card.active.action-card-orange {
+  background: rgba(220, 120, 30, 0.26);
+}
+
+.action-card.active.action-card-vert {
+  background: rgba(60, 150, 60, 0.24);
+}
+
+.action-card.active.action-card-jaune {
+  background: rgba(190, 160, 40, 0.24);
+}
+
+.action-card.active.action-card-bleu {
+  background: rgba(60, 120, 220, 0.24);
+}
+
+.action-card.active.action-card-marron {
+  background: rgba(130, 80, 35, 0.28);
+}
+@media (max-width: 420px) {
+  .action-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .action-card {
+    min-height: 78px;
+    padding: 7px 4px;
+  }
+
+  .action-card strong {
+    font-size: 0.74rem;
+  }
+
+  .action-card span {
+    font-size: 0.62rem;
+    padding: 2px 4px;
+  }
+}
