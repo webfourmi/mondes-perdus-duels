@@ -2170,7 +2170,7 @@ function fillActions(actions, restriction) {
         "</span>" +
         (upgradeBonus > 0
           ? "<span>EVO +" + escapeHtml(upgradeBonus) + "</span>"
-          : "") +
+          : "") 
       
 
       card.addEventListener("click", function() {
