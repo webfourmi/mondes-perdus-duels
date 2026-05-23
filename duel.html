@@ -221,16 +221,38 @@
       </div>
       </div>
 
-      <div class="home-card">
-        <h3>2. Choisir le mode de jeu</h3>
-        
-      <label for="gameMode">Mode de jeu</label>
-      <select id="gameMode">
-        <option value="duel">Duel à deux joueurs</option>
-        <option value="solo">Solo contre l’appli</option>
-      </select>
-     
-            </div>
+     <div class="home-card">
+  <h3>2. Choisir le mode de jeu</h3>
+
+  <select id="gameMode" class="hidden-game-mode-select">
+    <option value="duel">Duel à deux joueurs</option>
+    <option value="solo">Solo contre l’IA</option>
+  </select>
+
+  <div class="game-mode-buttons">
+    <button
+      type="button"
+      id="gameModeDuoButton"
+      class="game-mode-button active"
+      onclick="setGameMode('duel')"
+    >
+      <span class="game-mode-icon">⚔️</span>
+      <strong>Duo</strong>
+      <small>Deux joueurs</small>
+    </button>
+
+    <button
+      type="button"
+      id="gameModeSoloButton"
+      class="game-mode-button"
+      onclick="setGameMode('solo')"
+    >
+      <span class="game-mode-icon">💀</span>
+      <strong>Solo</strong>
+      <small>Contre l’IA</small>
+    </button>
+  </div>
+</div>
 
       <div class="home-card">
         <h3>3. Choisir l’adversaire</h3>
