@@ -1,7 +1,7 @@
 /* ============================================================
    MONDES PERDUS - DUELS
    style.css complet corrige
-   Version conseillee : style.css?v=127
+   Version conseillee : style.css?v=126
    ============================================================ */
 
 /* ============================================================
@@ -2358,302 +2358,67 @@ body.duel-active .page-image {
   }
 }
 
-/* ============================================================
-   FEEDBACK PERTE DE PV
-   ============================================================ */
-
-.hp-box {
-  position: relative;
-  overflow: visible;
-}
-
-.hp-damage-flash {
-  animation: hpDamageFlash 0.75s ease;
-}
-
-@keyframes hpDamageFlash {
-  0% {
-    background: rgba(180, 40, 40, 0.75);
-    box-shadow: 0 0 18px rgba(255, 80, 80, 0.9);
-    transform: scale(1.04);
-  }
-
-  45% {
-    background: rgba(180, 40, 40, 0.45);
-    box-shadow: 0 0 12px rgba(255, 80, 80, 0.65);
-  }
-
-  100% {
-    background: #18140c;
-    box-shadow: none;
-    transform: scale(1);
-  }
-}
-
-.hp-bar-shake {
-  animation: hpBarShake 0.35s ease;
-}
-
-@keyframes hpBarShake {
-  0% { transform: translateX(0); }
-  20% { transform: translateX(-4px); }
-  40% { transform: translateX(4px); }
-  60% { transform: translateX(-3px); }
-  80% { transform: translateX(3px); }
-  100% { transform: translateX(0); }
-}
-
-.damage-float {
-  position: absolute;
-  left: 50%;
-  top: -18px;
-  z-index: 10000;
-
-  transform: translateX(-50%);
-
-  padding: 4px 10px;
-  border: 2px solid #ff7777;
-  border-radius: 999px;
-
-  background: rgba(80, 0, 0, 0.96);
-  color: #ffe8e8;
-
-  font-weight: bold;
-  font-size: 1rem;
-  white-space: nowrap;
-
-  pointer-events: none;
-
-  animation: damageFloat 1.15s ease forwards;
-}
-
-@keyframes damageFloat {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(8px) scale(0.8);
-  }
-
-  20% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1.12);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-28px) scale(1);
-  }
-}
-
-.damage-alert {
-  margin: 8px 0;
-  padding: 9px;
-  border: 2px solid #ff7777;
-  border-radius: 12px;
-  background: rgba(180, 40, 40, 0.24);
-  color: #ffd0d0;
-  text-align: center;
-  font-weight: bold;
-  animation: damageAlertPop 0.45s ease;
-}
-
-@keyframes damageAlertPop {
-  0% {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
 
 /* ============================================================
-   INTRO ADVERSAIRE SOLO
+   v132 - DUEL PLUS COMPACT : XP CACHÉE + DÉTAILS REPLIABLES
    ============================================================ */
 
-.solo-intro-block {
-  margin: 12px 0;
-  padding: 13px;
+/* Les XP sont consultables dans la fiche PJ : on les cache pendant le duel. */
+body.duel-active .xp-panel,
+body.duel-active #xpPanel {
+  display: none !important;
+}
+
+/* Les dégâts deviennent des boutons repliables. */
+.damage-toggle-wrapper {
+  display: grid;
+  gap: 6px;
+}
+
+.damage-toggle-button {
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
   border: 2px solid var(--gold, #c9a45b);
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at top, rgba(255, 217, 138, 0.12), transparent 60%),
-    rgba(0, 0, 0, 0.26);
-  text-align: center;
-  box-shadow: inset 0 0 14px rgba(255, 217, 138, 0.05);
 }
 
-.solo-intro-badge {
-  display: inline-block;
-  margin-bottom: 8px;
-  padding: 4px 10px;
-  border: 1px solid var(--gold, #c9a45b);
-  border-radius: 999px;
+.damage-toggle-button.damage-pill {
+  display: block;
+}
+
+.damage-toggle-button .damage-toggle-hint {
+  display: block;
+  margin-top: 5px;
   color: var(--gold-soft, #ffe7a6);
   font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: rgba(0, 0, 0, 0.28);
+  font-style: normal;
+  font-weight: normal;
+  opacity: 0.86;
 }
 
-.solo-intro-block strong {
-  display: block;
-  color: var(--gold-light, #ffd98a);
-  font-size: 1.05rem;
-  margin-bottom: 6px;
-}
-
-.solo-intro-block p {
-  margin: 0 auto;
-  max-width: 520px;
-  line-height: 1.35;
-  font-size: 0.95rem;
-  opacity: 0.94;
-}
-
-@media (max-width: 560px) {
-  .solo-intro-block {
-    padding: 10px;
-  }
-
-  .solo-intro-block strong {
-    font-size: 0.95rem;
-  }
-
-  .solo-intro-block p {
-    font-size: 0.88rem;
-  }
-}
-
-/* ============================================================
-   CARTES DE CHOIX D'ACTION
-   ============================================================ */
-
-.hidden-action-select {
-  display: none;
-}
-
-.action-card-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.action-card {
-  width: 100%;
-  min-height: 82px;
-  margin: 0;
-  padding: 8px 6px;
-  border: 2px solid var(--gold-muted, #8d6b36);
-  border-radius: 12px;
-  background: rgba(255, 244, 210, 0.06);
-  color: var(--text-main, #f5e6c8);
-  text-align: center;
-  cursor: pointer;
-}
-
-.action-card strong {
-  display: block;
-  min-height: 2.2em;
-  color: var(--gold-light, #ffd98a);
-  font-size: 0.82rem;
-  line-height: 1.1;
-}
-
-.action-card span {
-  display: inline-block;
-  margin-top: 5px;
-  margin-right: 3px;
-  padding: 2px 5px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.25);
-  font-size: 0.68rem;
-  line-height: 1.1;
-}
-
-.action-card.active {
-  border-color: var(--gold-light, #ffd98a);
+.damage-toggle-button.damage-toggle-open {
   box-shadow: 0 0 0 2px rgba(255, 217, 138, 0.22);
-  transform: scale(1.01);
+  filter: brightness(1.05);
 }
 
-.action-card-rouge {
-  border-color: var(--red, #ff7777);
+.damage-detail-collapsible {
+  margin-top: 2px;
 }
 
-.action-card-orange {
-  border-color: var(--orange, #ffae4f);
+.damage-toggle-danger {
+  border-color: var(--danger, #ffb3a7);
+  background: rgba(180, 40, 40, 0.22);
 }
 
-.action-card-vert {
-  border-color: var(--green, #72d672);
+body.duel-active .damage-toggle-button {
+  padding: 7px;
 }
 
-.action-card-jaune {
-  border-color: var(--yellow, #ffe066);
+body.duel-active .damage-toggle-button strong {
+  font-size: 1.55rem;
 }
 
-.action-card-bleu {
-  border-color: var(--blue, #66aaff);
+body.duel-active .damage-toggle-button .damage-toggle-hint {
+  font-size: 0.66rem;
 }
 
-.action-card-marron {
-  border-color: var(--brown, #c49a6c);
-}
-
-.action-card.active.action-card-rouge {
-  background: rgba(180, 40, 40, 0.26);
-}
-
-.action-card.active.action-card-orange {
-  background: rgba(220, 120, 30, 0.26);
-}
-
-.action-card.active.action-card-vert {
-  background: rgba(60, 150, 60, 0.24);
-}
-
-.action-card.active.action-card-jaune {
-  background: rgba(190, 160, 40, 0.24);
-}
-
-.action-card.active.action-card-bleu {
-  background: rgba(60, 120, 220, 0.24);
-}
-
-.action-card.active.action-card-marron {
-  background: rgba(130, 80, 35, 0.28);
-}
-
-.selected-action-hint {
-  margin: 8px 0 0;
-  padding: 8px;
-  border: 1px solid var(--gold-muted, #8d6b36);
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.18);
-  color: var(--gold-soft, #ffe7a6);
-  text-align: center;
-  font-size: 0.9rem;
-}
-@media (max-width: 420px) {
-  .action-card-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 5px;
-  }
-
-  .action-card {
-    min-height: 78px;
-    padding: 7px 4px;
-  }
-
-  .action-card strong {
-    font-size: 0.74rem;
-  }
-
-  .action-card span {
-    font-size: 0.62rem;
-    padding: 2px 4px;
-  }
-}
