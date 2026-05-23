@@ -2166,18 +2166,14 @@ function fillActions(actions, restriction) {
         "<strong>" +
         escapeHtml(actionLabel(action)) +
         "</strong>" +
-        "<span>PG " +
-        escapeHtml(action.pg) +
-        "</span>" +
+        
         "<span>MOD " +
         escapeHtml(action.mod) +
         "</span>" +
         (upgradeBonus > 0
           ? "<span>EVO +" + escapeHtml(upgradeBonus) + "</span>"
           : "") +
-        "<span>" +
-        escapeHtml(action.color || "-") +
-        "</span>";
+      
 
       card.addEventListener("click", function() {
         selectActionCard(action.id);
