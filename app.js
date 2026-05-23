@@ -1371,6 +1371,7 @@ function applySavedDuelToSetup() {
   }
 
   refreshSoloDifficultyOptions();
+  updateGameModeButtons();
 
   return true;
 }
@@ -1445,6 +1446,7 @@ async function initApp() {
 
   refreshSoloDifficultyOptions();
   refreshSoloIntroText();
+  updateGameModeButtons();
 
   if (message && catalog !== fallbackCatalog) {
     message.textContent =
@@ -2482,6 +2484,36 @@ function getSoloDifficultyBodyBonus() {
   if (gameMode !== "solo") return 0;
 
   return Number(soloDifficultyLevel || 0) * 8;
+}
+
+function setGameMode(mode) {
+  const select = document.getElementById("gameMode");
+
+  if (!select) return;
+
+  select.value = mode;
+
+  updateGameModeButtons();
+  refreshSoloDifficultyOptions();
+  refreshSoloIntroText();
+}
+
+function updateGameModeButtons() {
+  const select = document.getElementById("gameMode");
+  const duoButton = document.getElementById("gameModeDuoButton");
+  const soloButton = document.getElementById("gameModeSoloButton");
+
+  if (!select) return;
+
+  const mode = select.value || "duel";
+
+  if (duoButton) {
+    duoButton.classList.toggle("active", mode === "duel");
+  }
+
+  if (soloButton) {
+    soloButton.classList.toggle("active", mode === "solo");
+  }
 }
 
 function refreshSoloDifficultyOptions() {
