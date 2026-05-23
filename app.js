@@ -2105,16 +2105,14 @@ function selectActionCard(actionId) {
     const upgradeBonus = getActionUpgradeBonus(action.id);
     const upgradeText = upgradeBonus > 0 ? " / EVO +" + upgradeBonus : "";
 
-    hint.textContent =
-      "Action choisie : " +
-      actionLabel(action) +
-      " — PG " +
-      action.pg +
-      " / MOD " +
-      action.mod +
-      upgradeText +
-      " / " +
-      action.color;
+   hint.textContent =
+    "Action choisie : " +
+    actionLabel(action) +
+    " — PG " +
+    action.pg +
+    " / MOD " +
+    action.mod +
+    upgradeText;
   }
 }
 
