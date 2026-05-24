@@ -269,7 +269,7 @@
       "pg": 50,
       "mod": 3,
       "bonus": 0,
-      "available": true
+      "available": true,
       "unlockName": "Charge"
     },
     {
@@ -279,7 +279,7 @@
       "pg": 64,
       "mod": -6,
       "bonus": 0,
-      "available": true
+      "available": true,
       "unlockName": "Coup latéral haut"
     },
     {
@@ -289,7 +289,7 @@
       "pg": 58,
       "mod": -6,
       "bonus": 0,
-      "available": true
+      "available": true,
       "unlockName": "Coup latéral bas"
     },
     {
@@ -299,7 +299,7 @@
       "pg": 54,
       "mod": -5,
       "bonus": 0,
-      "available": true
+      "available": true,
       "unlockName": "Estoc haut"
     },
     {
@@ -309,7 +309,7 @@
       "pg": 60,
       "mod": -5,
       "bonus": 0,
-      "available": true
+      "available": true,
       "unlockName": "Estoc bas"
     },
     {
@@ -319,7 +319,7 @@
       "pg": 56,
       "mod": 0,
       "bonus": 0,
-      "available": true
+      "available": true,
       "unlockName": "Bloque et approche"
     },
     {
@@ -329,7 +329,7 @@
       "pg": 52,
       "mod": -6,
       "bonus": 0,
-      "available": true
+      "available": true,
       "unlockName": "Esquive"
     },
     {
@@ -339,7 +339,7 @@
       "pg": 62,
       "mod": -6,
       "bonus": 0,
-      "available": true
+      "available": true,
       "unlockName": "Bond en arrière"
     }
   ]
