@@ -1060,9 +1060,6 @@ function savePlayerNameForSelectedFighter() {
 
 function loadPlayerProfile(fighterId, playerName) {
   currentProfileKey = getPlayerProfileKey(fighterId, playerName);
-  currentVictories = 0;
-  currentVictories = Number(profile.victories || 0);
-
 
   const raw = localStorage.getItem(currentProfileKey);
 
@@ -1078,21 +1075,22 @@ function loadPlayerProfile(fighterId, playerName) {
 
   try {
     const profile = JSON.parse(raw);
+
     currentExperience = Number(profile.experience || 0);
     currentSpentExperience = Number(profile.spentExperience || 0);
     currentActionBonuses = profile.actionBonuses || {};
     currentBodyBonus = Number(profile.bodyBonus || 0);
-    currentVictories = 0;
+    currentVictories = Number(profile.victories || 0);
   } catch (error) {
     currentExperience = 0;
     currentSpentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
+    currentVictories = 0;
   }
 
   updateExperienceDisplay();
 }
-
 function savePlayerProfile() {
   if (!currentProfileKey) return;
 
@@ -1108,7 +1106,7 @@ function savePlayerProfile() {
     experience: currentExperience,
     spentExperience: currentSpentExperience,
     actionBonuses: currentActionBonuses,
-    bodyBonus: currentBodyBonus
+    bodyBonus: currentBodyBonus,
     victories: currentVictories,
     level: getCurrentPlayerLevel()
   };
@@ -1122,8 +1120,9 @@ function savePlayerProfile() {
       fighterName: fighterEntry ? fighterEntry.shortName : fighterId,
       name: currentPlayerName,
       experience: currentExperience,
-      spentExperience: currentSpentExperience
-      currentVictories = 0;
+      spentExperience: currentSpentExperience,
+      victories: currentVictories,
+      level: getCurrentPlayerLevel()
     });
   }
 }
