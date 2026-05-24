@@ -1,4 +1,4 @@
-const APP_VERSION = "0.7.8";
+const APP_VERSION = "0.8.0";
 
 let catalog = null;
 
@@ -484,6 +484,7 @@ function refreshSavedCharactersSelect() {
     currentSpentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
+    currentVictories = 0;
     currentProfileKey = "";
 
     updateExperienceDisplay();
@@ -507,7 +508,10 @@ function refreshSavedCharactersSelect() {
       (character.experience || 0) +
       " XP dispo / " +
       (character.spentExperience || 0) +
-      " XP utilisées";
+      " XP utilisées" +
+      " — " +
+      Number(character.victories || 0) +
+      " victoire(s)";
 
     select.appendChild(option);
   });
@@ -550,7 +554,9 @@ function getCurrentSetupCharacterData() {
     fighterName: fighterName,
     name: name,
     experience: currentExperience || 0,
-    spentExperience: currentSpentExperience || 0
+    spentExperience: currentSpentExperience || 0,
+    victories: currentVictories || 0,
+    level: getCurrentPlayerLevel()
   };
 }
 
@@ -677,6 +683,7 @@ function showNewCharacterForm() {
   currentSpentExperience = 0;
   currentActionBonuses = {};
   currentBodyBonus = 0;
+  currentVictories = 0;
   currentProfileKey = "";
 
   updateExperienceDisplay();
@@ -786,6 +793,7 @@ async function deleteSelectedCharacter() {
   currentSpentExperience = 0;
   currentActionBonuses = {};
   currentBodyBonus = 0;
+  currentVictories = 0;
   currentProfileKey = "";
 
   updateExperienceDisplay();
@@ -813,15 +821,22 @@ function getCharacterProfileData(character) {
   }
 
   if (!profile) {
+    const victories = Number(character.victories || 0);
+
     profile = {
       fighterId: character.fighterId,
       name: character.name,
       experience: character.experience || 0,
       spentExperience: character.spentExperience || 0,
       actionBonuses: {},
-      bodyBonus: 0
+      bodyBonus: 0,
+      victories: victories,
+      level: getPlayerLevelFromVictories(victories)
     };
   }
+
+  profile.victories = Number(profile.victories || character.victories || 0);
+  profile.level = getPlayerLevelFromVictories(profile.victories);
 
   return {
     character: character,
@@ -972,6 +987,10 @@ function importCharactersData(data) {
 
     if (!importedCharacter.fighterId || !importedCharacter.name) return;
 
+    const victories = Number(
+      importedProfile.victories || importedCharacter.victories || 0
+    );
+
     const characterId = makeCharacterId(
       importedCharacter.fighterId,
       importedCharacter.name
@@ -983,7 +1002,9 @@ function importCharactersData(data) {
       fighterName: importedCharacter.fighterName || importedCharacter.fighterId,
       name: importedCharacter.name,
       experience: Number(importedProfile.experience || importedCharacter.experience || 0),
-      spentExperience: Number(importedProfile.spentExperience || importedCharacter.spentExperience || 0)
+      spentExperience: Number(importedProfile.spentExperience || importedCharacter.spentExperience || 0),
+      victories: victories,
+      level: getPlayerLevelFromVictories(victories)
     };
 
     const cleanProfile = {
@@ -992,7 +1013,9 @@ function importCharactersData(data) {
       experience: cleanCharacter.experience,
       spentExperience: cleanCharacter.spentExperience,
       actionBonuses: importedProfile.actionBonuses || {},
-      bodyBonus: Number(importedProfile.bodyBonus || 0)
+      bodyBonus: Number(importedProfile.bodyBonus || 0),
+      victories: cleanCharacter.victories,
+      level: cleanCharacter.level
     };
 
     const existingIndex = existingCharacters.findIndex(function(item) {
@@ -1068,14 +1091,13 @@ function loadPlayerProfile(fighterId, playerName) {
     currentSpentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
-    currentVictories = Number(profile.victories || 0);
+    currentVictories = 0;
     updateExperienceDisplay();
     return;
   }
 
   try {
     const profile = JSON.parse(raw);
-
     currentExperience = Number(profile.experience || 0);
     currentSpentExperience = Number(profile.spentExperience || 0);
     currentActionBonuses = profile.actionBonuses || {};
@@ -1086,17 +1108,24 @@ function loadPlayerProfile(fighterId, playerName) {
     currentSpentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
-    currentVictories = Number(profile.victories || 0);
+    currentVictories = 0;
   }
 
   updateExperienceDisplay();
 }
+
 function savePlayerProfile() {
   if (!currentProfileKey) return;
 
+  const fighterSelect = document.getElementById("playerSheet");
+
   const fighterId = currentFighter
     ? currentFighter.id
-    : document.getElementById("playerSheet").value;
+    : fighterSelect
+      ? fighterSelect.value
+      : "";
+
+  if (!fighterId) return;
 
   const fighterEntry = findCatalogEntry(fighterId);
 
@@ -1150,6 +1179,230 @@ function updateExperienceDisplay() {
    ÉVOLUTION DU PERSONNAGE
    ============================================================ */
 
+
+/* ============================================================
+   NIVEAUX / DÉBLOCAGE DES ACTIONS
+   ============================================================ */
+
+const playerLevelTitles = [
+  "Novice",
+  "Aguerri",
+  "Combattant",
+  "Bretteur",
+  "Champion",
+  "Idole",
+  "Vétéran"
+];
+
+const playerLevelVictoryThresholds = [0, 5, 15, 30, 50, 75, 105];
+
+const actionUnlocksByFighter = {
+  chevalier: {
+    0: [
+      "Coup latéral haut",
+      "Coup latéral bas",
+      "Coup de bouclier haut",
+      "Bond en arrière"
+    ],
+    1: [
+      "Coup plongeant violent",
+      "Estoc haut",
+      "Attaque protégée latérale",
+      "Bond esquive"
+    ],
+    2: [
+      "Estoc bas",
+      "Coup de bouclier bas",
+      "Feinte basse",
+      "Attaque protégée estoc"
+    ],
+    3: [
+      "Feinte haute",
+      "Feinte estoc",
+      "Attaque protégée plongeante",
+      "Bond en hauteur"
+    ],
+    4: [
+      "Coup plongeant puissant",
+      "Coup de pied",
+      "Désarmer",
+      "Récupérer arme"
+    ],
+    5: [
+      "Feinte coup latéral",
+      "Coup latéral féroce",
+      "Bond esquive basse"
+    ],
+    6: []
+  },
+
+  squelette: {
+    0: [
+      "Coup plongeant violent",
+      "Coup latéral bas",
+      "Coup de bouclier bas",
+      "Bond esquive",
+      "Récupérer arme"
+    ],
+    1: [
+      "Coup latéral haut",
+      "Estoc bas",
+      "Coup de bouclier haut",
+      "Bond en arrière"
+    ],
+    2: [
+      "Coup plongeant puissant",
+      "Estoc haut",
+      "Feinte basse",
+      "Attaque protégée latérale"
+    ],
+    3: [
+      "Feinte estoc",
+      "Attaque protégée plongeante",
+      "Bond esquive basse",
+      "Coup de pied"
+    ],
+    4: [
+      "Feinte haute",
+      "Désarmer",
+      "Récupérer arme",
+      "Coup latéral féroce"
+    ],
+    5: [
+      "Feinte coup latéral",
+      "Attaque protégée estoc",
+      "Bond en hauteur"
+    ],
+    6: [
+      "Bloque et approche",
+      "Esquive",
+      "Bond en arrière"
+    ]
+  }
+};
+
+function getPlayerLevelFromVictories(victories) {
+  const total = Number(victories || 0);
+  let level = 0;
+
+  for (let i = 0; i < playerLevelVictoryThresholds.length; i++) {
+    if (total >= playerLevelVictoryThresholds[i]) {
+      level = i;
+    }
+  }
+
+  return Math.min(6, level);
+}
+
+function getCurrentPlayerLevel() {
+  return getPlayerLevelFromVictories(currentVictories);
+}
+
+function getCurrentPlayerLevelTitle() {
+  return playerLevelTitles[getCurrentPlayerLevel()] || "Novice";
+}
+
+function normalizeActionUnlockName(text) {
+  return String(text || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function actionMatchesUnlockName(action, unlockName) {
+  const wanted = normalizeActionUnlockName(unlockName);
+
+  const fullLabel = normalizeActionUnlockName(actionLabel(action));
+  const simpleName = normalizeActionUnlockName(action.name);
+  const categoryName = normalizeActionUnlockName(
+    (action.category || "") + " " + (action.name || "")
+  );
+  const linkedUnlockName = normalizeActionUnlockName(action.unlockName);
+
+  const actionText = [fullLabel, simpleName, categoryName, linkedUnlockName]
+    .filter(Boolean)
+    .join(" ");
+
+  if (
+    fullLabel.includes(wanted) ||
+    simpleName.includes(wanted) ||
+    categoryName.includes(wanted) ||
+    linkedUnlockName.includes(wanted)
+  ) {
+    return true;
+  }
+
+  // Alias de sécurité pour les cartes de Distance Accrue
+  // quand les JSON n'ont pas encore le champ unlockName.
+  if (actionText.includes("charge") && wanted.includes("coup plongeant violent")) {
+    return true;
+  }
+
+  if (actionText.includes("esquive") && wanted.includes("bond esquive")) {
+    return true;
+  }
+
+  if (actionText.includes("bloque") && wanted.includes("coup de bouclier")) {
+    return true;
+  }
+
+  if (
+    actionText.includes("bond en arriere") &&
+    wanted.includes("bond en arriere")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function getUnlockedActionNamesForLevel(fighterId, level) {
+  const table = actionUnlocksByFighter[fighterId] || {};
+  const names = [];
+
+  for (let currentLevel = 0; currentLevel <= level; currentLevel++) {
+    (table[currentLevel] || []).forEach(function(name) {
+      if (!names.includes(name)) {
+        names.push(name);
+      }
+    });
+  }
+
+  return names;
+}
+
+function isRecoverWeaponAction(action) {
+  return normalizeActionUnlockName(actionLabel(action)).includes("recuperer arme");
+}
+
+function isActionUnlockedForFighter(action, fighterId, level) {
+  if (!action) return false;
+
+  const unlockedNames = getUnlockedActionNamesForLevel(fighterId, level);
+
+  return unlockedNames.some(function(name) {
+    return actionMatchesUnlockName(action, name);
+  });
+}
+
+function isActionUnlockedByLevel(action) {
+  if (!currentFighter) return true;
+
+  return isActionUnlockedForFighter(
+    action,
+    currentFighter.id,
+    getCurrentPlayerLevel()
+  );
+}
+
+function isDistanceModeActive() {
+  const distanceModeElement = document.getElementById("distanceMode");
+  const mode = distanceModeElement ? distanceModeElement.value : "normal";
+
+  return currentTurnNumber === 1 || mode === "distance";
+}
+
 function actionLabel(action) {
   if (action.category) {
     return action.category + " " + action.name;
@@ -1170,7 +1423,7 @@ function getAllUpgradeableActions() {
 
     if (isRecoverWeaponAction(action)) return true;
 
-    return isActionUnlockedByLevel(action) || isDistanceModeActive();
+    return isActionUnlockedByLevel(action);
   });
 }
 
@@ -1310,6 +1563,7 @@ function upgradeSelectedAction() {
 
   const actionId = select.value;
   const nextLevel = getNextUpgradeLevel();
+
   if (nextLevel > getCurrentPlayerLevel()) {
     appAlert(
       "Cette action ne peut pas dépasser le niveau actuel du PJ.",
@@ -1342,202 +1596,7 @@ function upgradeSelectedAction() {
 
   appAlert(message, "Évolution du PJ");
 }
-/* ============================================================
-   nouveau systeme evolution PJ
-   ============================================================ */
 
-const playerLevelTitles = [
-  "Novice",
-  "Aguerri",
-  "Combattant",
-  "Bretteur",
-  "Champion",
-  "Idole",
-  "Vétéran"
-];
-
-const playerLevelVictoryThresholds = [0, 5, 15, 30, 50, 75, 105];
-
-const actionUnlocksByFighter = {
-  chevalier: {
-    0: [
-      "Coup latéral haut",
-      "Coup latéral bas",
-      "Coup de bouclier haut",
-      "Bond en arrière"
-    ],
-    1: [
-      "Coup plongeant violent",
-      "Estoc haut",
-      "Attaque protégée latérale",
-      "Bond esquive"
-    ],
-    2: [
-      "Estoc bas",
-      "Coup de bouclier bas",
-      "Feinte basse",
-      "Attaque protégée estoc"
-    ],
-    3: [
-      "Feinte haute",
-      "Feinte estoc",
-      "Attaque protégée plongeante",
-      "Bond en hauteur"
-    ],
-    4: [
-      "Coup plongeant puissant",
-      "Coup de pied",
-      "Désarmer",
-      "Récupérer arme"
-    ],
-    5: [
-      "Feinte coup latéral",
-      "Coup latéral féroce",
-      "Bond esquive basse"
-    ],
-    6: []
-  },
-
-  squelette: {
-    0: [
-      "Coup plongeant violent",
-      "Coup latéral bas",
-      "Coup de bouclier bas",
-      "Bond esquive",
-      "Récupérer arme"
-    ],
-    1: [
-      "Coup latéral haut",
-      "Estoc bas",
-      "Coup de bouclier haut",
-      "Bond en arrière"
-    ],
-    2: [
-      "Coup plongeant puissant",
-      "Estoc haut",
-      "Feinte basse",
-      "Attaque protégée latérale"
-    ],
-    3: [
-      "Feinte estoc",
-      "Attaque protégée plongeante",
-      "Bond esquive basse",
-      "Coup de pied"
-    ],
-    4: [
-      "Feinte haute",
-      "Désarmer",
-      "Récupérer arme",
-      "Coup latéral féroce"
-    ],
-    5: [
-      "Feinte coup latéral",
-      "Attaque protégée estoc",
-      "Bond en hauteur"
-    ],
-    6: [
-      "Bloque et approche",
-      "Esquive",
-      "Bond en arrière"
-    ]
-  }
-};
-
-function getPlayerLevelFromVictories(victories) {
-  const total = Number(victories || 0);
-  let level = 0;
-
-  for (let i = 0; i < playerLevelVictoryThresholds.length; i++) {
-    if (total >= playerLevelVictoryThresholds[i]) {
-      level = i;
-    }
-  }
-
-  return Math.min(6, level);
-}
-
-function getCurrentPlayerLevel() {
-  return getPlayerLevelFromVictories(currentVictories);
-}
-
-function getCurrentPlayerLevelTitle() {
-  return playerLevelTitles[getCurrentPlayerLevel()] || "Novice";
-}
-
-function normalizeActionUnlockName(text) {
-  return String(text || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-function actionMatchesUnlockName(action, unlockName) {
-  const wanted = normalizeActionUnlockName(unlockName);
-
-  const fullLabel = normalizeActionUnlockName(actionLabel(action));
-  const simpleName = normalizeActionUnlockName(action.name);
-  const categoryName = normalizeActionUnlockName(
-    (action.category || "") + " " + (action.name || "")
-  );
-
-  // Option pratique pour les actions de Distance Accrue :
-  // dans le JSON, on pourra ajouter unlockName: "Coup latéral haut"
-  const linkedUnlockName = normalizeActionUnlockName(action.unlockName);
-
-  return (
-    fullLabel.includes(wanted) ||
-    simpleName.includes(wanted) ||
-    categoryName.includes(wanted) ||
-    linkedUnlockName.includes(wanted)
-  );
-}
-function getUnlockedActionNamesForLevel(fighterId, level) {
-  const table = actionUnlocksByFighter[fighterId] || {};
-  const names = [];
-
-  for (let currentLevel = 0; currentLevel <= level; currentLevel++) {
-    (table[currentLevel] || []).forEach(function(name) {
-      if (!names.includes(name)) {
-        names.push(name);
-      }
-    });
-  }
-
-  return names;
-}
-
-function isRecoverWeaponAction(action) {
-  return normalizeActionUnlockName(actionLabel(action)).includes("recuperer arme");
-}
-
-function isActionUnlockedByLevel(action) {
-  if (!currentFighter) return true;
-
-  const level = getCurrentPlayerLevel();
-  const unlockedNames = getUnlockedActionNamesForLevel(currentFighter.id, level);
-
-  return unlockedNames.some(function(name) {
-    return actionMatchesUnlockName(action, name);
-  });
-}
-
-function isActionUnlockedForFighter(action, fighterId, level) {
-  if (!action) return false;
-
-  const unlockedNames = getUnlockedActionNamesForLevel(fighterId, level);
-
-  return unlockedNames.some(function(name) {
-    return actionMatchesUnlockName(action, name);
-  });
-}
-
-function isDistanceModeActive() {
-  const distanceModeElement = document.getElementById("distanceMode");
-  const mode = distanceModeElement ? distanceModeElement.value : "normal";
-
-  return currentTurnNumber === 1 || mode === "distance";
-}
 /* ============================================================
    REPRISE DU DUEL
    ============================================================ */
@@ -1667,7 +1726,6 @@ async function initApp() {
 
   refreshSoloDifficultyOptions();
   refreshSoloIntroText();
-  updateGameModeButtons();
 
   if (message && catalog !== fallbackCatalog) {
     message.textContent =
@@ -1875,17 +1933,17 @@ function checkCombatEnd() {
 
     if (!victoryXpAwarded) {
       const oldLevel = getCurrentPlayerLevel();
-    
+
       currentExperience += xpGain;
       currentVictories += 1;
-    
+
       const newLevel = getCurrentPlayerLevel();
-    
+
       victoryXpAwarded = true;
-    
+
       updateExperienceDisplay();
       savePlayerProfile();
-    
+
       if (newLevel > oldLevel) {
         appAlert(
           currentPlayerName +
@@ -1904,7 +1962,8 @@ function checkCombatEnd() {
       [
         "L’adversaire est hors combat.",
         currentPlayerName + " gagne " + xpGain + " XP.",
-        "XP disponibles : " + currentExperience + "."
+        "XP disponibles : " + currentExperience + ".",
+        "Victoires : " + currentVictories + " | Niveau " + getCurrentPlayerLevel() + " - " + getCurrentPlayerLevelTitle() + "."
       ],
       "victory"
     );
@@ -2155,6 +2214,7 @@ function actionAllowedByRestriction(action, restriction) {
 
     case "disarmed":
       return (
+        isRecoverWeaponAction(action) ||
         lowerName.includes("coup de pied") ||
         color === "jaune" ||
         color === "vert"
@@ -2347,14 +2407,16 @@ function selectActionCard(actionId) {
     const upgradeBonus = getActionUpgradeBonus(action.id);
     const upgradeText = upgradeBonus > 0 ? " / EVO +" + upgradeBonus : "";
 
-   hint.textContent =
-    "Action choisie : " +
-    actionLabel(action) +
-    " — PG " +
-    action.pg +
-    " / MOD " +
-    action.mod +
-    upgradeText;
+    hint.textContent =
+      "Action choisie : " +
+      actionLabel(action) +
+      " — PG " +
+      action.pg +
+      " / MOD " +
+      action.mod +
+      upgradeText +
+      " / " +
+      action.color;
   }
 }
 
@@ -2374,18 +2436,8 @@ function fillActions(actions, restriction) {
 
   const activeRestriction = restriction || "none";
 
- actions.forEach(function(action) {
-  if (!actionAllowedByRestriction(action, activeRestriction)) return;
-
-  const isAlwaysAllowedRecover =
-    activeRestriction === "disarmed" && isRecoverWeaponAction(action);
-  
-  if (
-    !isAlwaysAllowedRecover &&
-    !isActionUnlockedByLevel(action)
-  ) {
-    return;
-  }
+  function addActionChoice(action) {
+    if (!action || currentActions.includes(action)) return;
 
     currentActions.push(action);
 
@@ -2400,9 +2452,7 @@ function fillActions(actions, restriction) {
       action.pg +
       " / MOD " +
       action.mod +
-      upgradeText +
-      " / " +
-      action.color;
+      upgradeText;
 
     select.appendChild(option);
 
@@ -2416,14 +2466,12 @@ function fillActions(actions, restriction) {
         "<strong>" +
         escapeHtml(actionLabel(action)) +
         "</strong>" +
-        
         "<span>MOD " +
         escapeHtml(action.mod) +
         "</span>" +
         (upgradeBonus > 0
           ? "<span>EVO +" + escapeHtml(upgradeBonus) + "</span>"
-          : "") 
-      
+          : "");
 
       card.addEventListener("click", function() {
         selectActionCard(action.id);
@@ -2431,6 +2479,22 @@ function fillActions(actions, restriction) {
 
       cardsContainer.appendChild(card);
     }
+  }
+
+  actions.forEach(function(action) {
+    if (!actionAllowedByRestriction(action, activeRestriction)) return;
+
+    const isAlwaysAllowedRecover =
+      activeRestriction === "disarmed" && isRecoverWeaponAction(action);
+
+    if (
+      !isAlwaysAllowedRecover &&
+      !isActionUnlockedByLevel(action)
+    ) {
+      return;
+    }
+
+    addActionChoice(action);
   });
 
   if (currentActions.length === 0 && !isDistanceModeActive()) {
@@ -2439,21 +2503,20 @@ function fillActions(actions, restriction) {
       "Coup de bouclier haut",
       "Coup de bouclier bas"
     ];
-  
+
     actions.forEach(function(action) {
       if (!actionAllowedByRestriction(action, activeRestriction)) return;
-  
+
       const isSafetyAction = safetyNames.some(function(name) {
         return actionMatchesUnlockName(action, name);
       });
-  
+
       if (!isSafetyAction) return;
-  
-      if (!currentActions.includes(action)) {
-        currentActions.push(action);
-      }
+
+      addActionChoice(action);
     });
   }
+
   if (currentActions.length === 0) {
     const option = document.createElement("option");
     option.value = "";
@@ -2510,7 +2573,9 @@ async function startDuel() {
       fighterName: sheetEntry.shortName,
       name: currentPlayerName,
       experience: currentExperience || 0,
-      spentExperience: currentSpentExperience || 0
+      spentExperience: currentSpentExperience || 0,
+      victories: currentVictories || 0,
+      level: getCurrentPlayerLevel()
     });
   }
 
@@ -2757,6 +2822,7 @@ function getSoloDifficultyBodyBonus() {
   return Number(soloDifficultyLevel || 0) * 8;
 }
 
+
 function setGameMode(mode) {
   const select = document.getElementById("gameMode");
 
@@ -2855,7 +2921,10 @@ function getSoloOpponentActions() {
     actions = currentOpponentFighter.actions || [];
   }
 
- return actions.filter(function(action) {
+  const opponentLevel = Number(soloDifficultyLevel || 0);
+  const opponentId = currentOpponentFighter.id;
+
+  return actions.filter(function(action) {
     if (
       !action ||
       !action.available ||
@@ -2864,14 +2933,11 @@ function getSoloOpponentActions() {
     ) {
       return false;
     }
-  
+
     if (!actionAllowedByRestriction(action, soloOpponentRestriction)) {
       return false;
     }
-  
-    const opponentLevel = Number(soloDifficultyLevel || 0);
-    const opponentId = currentOpponentFighter.id;
-  
+
     return isActionUnlockedForFighter(action, opponentId, opponentLevel);
   });
 }
@@ -4201,6 +4267,7 @@ async function newDuel() {
   refreshSavedCharactersSelect();
   refreshSoloDifficultyOptions();
   refreshSoloIntroText();
+  updateGameModeButtons();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
