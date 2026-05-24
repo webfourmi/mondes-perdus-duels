@@ -1068,7 +1068,7 @@ function loadPlayerProfile(fighterId, playerName) {
     currentSpentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
-    currentVictories = 0;
+    currentVictories = Number(profile.victories || 0);
     updateExperienceDisplay();
     return;
   }
@@ -1086,7 +1086,7 @@ function loadPlayerProfile(fighterId, playerName) {
     currentSpentExperience = 0;
     currentActionBonuses = {};
     currentBodyBonus = 0;
-    currentVictories = 0;
+    currentVictories = Number(profile.victories || 0);
   }
 
   updateExperienceDisplay();
