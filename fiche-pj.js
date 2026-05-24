@@ -7,6 +7,7 @@ let currentSheetCharacter = null;
 let currentSheetProfile = null;
 let currentSheetFighter = null;
 let currentSheetActions = [];
+let currentSheetLevel = 0;
 
 const fallbackCatalog = {
   fighters: [
@@ -28,6 +29,10 @@ const fallbackCatalog = {
     }
   ]
 };
+
+/* ============================================================
+   NIVEAUX / DÉBLOCAGE DES ACTIONS
+   ============================================================ */
 
 const playerLevelTitles = [
   "Novice",
@@ -126,56 +131,42 @@ const actionUnlocksByFighter = {
   }
 };
 
-const evolutionColorOrder = ["rouge", "orange", "vert", "jaune", "bleu", "marron"];
-
-const trophiesByColor = {
-  rouge: {
-    icon: "🩸",
-    title: "Lame écarlate",
-    text: "Toutes les actions rouges sont maîtrisées."
-  },
-  orange: {
-    icon: "🔥",
-    title: "Briseur d’élan",
-    text: "Toutes les actions orange sont maîtrisées."
-  },
-  vert: {
-    icon: "🌿",
-    title: "Gardien du cercle",
-    text: "Toutes les actions vertes sont maîtrisées."
-  },
-  jaune: {
-    icon: "⚡",
-    title: "Feinteur d’or",
-    text: "Toutes les actions jaunes sont maîtrisées."
-  },
-  bleu: {
-    icon: "🛡️",
-    title: "Garde d’azur",
-    text: "Toutes les actions bleues sont maîtrisées."
-  },
-  marron: {
-    icon: "🏹",
-    title: "Maître de la distance",
-    text: "Toutes les actions marron sont maîtrisées."
-  }
+const colorOrder = ["rouge", "orange", "vert", "jaune", "bleu", "marron"];
+const colorLabels = {
+  rouge: "Rouge",
+  orange: "Orange",
+  vert: "Vert",
+  jaune: "Jaune",
+  bleu: "Bleu",
+  marron: "Marron"
 };
 
 /* ============================================================
-   OUTILS GENERAUX
+   OUTILS GÉNÉRAUX
    ============================================================ */
 
 function setText(id, value) {
   const element = document.getElementById(id);
-
-  if (element) {
-    element.textContent = String(value);
-  }
+  if (element) element.textContent = value;
 }
 
-function goBackToDuel() {
-  localStorage.setItem(resumeDuelAfterSheetKey, "1");
-  window.location.href = "duel.html?resume=1";
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+async function loadJson(path) {
+  const response = await fetch(path + "?v=" + Date.now());
+
+  if (!response.ok) {
+    throw new Error("Impossible de charger : " + path);
+  }
+
+  return await response.json();
 }
 
 function normalizeProfileName(name) {
@@ -203,767 +194,24 @@ function getSavedCharacters() {
 
   try {
     const parsed = JSON.parse(raw);
-
-    if (!Array.isArray(parsed)) {
-      console.warn("Index PJ invalide :", parsed);
-      return [];
-    }
-
-    return parsed.filter(function(character) {
-      return (
-        character &&
-        character.id &&
-        character.fighterId &&
-        character.name
-      );
-    });
+    return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.error("Index PJ illisible :", error, raw);
     return [];
   }
 }
 
 function saveSavedCharacters(characters) {
-  localStorage.setItem(charactersIndexKey, JSON.stringify(characters));
+  localStorage.setItem(charactersIndexKey, JSON.stringify(characters || []));
 }
-
-function getQueryCharacterId() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("id") || localStorage.getItem(lastCharacterKey) || "";
-}
-
-async function loadJson(path) {
-  const response = await fetch(path + "?v=" + Date.now());
-
-  if (!response.ok) {
-    throw new Error("Impossible de charger : " + path);
-  }
-
-  return await response.json();
-}
-
-async function loadCatalog() {
-  try {
-    return await loadJson("data/catalog.json");
-  } catch (error) {
-    console.warn("Catalogue distant non chargé, catalogue de secours utilisé.", error);
-    return fallbackCatalog;
-  }
-}
-
-function findCatalogEntry(catalog, id) {
-  if (!catalog || !Array.isArray(catalog.fighters)) return null;
-
-  return catalog.fighters.find(function(fighter) {
-    return fighter.id === id;
-  });
-}
-
-function loadProfile(character) {
-  const fallbackProfile = {
-    fighterId: character.fighterId,
-    name: character.name,
-    experience: Number(character.experience || 0),
-    spentExperience: Number(character.spentExperience || 0),
-    actionBonuses: {},
-    bodyBonus: 0
-  };
-
-  const profileKey = getPlayerProfileKey(character.fighterId, character.name);
-  const raw = localStorage.getItem(profileKey);
-
-  if (!raw) {
-    return fallbackProfile;
-  }
-
-  try {
-    const profile = JSON.parse(raw);
-
-    return {
-      fighterId: profile.fighterId || character.fighterId,
-      name: profile.name || character.name,
-      experience: Number(profile.experience || 0),
-      spentExperience: Number(profile.spentExperience || 0),
-      actionBonuses: profile.actionBonuses || {},
-      bodyBonus: Number(profile.bodyBonus || 0)
-    };
-  } catch (error) {
-    console.error("Profil PJ illisible :", error, raw);
-    return fallbackProfile;
-  }
-}
-
-/* ============================================================
-   ACTIONS / COULEURS
-   ============================================================ */
 
 function actionLabel(action) {
+  if (!action) return "";
+
   if (action.category) {
     return action.category + " " + action.name;
   }
 
-  return action.name || "Action";
-}
-
-function getAllActions(fighter) {
-  const closeActions = (fighter.actions || []).map(function(action) {
-    return Object.assign({}, action, { modeLabel: "Rapproché" });
-  });
-
-  const distanceActions = (fighter.distanceActions || []).map(function(action) {
-    return Object.assign({}, action, { modeLabel: "Distance" });
-  });
-
-  return closeActions.concat(distanceActions);
-}
-
-function getColorLabel(color) {
-  const labels = {
-    rouge: "Rouge",
-    orange: "Orange",
-    vert: "Vert",
-    jaune: "Jaune",
-    bleu: "Bleu",
-    marron: "Marron"
-  };
-
-  return labels[color] || color || "-";
-}
-
-function getEvolutionColorRank(color) {
-  const index = evolutionColorOrder.indexOf(color);
-
-  if (index === -1) {
-    return 999;
-  }
-
-  return index;
-}
-
-function getSortedEvolutionActions(actions) {
-  return actions
-    .map(function(action, index) {
-      return {
-        action: action,
-        originalIndex: index
-      };
-    })
-    .sort(function(a, b) {
-      const colorDifference =
-        getEvolutionColorRank(a.action.color) -
-        getEvolutionColorRank(b.action.color);
-
-      if (colorDifference !== 0) {
-        return colorDifference;
-      }
-
-      return a.originalIndex - b.originalIndex;
-    })
-    .map(function(item) {
-      return item.action;
-    });
-}
-
-function getBonus(profile, actionId) {
-  return Number((profile.actionBonuses || {})[actionId] || 0);
-}
-
-function computeColorSummary(actions, profile) {
-  const byColor = {};
-
-  actions.forEach(function(action) {
-    if (!action.color) return;
-
-    if (!byColor[action.color]) {
-      byColor[action.color] = [];
-    }
-
-    byColor[action.color].push(action);
-  });
-
-  return Object.keys(byColor)
-    .sort(function(a, b) {
-      return getEvolutionColorRank(a) - getEvolutionColorRank(b);
-    })
-    .map(function(color) {
-      const colorActions = byColor[color];
-
-      let minBonus = Infinity;
-      let improvedCount = 0;
-
-      colorActions.forEach(function(action) {
-        const bonus = getBonus(profile, action.id);
-
-        minBonus = Math.min(minBonus, bonus);
-
-        if (bonus > 0) {
-          improvedCount += 1;
-        }
-      });
-
-      if (minBonus === Infinity) {
-        minBonus = 0;
-      }
-
-      return {
-        color: color,
-        total: colorActions.length,
-        improved: improvedCount,
-        minBonus: minBonus,
-        complete: improvedCount === colorActions.length && colorActions.length > 0
-      };
-    });
-}
-
-/* ============================================================
-   TROPHEES
-   ============================================================ */
-
-function getTrophyLevelLabel(level) {
-  switch (level) {
-    case 1:
-      return "Trophée";
-    case 2:
-      return "Double trophée";
-    case 3:
-      return "Triple trophée";
-    case 4:
-      return "Quadruple trophée";
-    case 5:
-      return "Quintuple trophée";
-    default:
-      return "Trophée";
-  }
-}
-
-function getTrophyCups(level) {
-  let cups = "";
-
-  for (let i = 0; i < level; i++) {
-    cups += "🏆";
-  }
-
-  return cups;
-}
-
-/* ============================================================
-   RENDU FICHE
-   ============================================================ */
-
-function renderHeader(character, profile, fighter) {
-  const xpAvailable = Number(profile.experience || 0);
-  const xpSpent = Number(profile.spentExperience || 0);
-  const xpTotal = xpAvailable + xpSpent;
-
-  const bodyBonus = Number(profile.bodyBonus || 0);
-  const bodyBase = Number(fighter.bodyPointsStart || 0);
-  const bodyMax = bodyBase + bodyBonus;
-
-  const victories = Number(profile.victories || 0);
-  const level = getPlayerLevelFromVictories(victories);
-  const levelTitle = playerLevelTitles[level] || "Novice";
-  const nextTarget = getNextLevelVictoryTarget(level);
-
-  const fighterName =
-    character.fighterName ||
-    fighter.shortName ||
-    character.fighterId ||
-    "Combattant";
-
-  setText("sheetCharacterName", character.name || "Personnage");
-  setText("sheetCharacterType", fighterName + " - Niveau " + level + " : " + levelTitle);
-
-  setText("sheetFighterName", fighterName);
-
-  setText("sheetLevel", level + " - " + levelTitle);
-  setText("sheetVictories", victories);
-  setText("sheetNextLevel", nextTarget);
-
-  setText("sheetXpAvailable", xpAvailable);
-  setText("sheetXpSpent", xpSpent);
-  setText("sheetXpTotal", xpTotal);
-
-  setText("sheetBodyStart", bodyBase);
-  setText("sheetBodyBonus", bodyBonus >= 0 ? "+" + bodyBonus : bodyBonus);
-  setText("sheetCurrentPv", bodyMax);
-}
-
-function renderColorSummary(actions, profile) {
-  const container = document.getElementById("colorSummary");
-  if (!container) return;
-
-  const summaries = computeColorSummary(actions, profile);
-
-  container.innerHTML = "";
-
-  summaries.forEach(function(summary) {
-    const item = document.createElement("div");
-    item.className = "color-summary-item evo-color-" + summary.color;
-
-    item.innerHTML =
-      "<strong>" +
-      getColorLabel(summary.color) +
-      "</strong>" +
-      "<span>" +
-      summary.improved +
-      " / " +
-      summary.total +
-      " améliorée(s)</span>" +
-      "<em>Bonus couleur : +" +
-      summary.minBonus +
-      "</em>";
-
-    container.appendChild(item);
-  });
-}
-
-function renderEvolutionTable(actions, profile) {
-  const tbody = document.getElementById("evolutionTableBody");
-  if (!tbody) return;
-
-  const sortedActions = getSortedEvolutionActions(actions);
-
-  tbody.innerHTML = "";
-
-  sortedActions.forEach(function(action) {
-    const bonus = getBonus(profile, action.id);
-    const checked = bonus > 0 ? "checked" : "";
-    const actionColor = action.color || "none";
-
-    const row = document.createElement("tr");
-    row.className = "evolution-row evolution-row-" + actionColor;
-
-    row.innerHTML =
-      "<td>" +
-      '<input type="checkbox" disabled ' +
-      checked +
-      ">" +
-      "</td>" +
-      "<td>" +
-      '<strong class="evo-action-name evo-text-' +
-      actionColor +
-      '">' +
-      actionLabel(action) +
-      "</strong>" +
-      '<span class="evo-mode-label">' +
-      action.modeLabel +
-      "</span>" +
-      "</td>" +
-      "<td>" +
-      (action.mod !== undefined && action.mod !== null ? action.mod : "-") +
-      "</td>" +
-      "<td>" +
-      (bonus > 0 ? "+" + bonus : "-") +
-      "</td>";
-
-    tbody.appendChild(row);
-  });
-}
-
-function renderTrophies(actions, profile) {
-  const container = document.getElementById("trophyGrid");
-  if (!container) return;
-
-  const summaries = computeColorSummary(actions, profile);
-
-  container.innerHTML = "";
-
-  summaries.forEach(function(summary) {
-    const trophy = trophiesByColor[summary.color] || {
-      icon: "🏆",
-      title: getColorLabel(summary.color),
-      text: "Couleur maîtrisée."
-    };
-
-    const colorLevel = Math.min(5, Math.max(0, Number(summary.minBonus || 0)));
-    const unlocked = colorLevel >= 1;
-
-    const item = document.createElement("div");
-
-    item.className =
-      "trophy-card " +
-      "trophy-" +
-      summary.color +
-      " " +
-      (unlocked ? "trophy-unlocked" : "trophy-locked");
-
-    let levelHtml = "";
-
-    if (unlocked) {
-      levelHtml =
-        '<div class="trophy-level">' +
-        "<strong>" +
-        getTrophyLevelLabel(colorLevel) +
-        "</strong>" +
-        "<span>" +
-        getTrophyCups(colorLevel) +
-        "</span>" +
-        "</div>";
-    }
-
-    item.innerHTML =
-      '<div class="trophy-icon">' +
-      (unlocked ? getTrophyCups(colorLevel) : trophy.icon) +
-      "</div>" +
-      '<div class="trophy-content">' +
-      "<strong>" +
-      trophy.title +
-      "</strong>" +
-      "<span>" +
-      (unlocked ? trophy.text : "Encore verrouillé") +
-      "</span>" +
-      "<em>" +
-      summary.improved +
-      " / " +
-      summary.total +
-      " actions améliorées</em>" +
-      "<em>Niveau couleur : +" +
-      colorLevel +
-      " / +5</em>" +
-      levelHtml +
-      "</div>";
-
-    container.appendChild(item);
-  });
-}
-
-function renderSpecialTrophies(actions, profile) {
-  const container = document.getElementById("specialTrophyGrid");
-  if (!container) return;
-
-  const xpAvailable = Number(profile.experience || 0);
-  const xpSpent = Number(profile.spentExperience || 0);
-  const xpTotal = xpAvailable + xpSpent;
-  const bodyBonus = Number(profile.bodyBonus || 0);
-
-  const summaries = computeColorSummary(actions, profile);
-  const completedColors = summaries.filter(function(summary) {
-    return summary.complete;
-  }).length;
-
-  let improvedActions = 0;
-  let maxActionBonus = 0;
-
-  actions.forEach(function(action) {
-    const bonus = getBonus(profile, action.id);
-
-    if (bonus > 0) {
-      improvedActions += 1;
-    }
-
-    maxActionBonus = Math.max(maxActionBonus, bonus);
-  });
-
-  const allActionsImproved =
-    actions.length > 0 && improvedActions === actions.length;
-
-  const allColorsCompleted =
-    summaries.length > 0 && completedColors === summaries.length;
-
-  const specialTrophies = [
-    {
-      icon: "🏆",
-      title: "Premier sang",
-      text: "Le combattant a gagné ses premiers XP.",
-      unlocked: xpTotal >= 1
-    },
-    {
-      icon: "⚔️",
-      title: "Apprenti duelliste",
-      text: "Le combattant a atteint 10 XP total.",
-      unlocked: xpTotal >= 10
-    },
-    {
-      icon: "🛡️",
-      title: "Vétéran d’arène",
-      text: "Le combattant a atteint 50 XP total.",
-      unlocked: xpTotal >= 50
-    },
-    {
-      icon: "👑",
-      title: "Champion des Mondes Perdus",
-      text: "Le combattant a atteint 100 XP total.",
-      unlocked: xpTotal >= 100
-    },
-    {
-      icon: "💪",
-      title: "PV endurcis",
-      text: "Le combattant a gagné au moins +1 PV maximum.",
-      unlocked: bodyBonus >= 1
-    },
-    {
-      icon: "🔥",
-      title: "Maître d’une couleur",
-      text: "Une couleur complète a été validée.",
-      unlocked: completedColors >= 1
-    },
-    {
-      icon: "🌈",
-      title: "Maître des six couleurs",
-      text: "Toutes les couleurs disponibles sont validées.",
-      unlocked: allColorsCompleted
-    },
-    {
-      icon: "📚",
-      title: "Élève appliqué",
-      text: "Au moins 5 actions ont été améliorées.",
-      unlocked: improvedActions >= 5
-    },
-    {
-      icon: "🧠",
-      title: "Tacticien",
-      text: "Au moins 10 actions ont été améliorées.",
-      unlocked: improvedActions >= 10
-    },
-    {
-      icon: "⚒️",
-      title: "Arsenal complet",
-      text: "Toutes les actions ont été améliorées au moins une fois.",
-      unlocked: allActionsImproved
-    },
-    {
-      icon: "⭐",
-      title: "Technique favorite",
-      text: "Une action a atteint le niveau +2.",
-      unlocked: maxActionBonus >= 2
-    },
-    {
-      icon: "🌟",
-      title: "Technique légendaire",
-      text: "Une action a atteint le niveau +3.",
-      unlocked: maxActionBonus >= 3
-    }
-  ];
-
-  container.innerHTML = "";
-
-  specialTrophies.forEach(function(trophy) {
-    const item = document.createElement("div");
-
-    item.className =
-      "trophy-card special-trophy-card " +
-      (trophy.unlocked ? "trophy-unlocked" : "trophy-locked");
-
-    item.innerHTML =
-      '<div class="trophy-icon">' +
-      trophy.icon +
-      "</div>" +
-      '<div class="trophy-content">' +
-      "<strong>" +
-      trophy.title +
-      "</strong>" +
-      "<span>" +
-      (trophy.unlocked ? trophy.text : "Encore verrouillé") +
-      "</span>" +
-      "</div>";
-
-    container.appendChild(item);
-  });
-}
-
-function toggleTrophyPanel() {
-  const panel = document.getElementById("trophyPanel");
-  const button = document.getElementById("toggleTrophiesButton");
-
-  if (!panel) return;
-
-  const isOpen = panel.style.display === "block";
-
-  if (isOpen) {
-    panel.style.display = "none";
-
-    if (button) {
-      button.textContent = "Afficher les trophées";
-    }
-
-    return;
-  }
-
-  panel.style.display = "block";
-
-  if (button) {
-    button.textContent = "Masquer les trophées";
-  }
-
-  panel.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-}
-
-/* ============================================================
-   RENOMMAGE
-   ============================================================ */
-
-function renameCurrentCharacter() {
-  if (!currentSheetCharacter || !currentSheetProfile || !currentSheetFighter) {
-    window.alert("Aucun PJ chargé.");
-    return;
-  }
-
-  const modal = document.getElementById("renameModal");
-  const input = document.getElementById("renameCharacterInput");
-  const error = document.getElementById("renameModalError");
-  const title = document.getElementById("renameModalTitle");
-
-  if (!modal || !input) return;
-
-  if (title) {
-    title.textContent = "Renommer " + currentSheetCharacter.name;
-  }
-
-  if (error) {
-    error.textContent = "";
-  }
-
-  input.value = currentSheetCharacter.name || "";
-  modal.style.display = "flex";
-
-  setTimeout(function() {
-    input.focus();
-    input.select();
-  }, 50);
-}
-
-function closeRenameModal() {
-  const modal = document.getElementById("renameModal");
-  const error = document.getElementById("renameModalError");
-
-  if (modal) {
-    modal.style.display = "none";
-  }
-
-  if (error) {
-    error.textContent = "";
-  }
-}
-
-function confirmRenameCharacter() {
-  const input = document.getElementById("renameCharacterInput");
-  const error = document.getElementById("renameModalError");
-
-  if (!input || !currentSheetCharacter || !currentSheetProfile) return;
-
-  const newName = input.value.trim();
-
-  if (!newName) {
-    if (error) error.textContent = "Le nom du PJ ne peut pas être vide.";
-    return;
-  }
-
-  const oldName = currentSheetCharacter.name;
-
-  if (newName === oldName) {
-    closeRenameModal();
-    return;
-  }
-
-  const fighterId = currentSheetCharacter.fighterId;
-  const characters = getSavedCharacters();
-
-  const oldId = currentSheetCharacter.id;
-  const newId = makeCharacterId(fighterId, newName);
-
-  const alreadyExists = characters.some(function(character) {
-    return character.id === newId && character.id !== oldId;
-  });
-
-  if (alreadyExists) {
-    if (error) error.textContent = "Un PJ porte déjà ce nom pour ce livret.";
-    return;
-  }
-
-  const oldProfileKey = getPlayerProfileKey(fighterId, oldName);
-  const newProfileKey = getPlayerProfileKey(fighterId, newName);
-
-  const updatedProfile = Object.assign({}, currentSheetProfile, {
-    fighterId: fighterId,
-    name: newName
-  });
-
-  localStorage.setItem(newProfileKey, JSON.stringify(updatedProfile));
-
-  if (oldProfileKey !== newProfileKey) {
-    localStorage.removeItem(oldProfileKey);
-  }
-
-  const updatedCharacters = characters.map(function(character) {
-    if (character.id !== oldId) return character;
-
-    return Object.assign({}, character, {
-      id: newId,
-      name: newName,
-      experience: Number(updatedProfile.experience || 0),
-      spentExperience: Number(updatedProfile.spentExperience || 0)
-    });
-  });
-
-  saveSavedCharacters(updatedCharacters);
-
-  localStorage.setItem(lastCharacterKey, newId);
-  localStorage.setItem("lw_player_name_" + fighterId, newName);
-
-  updateCurrentDuelNameIfNeeded(fighterId, oldName, newName);
-
-  currentSheetCharacter = Object.assign({}, currentSheetCharacter, {
-    id: newId,
-    name: newName
-  });
-
-  currentSheetProfile = updatedProfile;
-
-  renderHeader(currentSheetCharacter, currentSheetProfile, currentSheetFighter);
-  renderColorSummary(currentSheetActions, currentSheetProfile);
-  renderEvolutionTable(currentSheetActions, currentSheetProfile);
-  renderTrophies(currentSheetActions, currentSheetProfile);
-  renderSpecialTrophies(currentSheetActions, currentSheetProfile);
-
-  const newUrl =
-    window.location.pathname +
-    "?id=" +
-    encodeURIComponent(newId);
-
-  window.history.replaceState({}, "", newUrl);
-
-  closeRenameModal();
-}
-
-function updateCurrentDuelNameIfNeeded(fighterId, oldName, newName) {
-  const raw = localStorage.getItem(currentDuelSaveKey);
-  if (!raw) return;
-
-  try {
-    const state = JSON.parse(raw);
-
-    if (state.fighterId === fighterId && state.playerName === oldName) {
-      state.playerName = newName;
-      localStorage.setItem(currentDuelSaveKey, JSON.stringify(state));
-    }
-  } catch (error) {
-    // Sauvegarde de duel illisible, on ignore.
-  }
-}
-function getPlayerLevelFromVictories(victories) {
-  const total = Number(victories || 0);
-  let level = 0;
-
-  for (let i = 0; i < playerLevelVictoryThresholds.length; i++) {
-    if (total >= playerLevelVictoryThresholds[i]) {
-      level = i;
-    }
-  }
-
-  return Math.min(6, level);
-}
-
-function getNextLevelVictoryTarget(level) {
-  const nextLevel = Math.min(6, Number(level || 0) + 1);
-
-  if (level >= 6) {
-    return "Max";
-  }
-
-  return playerLevelVictoryThresholds[nextLevel];
+  return action.name || action.id || "Action";
 }
 
 function normalizeActionUnlockName(text) {
@@ -972,14 +220,6 @@ function normalizeActionUnlockName(text) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-}
-
-function actionLabel(action) {
-  if (action.category) {
-    return action.category + " " + action.name;
-  }
-
-  return action.name;
 }
 
 function actionMatchesUnlockName(action, unlockName) {
@@ -998,6 +238,33 @@ function actionMatchesUnlockName(action, unlockName) {
     categoryName.includes(wanted) ||
     linkedUnlockName.includes(wanted)
   );
+}
+
+function getPlayerLevelFromVictories(victories) {
+  const total = Number(victories || 0);
+  let level = 0;
+
+  for (let i = 0; i < playerLevelVictoryThresholds.length; i++) {
+    if (total >= playerLevelVictoryThresholds[i]) {
+      level = i;
+    }
+  }
+
+  return Math.min(6, level);
+}
+
+function getLevelTitle(level) {
+  return playerLevelTitles[level] || "Novice";
+}
+
+function getNextLevelVictoryTarget(level) {
+  const safeLevel = Math.max(0, Math.min(6, Number(level || 0)));
+
+  if (safeLevel >= 6) {
+    return "Max";
+  }
+
+  return playerLevelVictoryThresholds[safeLevel + 1];
 }
 
 function getUnlockedActionNamesForLevel(fighterId, level) {
@@ -1023,81 +290,615 @@ function isActionUnlockedForSheet(action, fighterId, level) {
   });
 }
 
+function getActionUpgradeBonus(actionId) {
+  if (!currentSheetProfile || !currentSheetProfile.actionBonuses) return 0;
+  return Number(currentSheetProfile.actionBonuses[actionId] || 0);
+}
+
+function getAllSheetActions(fighter) {
+  return []
+    .concat(fighter.actions || [])
+    .concat(fighter.distanceActions || [])
+    .filter(function(action) {
+      return action && action.id && action.available !== false;
+    });
+}
+
+function getUnlockedSheetActions() {
+  if (!currentSheetCharacter || !currentSheetFighter) return [];
+
+  const fighterId = currentSheetCharacter.fighterId;
+  const level = currentSheetLevel;
+
+  return getAllSheetActions(currentSheetFighter).filter(function(action) {
+    return isActionUnlockedForSheet(action, fighterId, level);
+  });
+}
+
 /* ============================================================
-   INITIALISATION
+   CHARGEMENT DE LA FICHE
    ============================================================ */
 
-async function initSheetPage() {
+async function loadCatalog() {
+  try {
+    return await loadJson("data/catalog.json");
+  } catch (error) {
+    return fallbackCatalog;
+  }
+}
+
+function getCharacterIdFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("id") || localStorage.getItem(lastCharacterKey) || "";
+}
+
+function findCharacter(characterId) {
   const characters = getSavedCharacters();
 
-  if (characters.length === 0) {
-    setText("sheetStatus", "Aucun PJ sauvegardé sur cet appareil.");
-
-    const tbody = document.getElementById("evolutionTableBody");
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="4">Aucun PJ trouvé.</td></tr>';
-    }
-
-    return;
-  }
-
-  const characterId = getQueryCharacterId();
-
-  let character = characters.find(function(item) {
-    return item.id === characterId;
+  return characters.find(function(character) {
+    return character.id === characterId;
   });
+}
 
-  if (!character) {
-    character = characters[0];
-  }
+function loadProfile(character) {
+  const key = getPlayerProfileKey(character.fighterId, character.name);
+  const raw = localStorage.getItem(key);
 
-  localStorage.setItem(lastCharacterKey, character.id);
-
-  const profile = loadProfile(character);
-  const catalog = await loadCatalog();
-  const catalogEntry = findCatalogEntry(catalog, character.fighterId);
-
-  if (!catalogEntry) {
-    setText("sheetStatus", "Type de combattant introuvable dans le catalogue.");
-    return;
+  if (!raw) {
+    return {
+      fighterId: character.fighterId,
+      name: character.name,
+      experience: Number(character.experience || 0),
+      spentExperience: Number(character.spentExperience || 0),
+      actionBonuses: {},
+      bodyBonus: 0,
+      victories: Number(character.victories || 0),
+      level: 0
+    };
   }
 
   try {
-    const fighter = await loadJson(catalogEntry.sheetFile);
-    const actions = getAllActions(fighter);
+    const profile = JSON.parse(raw);
+
+    return {
+      fighterId: character.fighterId,
+      name: character.name,
+      experience: Number(profile.experience || 0),
+      spentExperience: Number(profile.spentExperience || 0),
+      actionBonuses: profile.actionBonuses || {},
+      bodyBonus: Number(profile.bodyBonus || 0),
+      victories: Number(profile.victories || 0),
+      level: Number(profile.level || 0)
+    };
+  } catch (error) {
+    return {
+      fighterId: character.fighterId,
+      name: character.name,
+      experience: Number(character.experience || 0),
+      spentExperience: Number(character.spentExperience || 0),
+      actionBonuses: {},
+      bodyBonus: 0,
+      victories: Number(character.victories || 0),
+      level: 0
+    };
+  }
+}
+
+function saveCurrentSheetProfile() {
+  if (!currentSheetCharacter || !currentSheetProfile) return;
+
+  const profileKey = getPlayerProfileKey(
+    currentSheetCharacter.fighterId,
+    currentSheetCharacter.name
+  );
+
+  currentSheetProfile.level = getPlayerLevelFromVictories(
+    currentSheetProfile.victories || 0
+  );
+
+  localStorage.setItem(profileKey, JSON.stringify(currentSheetProfile));
+
+  const characters = getSavedCharacters();
+  const characterId = makeCharacterId(
+    currentSheetCharacter.fighterId,
+    currentSheetCharacter.name
+  );
+
+  const index = characters.findIndex(function(item) {
+    return item.id === characterId;
+  });
+
+  const cleanCharacter = {
+    id: characterId,
+    fighterId: currentSheetCharacter.fighterId,
+    fighterName: currentSheetCharacter.fighterName,
+    name: currentSheetCharacter.name,
+    experience: Number(currentSheetProfile.experience || 0),
+    spentExperience: Number(currentSheetProfile.spentExperience || 0),
+    victories: Number(currentSheetProfile.victories || 0),
+    level: currentSheetProfile.level
+  };
+
+  if (index >= 0) {
+    characters[index] = cleanCharacter;
+  } else {
+    characters.push(cleanCharacter);
+  }
+
+  saveSavedCharacters(characters);
+  localStorage.setItem(lastCharacterKey, cleanCharacter.id);
+}
+
+async function initSheetPage() {
+  const status = document.getElementById("sheetStatus");
+
+  try {
+    const characterId = getCharacterIdFromUrl();
+
+    if (!characterId) {
+      throw new Error("Aucun PJ sélectionné.");
+    }
+
+    const character = findCharacter(characterId);
+
+    if (!character) {
+      throw new Error("PJ introuvable dans la sauvegarde locale.");
+    }
+
+    const catalog = await loadCatalog();
+    const fighterEntry = (catalog.fighters || fallbackCatalog.fighters).find(
+      function(item) {
+        return item.id === character.fighterId;
+      }
+    );
+
+    if (!fighterEntry) {
+      throw new Error("Combattant introuvable dans le catalogue.");
+    }
+
+    const fighter = await loadJson(fighterEntry.sheetFile);
+    const profile = loadProfile(character);
 
     currentSheetCharacter = character;
     currentSheetProfile = profile;
     currentSheetFighter = fighter;
-    currentSheetActions = actions;
+    currentSheetLevel = getPlayerLevelFromVictories(profile.victories || 0);
+    currentSheetActions = getUnlockedSheetActions();
 
     renderHeader(character, profile, fighter);
-    renderColorSummary(actions, profile);
-    renderEvolutionTable(actions, profile);
-    renderTrophies(actions, profile);
-    renderSpecialTrophies(actions, profile);
+    renderColorSummary();
+    renderEvolutionTable();
+    renderTrophies();
 
-    setText("sheetStatus", "");
+    if (status) {
+      status.textContent = "";
+    }
   } catch (error) {
     console.error(error);
-    setText("sheetStatus", error.message);
+
+    if (status) {
+      status.innerHTML =
+        '<span class="error">Erreur fiche PJ : ' +
+        escapeHtml(error.message) +
+        "</span>";
+    }
   }
 }
 
-document.addEventListener("keydown", function(event) {
+/* ============================================================
+   RENDU EN-TÊTE / RÉSUMÉ
+   ============================================================ */
+
+function renderHeader(character, profile, fighter) {
+  const xpAvailable = Number(profile.experience || 0);
+  const xpSpent = Number(profile.spentExperience || 0);
+  const xpTotal = xpAvailable + xpSpent;
+
+  const bodyBonus = Number(profile.bodyBonus || 0);
+  const bodyBase = Number(fighter.bodyPointsStart || 0);
+  const bodyMax = bodyBase + bodyBonus;
+
+  const victories = Number(profile.victories || 0);
+  const level = getPlayerLevelFromVictories(victories);
+  const levelTitle = getLevelTitle(level);
+  const nextTarget = getNextLevelVictoryTarget(level);
+
+  const fighterName =
+    character.fighterName ||
+    fighter.shortName ||
+    character.fighterId ||
+    "Combattant";
+
+  setText("sheetCharacterName", character.name || "Personnage");
+  setText(
+    "sheetCharacterType",
+    fighterName + " - Niveau " + level + " : " + levelTitle
+  );
+
+  setText("sheetFighterName", fighterName);
+  setText("sheetLevel", level + " - " + levelTitle);
+  setText("sheetVictories", victories);
+  setText("sheetNextLevel", nextTarget);
+
+  setText("sheetXpAvailable", xpAvailable);
+  setText("sheetXpSpent", xpSpent);
+  setText("sheetXpTotal", xpTotal);
+
+  setText("sheetBodyStart", bodyBase);
+  setText("sheetBodyBonus", bodyBonus >= 0 ? "+" + bodyBonus : bodyBonus);
+  setText("sheetCurrentPv", bodyMax);
+}
+
+/* ============================================================
+   RÉSUMÉ PAR COULEUR
+   ============================================================ */
+
+function renderColorSummary() {
+  const container = document.getElementById("colorSummary");
+  if (!container) return;
+
+  const actions = getUnlockedSheetActions();
+
+  const html = colorOrder.map(function(color) {
+    const colorActions = actions.filter(function(action) {
+      return action.color === color;
+    });
+
+    const improved = colorActions.filter(function(action) {
+      return getActionUpgradeBonus(action.id) > 0;
+    });
+
+    let minBonus = 0;
+
+    if (colorActions.length > 0) {
+      minBonus = Math.min.apply(
+        null,
+        colorActions.map(function(action) {
+          return getActionUpgradeBonus(action.id);
+        })
+      );
+    }
+
+    return (
+      '<article class="color-summary-item evo-color-' +
+      escapeHtml(color) +
+      '">' +
+      "<strong>" +
+      escapeHtml(colorLabels[color] || color) +
+      "</strong>" +
+      "<span>" +
+      improved.length +
+      " / " +
+      colorActions.length +
+      " améliorée(s)</span>" +
+      "<em>Bonus couleur : +" +
+      minBonus +
+      "</em>" +
+      "</article>"
+    );
+  }).join("");
+
+  container.innerHTML = html;
+}
+
+/* ============================================================
+   TABLEAU DES ÉVOLUTIONS
+   ============================================================ */
+
+function renderEvolutionTable() {
+  const body = document.getElementById("evolutionTableBody");
+  if (!body) return;
+
+  const actions = getUnlockedSheetActions();
+
+  if (actions.length === 0) {
+    body.innerHTML =
+      '<tr><td colspan="4">Aucune action débloquée pour ce niveau.</td></tr>';
+    return;
+  }
+
+  const sortedActions = actions.slice().sort(function(a, b) {
+    const colorA = colorOrder.indexOf(a.color);
+    const colorB = colorOrder.indexOf(b.color);
+
+    if (colorA !== colorB) {
+      return colorA - colorB;
+    }
+
+    return actionLabel(a).localeCompare(actionLabel(b));
+  });
+
+  body.innerHTML = sortedActions.map(function(action) {
+    const bonus = getActionUpgradeBonus(action.id);
+    const checked = bonus > 0 ? "checked" : "";
+    const color = action.color || "none";
+    const label = actionLabel(action);
+    const mod = Number(action.mod || 0);
+    const modeLabel = action.unlockName
+      ? "Distance liée : " + action.unlockName
+      : "";
+
+    return (
+      '<tr class="evolution-row evolution-row-' +
+      escapeHtml(color) +
+      '">' +
+      '<td><input type="checkbox" disabled ' +
+      checked +
+      "></td>" +
+      '<td><span class="evo-action-name evo-text-' +
+      escapeHtml(color) +
+      '">' +
+      escapeHtml(label) +
+      "</span>" +
+      (modeLabel
+        ? '<span class="evo-mode-label">' + escapeHtml(modeLabel) + "</span>"
+        : "") +
+      "</td>" +
+      "<td>" +
+      escapeHtml(mod >= 0 ? "+" + mod : String(mod)) +
+      "</td>" +
+      "<td>+" +
+      bonus +
+      "</td>" +
+      "</tr>"
+    );
+  }).join("");
+}
+
+/* ============================================================
+   TROPHÉES
+   ============================================================ */
+
+function getTrophyIconForLevel(level) {
+  const safeLevel = Math.max(0, Math.min(5, Number(level || 0)));
+
+  if (safeLevel <= 0) return "◇";
+  return "🏆".repeat(safeLevel);
+}
+
+function renderTrophies() {
+  renderColorTrophies();
+  renderSpecialTrophies();
+}
+
+function renderColorTrophies() {
+  const grid = document.getElementById("trophyGrid");
+  if (!grid) return;
+
+  const actions = getUnlockedSheetActions();
+
+  grid.innerHTML = colorOrder.map(function(color) {
+    const colorActions = actions.filter(function(action) {
+      return action.color === color;
+    });
+
+    let minBonus = 0;
+
+    if (colorActions.length > 0) {
+      minBonus = Math.min.apply(
+        null,
+        colorActions.map(function(action) {
+          return getActionUpgradeBonus(action.id);
+        })
+      );
+    }
+
+    const unlocked = minBonus > 0;
+    const icon = getTrophyIconForLevel(minBonus);
+
+    return (
+      '<article class="trophy-card trophy-' +
+      escapeHtml(color) +
+      " " +
+      (unlocked ? "trophy-unlocked" : "trophy-locked") +
+      '">' +
+      '<div class="trophy-icon">' +
+      icon +
+      "</div>" +
+      '<div class="trophy-content">' +
+      "<strong>" +
+      escapeHtml(colorLabels[color] || color) +
+      "</strong>" +
+      "<span>Niveau couleur : +" +
+      minBonus +
+      "</span>" +
+      "<em>" +
+      colorActions.length +
+      " action(s) débloquée(s)</em>" +
+      "</div>" +
+      "</article>"
+    );
+  }).join("");
+}
+
+function renderSpecialTrophies() {
+  const grid = document.getElementById("specialTrophyGrid");
+  if (!grid) return;
+
+  const victories = Number(currentSheetProfile.victories || 0);
+  const level = getPlayerLevelFromVictories(victories);
+  const actions = getUnlockedSheetActions();
+  const improvedActions = actions.filter(function(action) {
+    return getActionUpgradeBonus(action.id) > 0;
+  });
+
+  const trophies = [
+    {
+      name: "Première victoire",
+      icon: "⚔️",
+      unlocked: victories >= 1,
+      text: victories + " victoire(s)"
+    },
+    {
+      name: "Combattant aguerri",
+      icon: "🛡️",
+      unlocked: level >= 2,
+      text: "Niveau " + level + " - " + getLevelTitle(level)
+    },
+    {
+      name: "Maître des gestes connus",
+      icon: "📜",
+      unlocked: actions.length > 0 && improvedActions.length === actions.length,
+      text: improvedActions.length + " / " + actions.length + " action(s)"
+    },
+    {
+      name: "Vétéran de l’arène",
+      icon: "👑",
+      unlocked: level >= 6,
+      text: victories + " victoire(s)"
+    }
+  ];
+
+  grid.innerHTML = trophies.map(function(trophy) {
+    return (
+      '<article class="trophy-card special-trophy-card ' +
+      (trophy.unlocked ? "trophy-unlocked" : "trophy-locked") +
+      '">' +
+      '<div class="trophy-icon">' +
+      trophy.icon +
+      "</div>" +
+      '<div class="trophy-content">' +
+      "<strong>" +
+      escapeHtml(trophy.name) +
+      "</strong>" +
+      "<span>" +
+      escapeHtml(trophy.text) +
+      "</span>" +
+      "</div>" +
+      "</article>"
+    );
+  }).join("");
+}
+
+function toggleTrophyPanel() {
+  const panel = document.getElementById("trophyPanel");
+  const button = document.getElementById("toggleTrophiesButton");
+
+  if (!panel) return;
+
+  const isOpen = panel.style.display === "block";
+
+  panel.style.display = isOpen ? "none" : "block";
+
+  if (button) {
+    button.textContent = isOpen ? "Afficher les trophées" : "Masquer les trophées";
+  }
+}
+
+/* ============================================================
+   RENOMMER LE PJ
+   ============================================================ */
+
+function renameCurrentCharacter() {
   const modal = document.getElementById("renameModal");
+  const input = document.getElementById("renameCharacterInput");
+  const error = document.getElementById("renameModalError");
 
-  if (!modal || modal.style.display !== "flex") return;
+  if (!currentSheetCharacter) return;
 
-  if (event.key === "Escape") {
+  if (input) {
+    input.value = currentSheetCharacter.name || "";
+  }
+
+  if (error) {
+    error.textContent = "";
+  }
+
+  if (modal) {
+    modal.style.display = "flex";
+  }
+
+  setTimeout(function() {
+    if (input) input.focus();
+  }, 50);
+}
+
+function closeRenameModal() {
+  const modal = document.getElementById("renameModal");
+  if (modal) modal.style.display = "none";
+}
+
+function confirmRenameCharacter() {
+  const input = document.getElementById("renameCharacterInput");
+  const error = document.getElementById("renameModalError");
+
+  if (!currentSheetCharacter || !currentSheetProfile || !input) return;
+
+  const newName = input.value.trim();
+
+  if (!newName) {
+    if (error) error.textContent = "Le nom ne peut pas être vide.";
+    return;
+  }
+
+  const oldName = currentSheetCharacter.name;
+  const fighterId = currentSheetCharacter.fighterId;
+
+  if (newName === oldName) {
     closeRenameModal();
+    return;
   }
 
-  if (event.key === "Enter") {
-    confirmRenameCharacter();
-  }
-});
+  const oldId = makeCharacterId(fighterId, oldName);
+  const newId = makeCharacterId(fighterId, newName);
 
-document.addEventListener("DOMContentLoaded", function() {
-  initSheetPage();
-});
+  const characters = getSavedCharacters();
+
+  const duplicate = characters.some(function(character) {
+    return character.id === newId && character.id !== oldId;
+  });
+
+  if (duplicate) {
+    if (error) error.textContent = "Un PJ porte déjà ce nom pour ce livret.";
+    return;
+  }
+
+  const oldProfileKey = getPlayerProfileKey(fighterId, oldName);
+  const newProfileKey = getPlayerProfileKey(fighterId, newName);
+
+  currentSheetCharacter.name = newName;
+  currentSheetCharacter.id = newId;
+  currentSheetProfile.name = newName;
+
+  const updatedCharacters = characters.map(function(character) {
+    if (character.id !== oldId) return character;
+
+    return {
+      id: newId,
+      fighterId: fighterId,
+      fighterName: character.fighterName,
+      name: newName,
+      experience: Number(currentSheetProfile.experience || 0),
+      spentExperience: Number(currentSheetProfile.spentExperience || 0),
+      victories: Number(currentSheetProfile.victories || 0),
+      level: getPlayerLevelFromVictories(currentSheetProfile.victories || 0)
+    };
+  });
+
+  localStorage.removeItem(oldProfileKey);
+  localStorage.setItem(newProfileKey, JSON.stringify(currentSheetProfile));
+  saveSavedCharacters(updatedCharacters);
+  localStorage.setItem(lastCharacterKey, newId);
+
+  renderHeader(currentSheetCharacter, currentSheetProfile, currentSheetFighter);
+  closeRenameModal();
+
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set("id", newId);
+  window.history.replaceState({}, "", currentUrl.toString());
+}
+
+/* ============================================================
+   RETOUR AU DUEL
+   ============================================================ */
+
+function goBackToDuel() {
+  localStorage.setItem(resumeDuelAfterSheetKey, "1");
+  window.location.href = "duel.html?resume=1";
+}
+
+/* ============================================================
+   LANCEMENT
+   ============================================================ */
+
+document.addEventListener("DOMContentLoaded", initSheetPage);
