@@ -29,6 +29,103 @@ const fallbackCatalog = {
   ]
 };
 
+const playerLevelTitles = [
+  "Novice",
+  "Aguerri",
+  "Combattant",
+  "Bretteur",
+  "Champion",
+  "Idole",
+  "Vétéran"
+];
+
+const playerLevelVictoryThresholds = [0, 5, 15, 30, 50, 75, 105];
+
+const actionUnlocksByFighter = {
+  chevalier: {
+    0: [
+      "Coup latéral haut",
+      "Coup latéral bas",
+      "Coup de bouclier haut",
+      "Bond en arrière"
+    ],
+    1: [
+      "Coup plongeant violent",
+      "Estoc haut",
+      "Attaque protégée latérale",
+      "Bond esquive"
+    ],
+    2: [
+      "Estoc bas",
+      "Coup de bouclier bas",
+      "Feinte basse",
+      "Attaque protégée estoc"
+    ],
+    3: [
+      "Feinte haute",
+      "Feinte estoc",
+      "Attaque protégée plongeante",
+      "Bond en hauteur"
+    ],
+    4: [
+      "Coup plongeant puissant",
+      "Coup de pied",
+      "Désarmer",
+      "Récupérer arme"
+    ],
+    5: [
+      "Feinte coup latéral",
+      "Coup latéral féroce",
+      "Bond esquive basse"
+    ],
+    6: []
+  },
+
+  squelette: {
+    0: [
+      "Coup plongeant violent",
+      "Coup latéral bas",
+      "Coup de bouclier bas",
+      "Bond esquive",
+      "Récupérer arme"
+    ],
+    1: [
+      "Coup latéral haut",
+      "Estoc bas",
+      "Coup de bouclier haut",
+      "Bond en arrière"
+    ],
+    2: [
+      "Coup plongeant puissant",
+      "Estoc haut",
+      "Feinte basse",
+      "Attaque protégée latérale"
+    ],
+    3: [
+      "Feinte estoc",
+      "Attaque protégée plongeante",
+      "Bond esquive basse",
+      "Coup de pied"
+    ],
+    4: [
+      "Feinte haute",
+      "Désarmer",
+      "Récupérer arme",
+      "Coup latéral féroce"
+    ],
+    5: [
+      "Feinte coup latéral",
+      "Attaque protégée estoc",
+      "Bond en hauteur"
+    ],
+    6: [
+      "Bloque et approche",
+      "Esquive",
+      "Bond en arrière"
+    ]
+  }
+};
+
 const evolutionColorOrder = ["rouge", "orange", "vert", "jaune", "bleu", "marron"];
 
 const trophiesByColor = {
@@ -362,6 +459,11 @@ function renderHeader(character, profile, fighter) {
   const bodyBase = Number(fighter.bodyPointsStart || 0);
   const bodyMax = bodyBase + bodyBonus;
 
+  const victories = Number(profile.victories || 0);
+  const level = getPlayerLevelFromVictories(victories);
+  const levelTitle = playerLevelTitles[level] || "Novice";
+  const nextTarget = getNextLevelVictoryTarget(level);
+
   const fighterName =
     character.fighterName ||
     fighter.shortName ||
@@ -369,8 +471,13 @@ function renderHeader(character, profile, fighter) {
     "Combattant";
 
   setText("sheetCharacterName", character.name || "Personnage");
-  setText("sheetCharacterType", fighterName);
+  setText("sheetCharacterType", fighterName + " - Niveau " + level + " : " + levelTitle);
+
   setText("sheetFighterName", fighterName);
+
+  setText("sheetLevel", level + " - " + levelTitle);
+  setText("sheetVictories", victories);
+  setText("sheetNextLevel", nextTarget);
 
   setText("sheetXpAvailable", xpAvailable);
   setText("sheetXpSpent", xpSpent);
@@ -835,6 +942,85 @@ function updateCurrentDuelNameIfNeeded(fighterId, oldName, newName) {
   } catch (error) {
     // Sauvegarde de duel illisible, on ignore.
   }
+}
+function getPlayerLevelFromVictories(victories) {
+  const total = Number(victories || 0);
+  let level = 0;
+
+  for (let i = 0; i < playerLevelVictoryThresholds.length; i++) {
+    if (total >= playerLevelVictoryThresholds[i]) {
+      level = i;
+    }
+  }
+
+  return Math.min(6, level);
+}
+
+function getNextLevelVictoryTarget(level) {
+  const nextLevel = Math.min(6, Number(level || 0) + 1);
+
+  if (level >= 6) {
+    return "Max";
+  }
+
+  return playerLevelVictoryThresholds[nextLevel];
+}
+
+function normalizeActionUnlockName(text) {
+  return String(text || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function actionLabel(action) {
+  if (action.category) {
+    return action.category + " " + action.name;
+  }
+
+  return action.name;
+}
+
+function actionMatchesUnlockName(action, unlockName) {
+  const wanted = normalizeActionUnlockName(unlockName);
+
+  const fullLabel = normalizeActionUnlockName(actionLabel(action));
+  const simpleName = normalizeActionUnlockName(action.name);
+  const categoryName = normalizeActionUnlockName(
+    (action.category || "") + " " + (action.name || "")
+  );
+  const linkedUnlockName = normalizeActionUnlockName(action.unlockName);
+
+  return (
+    fullLabel.includes(wanted) ||
+    simpleName.includes(wanted) ||
+    categoryName.includes(wanted) ||
+    linkedUnlockName.includes(wanted)
+  );
+}
+
+function getUnlockedActionNamesForLevel(fighterId, level) {
+  const table = actionUnlocksByFighter[fighterId] || {};
+  const names = [];
+
+  for (let currentLevel = 0; currentLevel <= level; currentLevel++) {
+    (table[currentLevel] || []).forEach(function(name) {
+      if (!names.includes(name)) {
+        names.push(name);
+      }
+    });
+  }
+
+  return names;
+}
+
+function isActionUnlockedForSheet(action, fighterId, level) {
+  const unlockedNames = getUnlockedActionNamesForLevel(fighterId, level);
+
+  return unlockedNames.some(function(name) {
+    return actionMatchesUnlockName(action, name);
+  });
 }
 
 /* ============================================================
