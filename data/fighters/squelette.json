@@ -270,6 +270,7 @@
       "mod": 4,
       "bonus": 0,
       "available": true
+      "unlockName": "Charge"
     },
     {
       "id": "da_coup_lateral_haut",
@@ -279,6 +280,7 @@
       "mod": -6,
       "bonus": 0,
       "available": true
+      "unlockName": "Coup latéral haut"
     },
     {
       "id": "da_coup_lateral_bas",
@@ -288,6 +290,7 @@
       "mod": -6,
       "bonus": 0,
       "available": true
+      "unlockName": "Coup latéral bas"
     },
     {
       "id": "da_estoc_haut",
@@ -297,6 +300,7 @@
       "mod": -5,
       "bonus": 0,
       "available": true
+      "unlockName": "Estoc haut"
     },
     {
       "id": "da_estoc_bas",
@@ -306,6 +310,7 @@
       "mod": -5,
       "bonus": 0,
       "available": true
+      "unlockName": "Estoc bas"
     },
     {
       "id": "da_bloque_approche",
@@ -315,6 +320,7 @@
       "mod": 0,
       "bonus": 0,
       "available": true
+      "unlockName": "Bloque et approche"
     },
     {
       "id": "da_esquive",
@@ -324,6 +330,7 @@
       "mod": -6,
       "bonus": 0,
       "available": true
+      "unlockName": "Esquive"
     },
     {
       "id": "da_bond_en_arriere",
@@ -333,6 +340,7 @@
       "mod": -6,
       "bonus": 0,
       "available": true
+      "unlockName": "Bond en arrière"
     }
   ]
 }
