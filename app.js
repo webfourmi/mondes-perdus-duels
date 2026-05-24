@@ -1481,13 +1481,17 @@ function actionMatchesUnlockName(action, unlockName) {
     (action.category || "") + " " + (action.name || "")
   );
 
+  // Option pratique pour les actions de Distance Accrue :
+  // dans le JSON, on pourra ajouter unlockName: "Coup latéral haut"
+  const linkedUnlockName = normalizeActionUnlockName(action.unlockName);
+
   return (
     fullLabel.includes(wanted) ||
     simpleName.includes(wanted) ||
-    categoryName.includes(wanted)
+    categoryName.includes(wanted) ||
+    linkedUnlockName.includes(wanted)
   );
 }
-
 function getUnlockedActionNamesForLevel(fighterId, level) {
   const table = actionUnlocksByFighter[fighterId] || {};
   const names = [];
@@ -1512,6 +1516,16 @@ function isActionUnlockedByLevel(action) {
 
   const level = getCurrentPlayerLevel();
   const unlockedNames = getUnlockedActionNamesForLevel(currentFighter.id, level);
+
+  return unlockedNames.some(function(name) {
+    return actionMatchesUnlockName(action, name);
+  });
+}
+
+function isActionUnlockedForFighter(action, fighterId, level) {
+  if (!action) return false;
+
+  const unlockedNames = getUnlockedActionNamesForLevel(fighterId, level);
 
   return unlockedNames.some(function(name) {
     return actionMatchesUnlockName(action, name);
@@ -2363,13 +2377,10 @@ function fillActions(actions, restriction) {
  actions.forEach(function(action) {
   if (!actionAllowedByRestriction(action, activeRestriction)) return;
 
-  const distanceMode = isDistanceModeActive();
-
   const isAlwaysAllowedRecover =
     activeRestriction === "disarmed" && isRecoverWeaponAction(action);
-
+  
   if (
-    !distanceMode &&
     !isAlwaysAllowedRecover &&
     !isActionUnlockedByLevel(action)
   ) {
@@ -2844,14 +2855,24 @@ function getSoloOpponentActions() {
     actions = currentOpponentFighter.actions || [];
   }
 
-  return actions.filter(function(action) {
-    return (
-      action &&
-      action.available &&
-      action.pg !== undefined &&
-      action.pg !== null &&
-      actionAllowedByRestriction(action, soloOpponentRestriction)
-    );
+ return actions.filter(function(action) {
+    if (
+      !action ||
+      !action.available ||
+      action.pg === undefined ||
+      action.pg === null
+    ) {
+      return false;
+    }
+  
+    if (!actionAllowedByRestriction(action, soloOpponentRestriction)) {
+      return false;
+    }
+  
+    const opponentLevel = Number(soloDifficultyLevel || 0);
+    const opponentId = currentOpponentFighter.id;
+  
+    return isActionUnlockedForFighter(action, opponentId, opponentLevel);
   });
 }
 
