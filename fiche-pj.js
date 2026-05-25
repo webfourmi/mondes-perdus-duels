@@ -688,13 +688,9 @@ function renderSheetUpgradePanel() {
 
   select.innerHTML = "";
 
-  if (xp < cost) {
-    info.textContent =
-      xp +
-      " XP disponibles. Il faut au moins " +
-      cost +
-      " XP (PV max actuels) pour ajouter +1 à une action.";
-    panel.style.display = "block";
+  // Sur la fiche aussi, le bloc n’apparaît que si une dépense est possible.
+  if (xp < cost || availableEntries.length === 0) {
+    panel.style.display = "none";
     select.style.display = "none";
     if (button) button.style.display = "none";
     return;
@@ -719,19 +715,6 @@ function renderSheetUpgradePanel() {
 
     select.appendChild(option);
   });
-
-  if (availableEntries.length === 0) {
-    info.textContent =
-      "Aucune action ne peut être améliorée : les EVO des actions débloquées ont déjà atteint l’EVO max autorisée. Niveau PJ : " +
-      playerLevel +
-      " | EVO max actuelle : +" +
-      maxEvolutionLevel +
-      ".";
-    panel.style.display = "block";
-    select.style.display = "none";
-    if (button) button.style.display = "none";
-    return;
-  }
 
   info.textContent =
     xp +
