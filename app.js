@@ -1320,18 +1320,13 @@ function actionMatchesUnlockName(action, unlockName) {
   );
   const linkedUnlockName = normalizeActionUnlockName(action.unlockName);
 
-  const actionText = [fullLabel, simpleName, categoryName, linkedUnlockName]
-    .filter(Boolean)
-    .join(" ");
-
-  if (
-    fullLabel.includes(wanted) ||
-    simpleName.includes(wanted) ||
-    categoryName.includes(wanted) ||
-    linkedUnlockName.includes(wanted)
-  ) {
-    return true;
-  }
+  return (
+    fullLabel === wanted ||
+    simpleName === wanted ||
+    categoryName === wanted ||
+    linkedUnlockName === wanted
+  );
+}
 
   // Alias de sécurité pour les cartes de Distance Accrue
   // quand les JSON n'ont pas encore le champ unlockName.
