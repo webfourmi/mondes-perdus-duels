@@ -2394,33 +2394,62 @@ function selectActionCard(actionId) {
 
   if (!select) return;
 
+  selectedAction = currentActions.find(function(action) {
+    return action.id === actionId;
+  });
+
+  if (!selectedAction) return;
+
   select.value = actionId;
 
-  document.querySelectorAll(".action-card").forEach(function(card) {
+  const cards = document.querySelectorAll(".action-card");
+  cards.forEach(function(card) {
     card.classList.toggle("active", card.dataset.actionId === actionId);
   });
 
-  const action = currentActions.find(function(item) {
-    return item.id === actionId;
-  });
-
-  if (hint && action) {
-    const upgradeBonus = getActionUpgradeBonus(action.id);
-    const upgradeText = upgradeBonus > 0 ? " / EVO +" + upgradeBonus : "";
-
-    hint.textContent =
-      "Action choisie : " +
-      actionLabel(action) +
-      " — PG " +
-      action.pg +
-      " / MOD " +
-      action.mod +
-      upgradeText +
-      " / " +
-      action.color;
+  if (hint) {
+    hint.textContent = "Choisis ton action";
   }
+
+  updateActionPreview(selectedAction);
 }
 
+function getActionPreviewImagePath(action) {
+  if (!currentFighter || !action) return "";
+
+  // Exemple : chevalier_atk1.png
+  return "images/actions/" + currentFighter.id + "_" + action.id + ".png";
+}
+
+function updateActionPreview(action) {
+  const image = document.getElementById("actionPreviewImage");
+  const placeholder = document.getElementById("actionPreviewPlaceholder");
+
+  if (!image || !placeholder) return;
+
+  if (!action) {
+    image.style.display = "none";
+    image.src = "";
+    placeholder.style.display = "block";
+    placeholder.textContent = "Clique sur une action pour voir sa carte.";
+    return;
+  }
+
+  const imagePath = getActionPreviewImagePath(action);
+
+  image.onload = function() {
+    image.style.display = "block";
+    placeholder.style.display = "none";
+  };
+
+  image.onerror = function() {
+    image.style.display = "none";
+    placeholder.style.display = "block";
+    placeholder.textContent = "Bientôt dans votre manuel d’escrime";
+  };
+
+  image.src = imagePath + "?v=" + Date.now();
+}
 function fillActions(actions, restriction) {
   const select = document.getElementById("actionChoice");
   const cardsContainer = document.getElementById("actionCards");
