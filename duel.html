@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=136">
+  <link rel="stylesheet" href="style.css?v=137">
 
   <style>
     #actionManualOverlay {
@@ -14,6 +14,7 @@
       inset: 0;
       z-index: 9999;
       background: rgba(0, 0, 0, 0.94);
+      display: none;
       align-items: center;
       justify-content: center;
       flex-direction: column;
@@ -23,20 +24,47 @@
 
     #actionManualOverlay .image-overlay-scroll {
       width: 100%;
-      max-width: 720px;
-      max-height: calc(100vh - 88px);
+      max-width: min(94vw, 720px);
+      max-height: calc(100vh - 92px);
+      margin: 0 auto;
       overflow: auto;
       text-align: center;
+      box-sizing: border-box;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     #actionManualImage {
-      max-width: 100%;
+      display: block;
+      width: auto;
+      max-width: min(92vw, 680px);
+      max-height: calc(100vh - 150px);
       height: auto;
+      margin: 0 auto;
+      object-fit: contain;
       border-radius: 12px;
     }
 
+    #actionManualOverlay .image-overlay-toolbar {
+      width: 100%;
+      max-width: min(92vw, 420px);
+      margin: 10px auto 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    #actionManualOverlay .image-overlay-toolbar button {
+      width: 100%;
+      max-width: 220px;
+      margin: 0 auto;
+    }
+
     .action-manual-title {
-      margin-bottom: 8px;
+      width: 100%;
+      max-width: min(92vw, 680px);
+      margin: 0 auto 8px;
       padding: 6px 10px;
       border: 1px solid #c9a45b;
       border-radius: 10px;
@@ -44,6 +72,28 @@
       text-align: center;
       font-weight: bold;
       background: rgba(0, 0, 0, 0.4);
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 520px) {
+      #actionManualOverlay {
+        padding: 6px;
+      }
+
+      #actionManualOverlay .image-overlay-scroll {
+        max-width: 98vw;
+        max-height: calc(100vh - 82px);
+      }
+
+      #actionManualImage {
+        max-width: 96vw;
+        max-height: calc(100vh - 136px);
+      }
+
+      .action-manual-title {
+        max-width: 96vw;
+        font-size: 0.9rem;
+      }
     }
   </style>
 
