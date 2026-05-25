@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.9";
+const APP_VERSION = "0.9.0";
 
 let catalog = null;
 
@@ -1572,18 +1572,22 @@ function getNextUpgradeLevel() {
   return minBonus + 1;
 }
 
+function getCurrentMaxActionEvolutionLevel() {
+  // Exception de confort : au niveau 0, le joueur peut déjà monter
+  // ses actions débloquées jusqu’à EVO +1.
+  return Math.max(1, getCurrentPlayerLevel());
+}
+
 function getActionsAvailableForUpgrade() {
   const uniqueActions = getAllUnlockedUniqueActions();
-  const playerLevel = getCurrentPlayerLevel();
-
-  if (playerLevel <= 0) return [];
+  const maxEvolutionLevel = getCurrentMaxActionEvolutionLevel();
 
   return uniqueActions.filter(function(entry) {
     const action = entry.action;
 
     return (
       isActionUnlockedByLevel(action) &&
-      getActionUpgradeBonus(action) < playerLevel
+      getActionUpgradeBonus(action) < maxEvolutionLevel
     );
   });
 }
@@ -1646,17 +1650,10 @@ function updateEvolutionPanel() {
 
   const cost = getEffectiveBodyStart();
   const playerLevel = getCurrentPlayerLevel();
+  const maxEvolutionLevel = getCurrentMaxActionEvolutionLevel();
   const availableEntries = getActionsAvailableForUpgrade();
 
   select.innerHTML = "";
-
-  if (playerLevel <= 0) {
-    info.textContent =
-      "Le PJ est niveau 0 : il doit gagner des victoires pour passer niveau 1 avant d’améliorer ses actions.";
-    panel.style.display = "block";
-    select.style.display = "none";
-    return;
-  }
 
   if (currentExperience < cost) {
     info.textContent =
@@ -1691,7 +1688,11 @@ function updateEvolutionPanel() {
 
   if (availableEntries.length === 0) {
     info.textContent =
-      "Aucune action ne peut être améliorée : les actions débloquées ont déjà atteint le niveau actuel du PJ.";
+      "Aucune action ne peut être améliorée : les actions débloquées ont déjà atteint l’EVO max autorisée. Niveau PJ : " +
+      playerLevel +
+      " | EVO max actuelle : +" +
+      maxEvolutionLevel +
+      ".";
     panel.style.display = "block";
     select.style.display = "none";
     return;
@@ -1701,9 +1702,11 @@ function updateEvolutionPanel() {
     currentExperience +
     " XP disponibles. Coût : " +
     cost +
-    " XP. Une action peut monter jusqu’au niveau actuel du PJ. Niveau actuel : " +
+    " XP. Niveau PJ : " +
     playerLevel +
-    ".";
+    " | EVO max actuelle : +" +
+    maxEvolutionLevel +
+    (playerLevel === 0 ? " (exception débutant)." : ".") ;
 
   select.style.display = "block";
   panel.style.display = "block";
@@ -1735,19 +1738,14 @@ function upgradeSelectedAction() {
   const currentBonus = getActionUpgradeBonus(entry.action);
   const nextLevel = currentBonus + 1;
   const playerLevel = getCurrentPlayerLevel();
+  const maxEvolutionLevel = getCurrentMaxActionEvolutionLevel();
 
-  if (playerLevel <= 0) {
+  if (nextLevel > maxEvolutionLevel) {
     appAlert(
-      "Le PJ est niveau 0 : il doit gagner des victoires pour passer niveau 1 avant d’améliorer ses actions.",
-      "Évolution impossible"
-    );
-    return;
-  }
-
-  if (nextLevel > playerLevel) {
-    appAlert(
-      "Cette action ne peut pas dépasser le niveau actuel du PJ.\n\nNiveau PJ : " +
+      "Cette action ne peut pas dépasser l’EVO max actuelle.\n\nNiveau PJ : " +
         playerLevel +
+        "\nEVO max : +" +
+        maxEvolutionLevel +
         "\nEVO actuelle : +" +
         currentBonus,
       "Évolution impossible"
