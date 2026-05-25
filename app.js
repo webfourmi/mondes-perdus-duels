@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.1";
+const APP_VERSION = "0.8.2";
 
 let catalog = null;
 
@@ -281,6 +281,52 @@ function findCatalogEntry(id) {
 
   return activeCatalog.fighters.find(function(fighter) {
     return fighter.id === id;
+  });
+}
+
+function ensureSetupSelectorsVisible() {
+  const selectors = [
+    document.getElementById("playerSheet"),
+    document.getElementById("opponentBook")
+  ];
+
+  selectors.forEach(function(select) {
+    if (!select) return;
+
+    select.classList.remove("hidden-action-select");
+    select.classList.remove("hidden-game-mode-select");
+    select.style.display = "";
+  });
+}
+
+function refreshSetupSelectionDisplays() {
+  const playerSelect = document.getElementById("playerSheet");
+  const opponentSelect = document.getElementById("opponentBook");
+
+  const playerEntry = playerSelect ? findCatalogEntry(playerSelect.value) : null;
+  const opponentEntry = opponentSelect ? findCatalogEntry(opponentSelect.value) : null;
+
+  const playerLabels = [
+    document.getElementById("currentSheet"),
+    document.getElementById("selectedPlayerSheet"),
+    document.getElementById("playerSheetDisplay")
+  ];
+
+  const opponentLabels = [
+    document.getElementById("currentBook"),
+    document.getElementById("selectedOpponentBook"),
+    document.getElementById("opponentBookDisplay"),
+    document.getElementById("bookChoiceDisplay")
+  ];
+
+  playerLabels.forEach(function(element) {
+    if (!element || !playerEntry) return;
+    element.textContent = playerEntry.fullName || playerEntry.shortName || playerEntry.id;
+  });
+
+  opponentLabels.forEach(function(element) {
+    if (!element || !opponentEntry) return;
+    element.textContent = opponentEntry.fullName || opponentEntry.shortName || opponentEntry.id;
   });
 }
 
@@ -1313,6 +1359,7 @@ function normalizeActionUnlockName(text) {
 function actionMatchesUnlockName(action, unlockName) {
   const wanted = normalizeActionUnlockName(unlockName);
 
+  const actionId = normalizeActionUnlockName(action.id);
   const fullLabel = normalizeActionUnlockName(actionLabel(action));
   const simpleName = normalizeActionUnlockName(action.name);
   const categoryName = normalizeActionUnlockName(
@@ -1321,35 +1368,12 @@ function actionMatchesUnlockName(action, unlockName) {
   const linkedUnlockName = normalizeActionUnlockName(action.unlockName);
 
   return (
+    actionId === wanted ||
     fullLabel === wanted ||
     simpleName === wanted ||
     categoryName === wanted ||
     linkedUnlockName === wanted
   );
-}
-
-  // Alias de sécurité pour les cartes de Distance Accrue
-  // quand les JSON n'ont pas encore le champ unlockName.
-  if (actionText.includes("charge") && wanted.includes("coup plongeant violent")) {
-    return true;
-  }
-
-  if (actionText.includes("esquive") && wanted.includes("bond esquive")) {
-    return true;
-  }
-
-  if (actionText.includes("bloque") && wanted.includes("coup de bouclier")) {
-    return true;
-  }
-
-  if (
-    actionText.includes("bond en arriere") &&
-    wanted.includes("bond en arriere")
-  ) {
-    return true;
-  }
-
-  return false;
 }
 
 function getUnlockedActionNamesForLevel(fighterId, level) {
@@ -1703,16 +1727,30 @@ async function initApp() {
   fillSelect("playerSheet", catalog.fighters);
   fillSelect("opponentBook", catalog.fighters);
 
+  ensureSetupSelectorsVisible();
+  refreshSetupSelectionDisplays();
+
   const gameModeSelect = document.getElementById("gameMode");
+  const playerSheetSelect = document.getElementById("playerSheet");
   const opponentBookSelect = document.getElementById("opponentBook");
   const soloDifficultySelect = document.getElementById("soloDifficultyLevel");
 
   if (gameModeSelect) {
-    gameModeSelect.addEventListener("change", refreshSoloDifficultyOptions);
+    gameModeSelect.addEventListener("change", function() {
+      refreshSoloDifficultyOptions();
+      refreshSetupSelectionDisplays();
+    });
+  }
+
+  if (playerSheetSelect) {
+    playerSheetSelect.addEventListener("change", refreshSetupSelectionDisplays);
   }
 
   if (opponentBookSelect) {
-    opponentBookSelect.addEventListener("change", refreshSoloDifficultyOptions);
+    opponentBookSelect.addEventListener("change", function() {
+      refreshSoloDifficultyOptions();
+      refreshSetupSelectionDisplays();
+    });
   }
 
   if (soloDifficultySelect) {
@@ -2953,6 +2991,7 @@ function refreshSoloDifficultyOptions() {
   }
 
   refreshSoloIntroText();
+  refreshSetupSelectionDisplays();
 }
 
 function getSoloOpponentActions() {
@@ -4320,6 +4359,7 @@ async function newDuel() {
   refreshSoloDifficultyOptions();
   refreshSoloIntroText();
   updateGameModeButtons();
+  refreshSetupSelectionDisplays();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
