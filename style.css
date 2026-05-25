@@ -2653,3 +2653,10 @@ body.duel-active .damage-toggle-button .damage-toggle-hint {
   font-style: italic;
   background: rgba(0, 0, 0, 0.18);
 }
+.opponent-choice-image {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
