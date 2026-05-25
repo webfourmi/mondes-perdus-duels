@@ -253,6 +253,18 @@ function getPlayerLevelFromVictories(victories) {
   return Math.min(6, level);
 }
 
+function getVictoriesCompatibleWithStoredLevel(profile) {
+  const victories = Number(profile && profile.victories !== undefined ? profile.victories : 0);
+  const storedLevel = Number(profile && profile.level !== undefined ? profile.level : 0);
+  const computedLevel = getPlayerLevelFromVictories(victories);
+
+  if (storedLevel > computedLevel && playerLevelVictoryThresholds[storedLevel] !== undefined) {
+    return playerLevelVictoryThresholds[storedLevel];
+  }
+
+  return victories;
+}
+
 function getLevelTitle(level) {
   return playerLevelTitles[level] || "Novice";
 }
@@ -417,6 +429,8 @@ function loadProfile(character) {
   const raw = localStorage.getItem(key);
 
   if (!raw) {
+    const victories = Number(character.victories || 0);
+
     return {
       fighterId: character.fighterId,
       name: character.name,
@@ -424,13 +438,14 @@ function loadProfile(character) {
       spentExperience: Number(character.spentExperience || 0),
       actionBonuses: {},
       bodyBonus: 0,
-      victories: Number(character.victories || 0),
-      level: 0
+      victories: victories,
+      level: getPlayerLevelFromVictories(victories)
     };
   }
 
   try {
     const profile = JSON.parse(raw);
+    const victories = getVictoriesCompatibleWithStoredLevel(profile);
 
     return {
       fighterId: character.fighterId,
@@ -439,10 +454,12 @@ function loadProfile(character) {
       spentExperience: Number(profile.spentExperience || 0),
       actionBonuses: profile.actionBonuses || {},
       bodyBonus: Number(profile.bodyBonus || 0),
-      victories: Number(profile.victories || 0),
-      level: Number(profile.level || 0)
+      victories: victories,
+      level: getPlayerLevelFromVictories(victories)
     };
   } catch (error) {
+    const victories = Number(character.victories || 0);
+
     return {
       fighterId: character.fighterId,
       name: character.name,
@@ -450,8 +467,8 @@ function loadProfile(character) {
       spentExperience: Number(character.spentExperience || 0),
       actionBonuses: {},
       bodyBonus: 0,
-      victories: Number(character.victories || 0),
-      level: 0
+      victories: victories,
+      level: getPlayerLevelFromVictories(victories)
     };
   }
 }
@@ -654,6 +671,7 @@ function renderSheetUpgradePanel() {
   const panel = ensureSheetUpgradePanel();
   const info = document.getElementById("sheetUpgradeInfo");
   const select = document.getElementById("sheetUpgradeActionChoice");
+  const button = panel ? panel.querySelector("button") : null;
 
   if (!panel || !info || !select || !currentSheetProfile) return;
 
@@ -669,6 +687,7 @@ function renderSheetUpgradePanel() {
       "Le PJ est niveau 0 : il doit gagner des victoires pour passer niveau 1 avant d’améliorer ses actions.";
     panel.style.display = "block";
     select.style.display = "none";
+    if (button) button.style.display = "none";
     return;
   }
 
@@ -680,6 +699,7 @@ function renderSheetUpgradePanel() {
       " XP (PV max actuels) pour ajouter +1 à une action.";
     panel.style.display = "block";
     select.style.display = "none";
+    if (button) button.style.display = "none";
     return;
   }
 
@@ -708,6 +728,7 @@ function renderSheetUpgradePanel() {
       "Aucune action ne peut être améliorée : les EVO des actions débloquées ont déjà atteint le niveau actuel du PJ.";
     panel.style.display = "block";
     select.style.display = "none";
+    if (button) button.style.display = "none";
     return;
   }
 
@@ -720,6 +741,7 @@ function renderSheetUpgradePanel() {
     ".";
 
   select.style.display = "block";
+  if (button) button.style.display = "block";
   panel.style.display = "block";
 }
 
