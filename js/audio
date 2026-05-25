@@ -1,18 +1,19 @@
 /* ============================================================
    AUDIO
+   Fichier séparé - doit être chargé AVANT app.js
    ============================================================ */
 
-const audioStorageKey = "lw_audio_enabled";
-const musicStorageKey = "lw_music_enabled";
+var audioStorageKey = "lw_audio_enabled";
+var musicStorageKey = "lw_music_enabled";
 
-let audioEnabled = localStorage.getItem(audioStorageKey) === "true";
-let musicEnabled = localStorage.getItem(musicStorageKey) === "true";
+var audioEnabled = localStorage.getItem(audioStorageKey) === "true";
+var musicEnabled = localStorage.getItem(musicStorageKey) === "true";
 
-let audioInitialized = false;
-let sfxBank = {};
-let combatMusic = null;
+var audioInitialized = false;
+var sfxBank = {};
+var combatMusic = null;
 
-const audioFiles = {
+var audioFiles = {
   click: "audio/click.mp3",
   hit: "audio/hit.mp3",
   victory: "audio/victory.mp3",
@@ -85,7 +86,13 @@ function toggleMusic() {
 
   updateAudioButtons();
 
-  if (musicEnabled && currentFighter && !duelFinished) {
+  const fighterLoaded =
+    typeof currentFighter !== "undefined" && currentFighter;
+
+  const finished =
+    typeof duelFinished !== "undefined" && duelFinished;
+
+  if (musicEnabled && fighterLoaded && !finished) {
     startCombatMusic();
   } else {
     stopCombatMusic();
@@ -121,3 +128,12 @@ function stopCombatMusic() {
 
   combatMusic.pause();
 }
+
+// Sécurité pour les onclick="" et pour app.js.
+window.initAudioSystem = initAudioSystem;
+window.updateAudioButtons = updateAudioButtons;
+window.toggleAudio = toggleAudio;
+window.toggleMusic = toggleMusic;
+window.playSfx = playSfx;
+window.startCombatMusic = startCombatMusic;
+window.stopCombatMusic = stopCombatMusic;
