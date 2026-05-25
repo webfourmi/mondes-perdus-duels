@@ -7,6 +7,46 @@
   <title>Mondes Perdus - Duels</title>
 
   <link rel="stylesheet" href="style.css?v=136">
+
+  <style>
+    #actionManualOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.94);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    #actionManualOverlay .image-overlay-scroll {
+      width: 100%;
+      max-width: 720px;
+      max-height: calc(100vh - 88px);
+      overflow: auto;
+      text-align: center;
+    }
+
+    #actionManualImage {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+    }
+
+    .action-manual-title {
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      border: 1px solid #c9a45b;
+      border-radius: 10px;
+      color: #ffe7a6;
+      text-align: center;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.4);
+    }
+  </style>
+
 </head>
 
 <body>
@@ -93,7 +133,7 @@
 </div>
 
 <!-- Écran carte du manuel d’escrime -->
-<div id="actionManualOverlay" class="image-overlay">
+<div id="actionManualOverlay" class="image-overlay" style="display:none;">
   <div class="image-overlay-scroll">
     <div class="action-manual-title" id="actionManualTitle">
       Manuel d’escrime
@@ -551,6 +591,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=84"></script>
+  <script src="app.js?v=85"></script>
 </body>
 </html>
