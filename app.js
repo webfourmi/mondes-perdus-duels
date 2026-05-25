@@ -1,4 +1,4 @@
-const APP_VERSION = "0.9.2-split1";
+const APP_VERSION = "0.9.3-split1";
 
 let catalog = null;
 
@@ -2685,12 +2685,9 @@ function selectActionCard(actionId, showManual) {
   }
 }
 
-function getActionPreviewImageSources(action) {
-  if (!currentFighter || !action) return [];
-
-  const sources = [];
-
-  // Option 1 : champ image directement dansrds");
+function fillActions(actions, restriction) {
+  const select = document.getElementById("actionChoice");
+  const cardsContainer = document.getElementById("actionCards");
   const hint = document.getElementById("selectedActionHint");
 
   if (!select) return;
