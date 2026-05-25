@@ -1,4 +1,4 @@
-const APP_VERSION = "0.9.4-split2";
+const APP_VERSION = "0.9.5-split-audio-fix";
 
 let catalog = null;
 
