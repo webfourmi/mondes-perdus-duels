@@ -1238,7 +1238,7 @@ const actionUnlocksByFighter = {
 
   squelette: {
     0: [
-      "Coup plongeant violent",
+     
       "Coup latéral bas",
       "Coup de bouclier bas",
       "Bond esquive",
@@ -1269,6 +1269,7 @@ const actionUnlocksByFighter = {
       "Coup latéral féroce"
     ],
     5: [
+       "Coup plongeant violent",
       "Feinte coup latéral",
       "Attaque protégée estoc",
       "Bond en hauteur"
@@ -2618,9 +2619,19 @@ async function startDuel() {
       myMaxBody = getEffectiveBodyStart();
       myCurrentBody = myMaxBody;
 
-      const opponentBaseBody = Number(currentOpponentFighter.bodyPointsStart || 0);
-      const opponentDifficultyBodyBonus = getSoloDifficultyBodyBonus();
+      let opponentBaseBody = Number(currentOpponentFighter.bodyPointsStart || 0);
 
+      if (
+        gameMode === "solo" &&
+        currentOpponentFighter &&
+        currentOpponentFighter.id === "squelette" &&
+        Number(soloDifficultyLevel || 0) === 0
+      ) {
+        opponentBaseBody = 8;
+      }
+      
+      const opponentDifficultyBodyBonus = getSoloDifficultyBodyBonus();
+      
       opponentMaxBody = opponentBaseBody + opponentDifficultyBodyBonus;
       opponentCurrentBody = opponentMaxBody;
 
