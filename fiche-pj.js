@@ -486,6 +486,212 @@ async function initSheetPage() {
 }
 
 /* ============================================================
+   DÉPENSE D'XP SUR LA FICHE
+   ============================================================ */
+
+function getSheetEffectiveBodyStart() {
+  if (!currentSheetFighter || !currentSheetProfile) return 0;
+
+  const bodyBase = Number(currentSheetFighter.bodyPointsStart || 0);
+  const bodyBonus = Number(currentSheetProfile.bodyBonus || 0);
+
+  return bodyBase + bodyBonus;
+}
+
+function getSheetAvailableUpgradeActions() {
+  const playerLevel = currentSheetLevel;
+
+  if (playerLevel <= 0) return [];
+
+  return getUnlockedSheetActions().filter(function(action) {
+    return getActionUpgradeBonus(action.id) < playerLevel;
+  });
+}
+
+function computeSheetBodyBonusFromColors() {
+  const actions = getUnlockedSheetActions();
+  const byColor = {};
+
+  actions.forEach(function(action) {
+    if (!action.color) return;
+
+    if (!byColor[action.color]) {
+      byColor[action.color] = [];
+    }
+
+    byColor[action.color].push(action);
+  });
+
+  let bonus = 0;
+
+  Object.keys(byColor).forEach(function(color) {
+    const colorActions = byColor[color];
+
+    if (colorActions.length === 0) return;
+
+    let minColorBonus = Infinity;
+
+    colorActions.forEach(function(action) {
+      minColorBonus = Math.min(minColorBonus, getActionUpgradeBonus(action.id));
+    });
+
+    if (minColorBonus !== Infinity) {
+      bonus += minColorBonus;
+    }
+  });
+
+  return bonus;
+}
+
+function ensureSheetUpgradePanel() {
+  let panel = document.getElementById("sheetUpgradePanel");
+
+  if (panel) return panel;
+
+  panel = document.createElement("section");
+  panel.id = "sheetUpgradePanel";
+  panel.className = "rules-card sheet-upgrade-panel";
+  panel.style.display = "none";
+
+  panel.innerHTML =
+    "<h2>Utiliser les XP</h2>" +
+    '<p id="sheetUpgradeInfo" class="rules-note"></p>' +
+    '<label for="sheetUpgradeActionChoice">Action à améliorer</label>' +
+    '<select id="sheetUpgradeActionChoice" class="compact-select"></select>' +
+    '<button type="button" onclick="upgradeSheetSelectedAction()">Améliorer cette action</button>';
+
+  const status = document.getElementById("sheetStatus");
+
+  if (status && status.parentNode) {
+    status.parentNode.insertBefore(panel, status.nextSibling);
+  } else {
+    const main = document.querySelector("main");
+    if (main) main.appendChild(panel);
+  }
+
+  return panel;
+}
+
+function renderSheetUpgradePanel() {
+  const panel = ensureSheetUpgradePanel();
+  const info = document.getElementById("sheetUpgradeInfo");
+  const select = document.getElementById("sheetUpgradeActionChoice");
+
+  if (!panel || !info || !select || !currentSheetProfile) return;
+
+  const xp = Number(currentSheetProfile.experience || 0);
+  const cost = getSheetEffectiveBodyStart();
+  const playerLevel = currentSheetLevel;
+  const availableActions = getSheetAvailableUpgradeActions();
+
+  select.innerHTML = "";
+
+  if (playerLevel <= 0) {
+    info.textContent =
+      "Le PJ est niveau 0 : il doit gagner des victoires pour passer niveau 1 avant d’améliorer ses actions.";
+    panel.style.display = "block";
+    select.style.display = "none";
+    return;
+  }
+
+  if (xp < cost) {
+    info.textContent =
+      xp +
+      " XP disponibles. Il faut au moins " +
+      cost +
+      " XP (PV max actuels) pour ajouter +1 à une action.";
+    panel.style.display = "block";
+    select.style.display = "none";
+    return;
+  }
+
+  availableActions.forEach(function(action) {
+    const currentBonus = getActionUpgradeBonus(action.id);
+    const nextBonus = currentBonus + 1;
+
+    const option = document.createElement("option");
+    option.value = action.id;
+    option.textContent =
+      actionLabel(action) +
+      " (" +
+      (action.color || "-") +
+      ") : EVO +" +
+      currentBonus +
+      " → +" +
+      nextBonus;
+
+    select.appendChild(option);
+  });
+
+  if (availableActions.length === 0) {
+    info.textContent =
+      "Aucune action ne peut être améliorée : les EVO des actions débloquées ont déjà atteint le niveau actuel du PJ.";
+    panel.style.display = "block";
+    select.style.display = "none";
+    return;
+  }
+
+  info.textContent =
+    xp +
+    " XP disponibles. Coût : " +
+    cost +
+    " XP. Le bonus EVO d’une action doit rester inférieur ou égal au niveau du PJ. Niveau actuel : " +
+    playerLevel +
+    ".";
+
+  select.style.display = "block";
+  panel.style.display = "block";
+}
+
+function upgradeSheetSelectedAction() {
+  const select = document.getElementById("sheetUpgradeActionChoice");
+
+  if (!select || !select.value || !currentSheetProfile) return;
+
+  const xp = Number(currentSheetProfile.experience || 0);
+  const cost = getSheetEffectiveBodyStart();
+  const actionId = select.value;
+  const currentBonus = getActionUpgradeBonus(actionId);
+  const nextBonus = currentBonus + 1;
+
+  if (xp < cost) {
+    alert("Pas assez d’expérience. Il faut au moins " + cost + " XP.");
+    return;
+  }
+
+  if (currentSheetLevel <= 0) {
+    alert("Le PJ est niveau 0 : il doit passer niveau 1 avant d’améliorer ses actions.");
+    return;
+  }
+
+  if (nextBonus > currentSheetLevel) {
+    alert("Cette action ne peut pas dépasser le niveau actuel du PJ.");
+    return;
+  }
+
+  if (!currentSheetProfile.actionBonuses) {
+    currentSheetProfile.actionBonuses = {};
+  }
+
+  currentSheetProfile.actionBonuses[actionId] = nextBonus;
+  currentSheetProfile.experience = xp - cost;
+  currentSheetProfile.spentExperience =
+    Number(currentSheetProfile.spentExperience || 0) + cost;
+
+  currentSheetProfile.bodyBonus = computeSheetBodyBonusFromColors();
+
+  saveCurrentSheetProfile();
+
+  renderHeader(currentSheetCharacter, currentSheetProfile, currentSheetFighter);
+  renderColorSummary();
+  renderEvolutionTable();
+  renderTrophies();
+  renderSheetUpgradePanel();
+
+  alert("Action améliorée : EVO +" + nextBonus + ".");
+}
+
+/* ============================================================
    RENDU EN-TÊTE / RÉSUMÉ
    ============================================================ */
 
