@@ -290,9 +290,81 @@ function isActionUnlockedForSheet(action, fighterId, level) {
   });
 }
 
-function getActionUpgradeBonus(actionId) {
+function getActionUpgradeKey(actionOrId) {
+  if (!actionOrId) return "";
+
+  if (typeof actionOrId === "string") {
+    return actionOrId;
+  }
+
+  const sourceName =
+    actionOrId.unlockName ||
+    actionLabel(actionOrId) ||
+    actionOrId.id ||
+    "";
+
+  return normalizeActionUnlockName(sourceName).replace(/\s+/g, "_");
+}
+
+function getUniqueSheetActionsByUpgradeKey(actions) {
+  const map = {};
+
+  (actions || []).forEach(function(action) {
+    if (!action || !action.id) return;
+
+    const key = getActionUpgradeKey(action);
+    if (!key) return;
+
+    if (!map[key]) {
+      map[key] = {
+        key: key,
+        action: action,
+        variants: [action]
+      };
+      return;
+    }
+
+    map[key].variants.push(action);
+
+    if (
+      map[key].action &&
+      map[key].action.color === "marron" &&
+      action.color !== "marron"
+    ) {
+      map[key].action = action;
+    }
+  });
+
+  return Object.keys(map).map(function(key) {
+    return map[key];
+  });
+}
+
+function getUnlockedUniqueSheetActions() {
+  return getUniqueSheetActionsByUpgradeKey(getUnlockedSheetActions());
+}
+
+function getActionUpgradeBonus(actionOrId) {
   if (!currentSheetProfile || !currentSheetProfile.actionBonuses) return 0;
-  return Number(currentSheetProfile.actionBonuses[actionId] || 0);
+
+  const key = getActionUpgradeKey(actionOrId);
+
+  if (!key) return 0;
+
+  if (currentSheetProfile.actionBonuses[key] !== undefined) {
+    return Number(currentSheetProfile.actionBonuses[key] || 0);
+  }
+
+  if (
+    actionOrId &&
+    typeof actionOrId !== "string" &&
+    actionOrId.id &&
+    currentSheetProfile.actionBonuses[actionOrId.id] !== undefined
+  ) {
+    return Number(currentSheetProfile.actionBonuses[actionOrId.id] || 0);
+  }
+
+  return 0;
 }
 
 function getAllSheetActions(fighter) {
@@ -395,6 +467,7 @@ function saveCurrentSheetProfile() {
   currentSheetProfile.level = getPlayerLevelFromVictories(
     currentSheetProfile.victories || 0
   );
+  currentSheetProfile.bodyBonus = computeSheetTotalBodyBonus();
 
   localStorage.setItem(profileKey, JSON.stringify(currentSheetProfile));
 
@@ -493,9 +566,9 @@ function getSheetEffectiveBodyStart() {
   if (!currentSheetFighter || !currentSheetProfile) return 0;
 
   const bodyBase = Number(currentSheetFighter.bodyPointsStart || 0);
-  const bodyBonus = Number(currentSheetProfile.bodyBonus || 0);
+  currentSheetProfile.bodyBonus = computeSheetTotalBodyBonus();
 
-  return bodyBase + bodyBonus;
+  return bodyBase + Number(currentSheetProfile.bodyBonus || 0);
 }
 
 function getSheetAvailableUpgradeActions() {
@@ -503,16 +576,17 @@ function getSheetAvailableUpgradeActions() {
 
   if (playerLevel <= 0) return [];
 
-  return getUnlockedSheetActions().filter(function(action) {
-    return getActionUpgradeBonus(action.id) < playerLevel;
+  return getUnlockedUniqueSheetActions().filter(function(entry) {
+    return getActionUpgradeBonus(entry.action) < playerLevel;
   });
 }
 
 function computeSheetBodyBonusFromColors() {
-  const actions = getUnlockedSheetActions();
+  const entries = getUnlockedUniqueSheetActions();
   const byColor = {};
 
-  actions.forEach(function(action) {
+  entries.forEach(function(entry) {
+    const action = entry.action;
     if (!action.color) return;
 
     if (!byColor[action.color]) {
@@ -532,7 +606,7 @@ function computeSheetBodyBonusFromColors() {
     let minColorBonus = Infinity;
 
     colorActions.forEach(function(action) {
-      minColorBonus = Math.min(minColorBonus, getActionUpgradeBonus(action.id));
+      minColorBonus = Math.min(minColorBonus, getActionUpgradeBonus(action));
     });
 
     if (minColorBonus !== Infinity) {
@@ -541,6 +615,10 @@ function computeSheetBodyBonusFromColors() {
   });
 
   return bonus;
+}
+
+function computeSheetTotalBodyBonus() {
+  return currentSheetLevel + computeSheetBodyBonusFromColors();
 }
 
 function ensureSheetUpgradePanel() {
@@ -582,7 +660,7 @@ function renderSheetUpgradePanel() {
   const xp = Number(currentSheetProfile.experience || 0);
   const cost = getSheetEffectiveBodyStart();
   const playerLevel = currentSheetLevel;
-  const availableActions = getSheetAvailableUpgradeActions();
+  const availableEntries = getSheetAvailableUpgradeActions();
 
   select.innerHTML = "";
 
@@ -605,12 +683,13 @@ function renderSheetUpgradePanel() {
     return;
   }
 
-  availableActions.forEach(function(action) {
-    const currentBonus = getActionUpgradeBonus(action.id);
+  availableEntries.forEach(function(entry) {
+    const action = entry.action;
+    const currentBonus = getActionUpgradeBonus(action);
     const nextBonus = currentBonus + 1;
 
     const option = document.createElement("option");
-    option.value = action.id;
+    option.value = entry.key;
     option.textContent =
       actionLabel(action) +
       " (" +
@@ -618,12 +697,13 @@ function renderSheetUpgradePanel() {
       ") : EVO +" +
       currentBonus +
       " → +" +
-      nextBonus;
+      nextBonus +
+      (entry.variants.length > 1 ? " [mêlée + DA]" : "");
 
     select.appendChild(option);
   });
 
-  if (availableActions.length === 0) {
+  if (availableEntries.length === 0) {
     info.textContent =
       "Aucune action ne peut être améliorée : les EVO des actions débloquées ont déjà atteint le niveau actuel du PJ.";
     panel.style.display = "block";
@@ -635,7 +715,7 @@ function renderSheetUpgradePanel() {
     xp +
     " XP disponibles. Coût : " +
     cost +
-    " XP. Le bonus EVO d’une action doit rester inférieur ou égal au niveau du PJ. Niveau actuel : " +
+    " XP. Une action peut monter jusqu’au niveau actuel du PJ. Niveau actuel : " +
     playerLevel +
     ".";
 
@@ -650,8 +730,18 @@ function upgradeSheetSelectedAction() {
 
   const xp = Number(currentSheetProfile.experience || 0);
   const cost = getSheetEffectiveBodyStart();
-  const actionId = select.value;
-  const currentBonus = getActionUpgradeBonus(actionId);
+  const actionKey = select.value;
+
+  const entry = getSheetAvailableUpgradeActions().find(function(item) {
+    return item.key === actionKey;
+  });
+
+  if (!entry) {
+    alert("Cette action ne peut pas être améliorée pour le moment.");
+    return;
+  }
+
+  const currentBonus = getActionUpgradeBonus(entry.action);
   const nextBonus = currentBonus + 1;
 
   if (xp < cost) {
@@ -673,12 +763,19 @@ function upgradeSheetSelectedAction() {
     currentSheetProfile.actionBonuses = {};
   }
 
-  currentSheetProfile.actionBonuses[actionId] = nextBonus;
+  currentSheetProfile.actionBonuses[actionKey] = nextBonus;
+
+  entry.variants.forEach(function(variant) {
+    if (variant && variant.id && variant.id !== actionKey) {
+      delete currentSheetProfile.actionBonuses[variant.id];
+    }
+  });
+
   currentSheetProfile.experience = xp - cost;
   currentSheetProfile.spentExperience =
     Number(currentSheetProfile.spentExperience || 0) + cost;
 
-  currentSheetProfile.bodyBonus = computeSheetBodyBonusFromColors();
+  currentSheetProfile.bodyBonus = computeSheetTotalBodyBonus();
 
   saveCurrentSheetProfile();
 
@@ -688,7 +785,13 @@ function upgradeSheetSelectedAction() {
   renderTrophies();
   renderSheetUpgradePanel();
 
-  alert("Action améliorée : EVO +" + nextBonus + ".");
+  alert(
+    "Action améliorée : EVO +" +
+      nextBonus +
+      (entry.variants.length > 1
+        ? "\\n\\nCette amélioration s’applique à la version mêlée et à la version Distance Accrue."
+        : "")
+  );
 }
 
 /* ============================================================
@@ -700,6 +803,7 @@ function renderHeader(character, profile, fighter) {
   const xpSpent = Number(profile.spentExperience || 0);
   const xpTotal = xpAvailable + xpSpent;
 
+  profile.bodyBonus = computeSheetTotalBodyBonus();
   const bodyBonus = Number(profile.bodyBonus || 0);
   const bodyBase = Number(fighter.bodyPointsStart || 0);
   const bodyMax = bodyBase + bodyBonus;
@@ -743,24 +847,24 @@ function renderColorSummary() {
   const container = document.getElementById("colorSummary");
   if (!container) return;
 
-  const actions = getUnlockedSheetActions();
+  const entries = getUnlockedUniqueSheetActions();
 
   const html = colorOrder.map(function(color) {
-    const colorActions = actions.filter(function(action) {
-      return action.color === color;
+    const colorEntries = entries.filter(function(entry) {
+      return entry.action.color === color;
     });
 
-    const improved = colorActions.filter(function(action) {
-      return getActionUpgradeBonus(action.id) > 0;
+    const improved = colorEntries.filter(function(entry) {
+      return getActionUpgradeBonus(entry.action) > 0;
     });
 
     let minBonus = 0;
 
-    if (colorActions.length > 0) {
+    if (colorEntries.length > 0) {
       minBonus = Math.min.apply(
         null,
-        colorActions.map(function(action) {
-          return getActionUpgradeBonus(action.id);
+        colorEntries.map(function(entry) {
+          return getActionUpgradeBonus(entry.action);
         })
       );
     }
@@ -775,7 +879,7 @@ function renderColorSummary() {
       "<span>" +
       improved.length +
       " / " +
-      colorActions.length +
+      colorEntries.length +
       " améliorée(s)</span>" +
       "<em>Bonus couleur : +" +
       minBonus +
@@ -795,34 +899,38 @@ function renderEvolutionTable() {
   const body = document.getElementById("evolutionTableBody");
   if (!body) return;
 
-  const actions = getUnlockedSheetActions();
+  const entries = getUnlockedUniqueSheetActions();
 
-  if (actions.length === 0) {
+  if (entries.length === 0) {
     body.innerHTML =
       '<tr><td colspan="4">Aucune action débloquée pour ce niveau.</td></tr>';
     return;
   }
 
-  const sortedActions = actions.slice().sort(function(a, b) {
-    const colorA = colorOrder.indexOf(a.color);
-    const colorB = colorOrder.indexOf(b.color);
+  const sortedEntries = entries.slice().sort(function(a, b) {
+    const colorA = colorOrder.indexOf(a.action.color);
+    const colorB = colorOrder.indexOf(b.action.color);
 
     if (colorA !== colorB) {
       return colorA - colorB;
     }
 
-    return actionLabel(a).localeCompare(actionLabel(b));
+    return actionLabel(a.action).localeCompare(actionLabel(b.action));
   });
 
-  body.innerHTML = sortedActions.map(function(action) {
-    const bonus = getActionUpgradeBonus(action.id);
+  body.innerHTML = sortedEntries.map(function(entry) {
+    const action = entry.action;
+    const bonus = getActionUpgradeBonus(action);
     const checked = bonus > 0 ? "checked" : "";
     const color = action.color || "none";
     const label = actionLabel(action);
     const mod = Number(action.mod || 0);
-    const modeLabel = action.unlockName
-      ? "Distance liée : " + action.unlockName
-      : "";
+    const modeLabel =
+      entry.variants.length > 1
+        ? "Mêlée + Distance Accrue"
+        : action.unlockName
+          ? "Distance liée : " + action.unlockName
+          : "";
 
     return (
       '<tr class="evolution-row evolution-row-' +
@@ -871,20 +979,20 @@ function renderColorTrophies() {
   const grid = document.getElementById("trophyGrid");
   if (!grid) return;
 
-  const actions = getUnlockedSheetActions();
+  const entries = getUnlockedUniqueSheetActions();
 
   grid.innerHTML = colorOrder.map(function(color) {
-    const colorActions = actions.filter(function(action) {
-      return action.color === color;
+    const colorEntries = entries.filter(function(entry) {
+      return entry.action.color === color;
     });
 
     let minBonus = 0;
 
-    if (colorActions.length > 0) {
+    if (colorEntries.length > 0) {
       minBonus = Math.min.apply(
         null,
-        colorActions.map(function(action) {
-          return getActionUpgradeBonus(action.id);
+        colorEntries.map(function(entry) {
+          return getActionUpgradeBonus(entry.action);
         })
       );
     }
@@ -909,7 +1017,7 @@ function renderColorTrophies() {
       minBonus +
       "</span>" +
       "<em>" +
-      colorActions.length +
+      colorEntries.length +
       " action(s) débloquée(s)</em>" +
       "</div>" +
       "</article>"
@@ -923,9 +1031,10 @@ function renderSpecialTrophies() {
 
   const victories = Number(currentSheetProfile.victories || 0);
   const level = getPlayerLevelFromVictories(victories);
-  const actions = getUnlockedSheetActions();
-  const improvedActions = actions.filter(function(action) {
-    return getActionUpgradeBonus(action.id) > 0;
+  const entries = getUnlockedUniqueSheetActions();
+  const actions = entries.map(function(entry) { return entry.action; });
+  const improvedActions = entries.filter(function(entry) {
+    return getActionUpgradeBonus(entry.action) > 0;
   });
 
   const trophies = [
