@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=138">
+  <link rel="stylesheet" href="style.css?v=139">
 
   <style>
     #actionManualOverlay {
@@ -122,6 +122,59 @@
         min-height: 34px;
         font-size: 0.82rem;
         padding: 7px 5px;
+      }
+    }
+
+  
+    .hidden-opponent-select {
+      display: none !important;
+    }
+
+    .opponent-choice-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .opponent-choice-button {
+      min-height: 54px;
+      border: 1px solid rgba(213, 180, 72, 0.85);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(55, 45, 25, 0.95), rgba(22, 18, 12, 0.98));
+      color: #ffe7a6;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: inset 0 0 0 1px rgba(255, 229, 150, 0.12);
+    }
+
+    .opponent-choice-button.active {
+      background: linear-gradient(180deg, rgba(210, 174, 58, 0.98), rgba(139, 94, 25, 0.98));
+      color: #120d08;
+      border-color: #fff1a8;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 252, 190, 0.55),
+        0 0 0 2px rgba(255, 217, 108, 0.18);
+    }
+
+    .opponent-choice-icon {
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    @media (max-width: 420px) {
+      .opponent-choice-buttons {
+        gap: 6px;
+      }
+
+      .opponent-choice-button {
+        min-height: 48px;
+        font-size: 0.92rem;
       }
     }
 
@@ -410,15 +463,36 @@
 
       <div class="home-card">
         <h3>3. Choisir l’adversaire</h3>
-      
-        <label for="opponentBook">Livret affiché, adversaire</label>
-        <select id="opponentBook"></select>
 
-        <p class="small setup-choice-line">
-          Livret affiché :
-          <strong id="opponentBookDisplay">-</strong>
-        </p>
-      
+        <select
+          id="opponentBook"
+          class="hidden-opponent-select"
+          aria-hidden="true"
+          tabindex="-1"
+        ></select>
+
+        <div class="opponent-choice-buttons">
+          <button
+            type="button"
+            id="opponentBookChevalierButton"
+            class="opponent-choice-button active"
+            onclick="setOpponentBook('chevalier')"
+          >
+            <span class="opponent-choice-icon">⚔️</span>
+            <strong>Chevalier</strong>
+          </button>
+
+          <button
+            type="button"
+            id="opponentBookSqueletteButton"
+            class="opponent-choice-button"
+            onclick="setOpponentBook('squelette')"
+          >
+            <span class="opponent-choice-icon">💀</span>
+            <strong>Squelette</strong>
+          </button>
+        </div>
+
         <div id="soloDifficultyBlock" class="solo-difficulty-block" style="display:none;">
           <label for="soloDifficultyLevel">Difficulté de l’adversaire solo</label>
       
@@ -692,6 +766,6 @@
   </main>
 
   <script src="js/manual.js?v=3"></script>
-  <script src="app.js?v=96"></script>
+  <script src="app.js?v=97"></script>
 </body>
 </html>
