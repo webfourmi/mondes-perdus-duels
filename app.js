@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.0";
+const APP_VERSION = "0.8.1";
 
 let catalog = null;
 
@@ -1238,13 +1238,13 @@ const actionUnlocksByFighter = {
 
   squelette: {
     0: [
-     
       "Coup latéral bas",
       "Coup de bouclier bas",
       "Bond esquive",
       "Récupérer arme"
     ],
     1: [
+      "Coup plongeant violent",
       "Coup latéral haut",
       "Estoc bas",
       "Coup de bouclier haut",
@@ -1269,7 +1269,6 @@ const actionUnlocksByFighter = {
       "Coup latéral féroce"
     ],
     5: [
-       "Coup plongeant violent",
       "Feinte coup latéral",
       "Attaque protégée estoc",
       "Bond en hauteur"
@@ -2407,8 +2406,18 @@ function selectActionCard(actionId) {
     card.classList.toggle("active", card.dataset.actionId === actionId);
   });
 
+  const upgradeBonus = getActionUpgradeBonus(selectedAction.id);
+  const upgradeText = upgradeBonus > 0 ? " / EVO +" + upgradeBonus : "";
+
   if (hint) {
-    hint.textContent = "Choisis ton action";
+    hint.textContent =
+      "Action choisie : " +
+      actionLabel(selectedAction) +
+      " — PG " +
+      selectedAction.pg +
+      " / MOD " +
+      selectedAction.mod +
+      upgradeText;
   }
 
   updateActionPreview(selectedAction);
@@ -2417,7 +2426,8 @@ function selectActionCard(actionId) {
 function getActionPreviewImagePath(action) {
   if (!currentFighter || !action) return "";
 
-  // Exemple : chevalier_atk1.png
+  // Format attendu : images/actions/chevalier_atk1.png
+  // Exemple : currentFighter.id = "chevalier" et action.id = "atk1"
   return "images/actions/" + currentFighter.id + "_" + action.id + ".png";
 }
 
@@ -2428,6 +2438,8 @@ function updateActionPreview(action) {
   if (!image || !placeholder) return;
 
   if (!action) {
+    image.onload = null;
+    image.onerror = null;
     image.style.display = "none";
     image.src = "";
     placeholder.style.display = "block";
@@ -2447,6 +2459,10 @@ function updateActionPreview(action) {
     placeholder.style.display = "block";
     placeholder.textContent = "Bientôt dans votre manuel d’escrime";
   };
+
+  image.style.display = "none";
+  placeholder.style.display = "block";
+  placeholder.textContent = "Chargement de la carte...";
 
   image.src = imagePath + "?v=" + Date.now();
 }
@@ -2562,6 +2578,7 @@ function fillActions(actions, restriction) {
       hint.textContent = "Aucune action disponible.";
     }
 
+    updateActionPreview(null);
     return;
   }
 
