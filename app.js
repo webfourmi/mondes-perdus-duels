@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.2";
+const APP_VERSION = "0.8.4";
 
 let catalog = null;
 
@@ -2420,7 +2420,7 @@ function refreshActionList() {
   fillActions(actions, restriction);
 }
 
-function selectActionCard(actionId) {
+function selectActionCard(actionId, showManual) {
   const select = document.getElementById("actionChoice");
   const hint = document.getElementById("selectedActionHint");
 
@@ -2453,34 +2453,74 @@ function selectActionCard(actionId) {
       upgradeText;
   }
 
-  updateActionPreview(selectedAction);
+  if (showManual) {
+    openActionManualScreen(selectedAction);
+  }
 }
 
-function getActionPreviewImagePath(action) {
-  if (!currentFighter || !action) return "";
+function getActionPreviewImageSources(action) {
+  if (!currentFighter || !action) return [];
 
-  // Format attendu : images/actions/chevalier_atk1.png
-  // Exemple : currentFighter.id = "chevalier" et action.id = "atk1"
-  return "images/actions/" + currentFighter.id + "_" + action.id + ".png";
+  const sources = [];
+
+  // Option 1 : champ image directement dans le JSON de l'action.
+  // Exemple : "image": "images/actions/chevalier_atk1.png"
+  if (action.image) {
+    sources.push(action.image);
+  }
+
+  // Option 2 : format automatique attendu.
+  // Exemple : images/actions/chevalier_atk1.png
+  const basePath = "images/actions/" + currentFighter.id + "_" + action.id;
+
+  sources.push(basePath + ".png");
+  sources.push(basePath + ".PNG");
+  sources.push(basePath + ".jpg");
+  sources.push(basePath + ".jpeg");
+  sources.push(basePath + ".webp");
+
+  // Option 3 : si action.id contient déjà le nom complet.
+  // Exemple : action.id = "chevalier_atk1"
+  sources.push("images/actions/" + action.id + ".png");
+  sources.push("images/actions/" + action.id + ".PNG");
+  sources.push("images/actions/" + action.id + ".jpg");
+  sources.push("images/actions/" + action.id + ".jpeg");
+  sources.push("images/actions/" + action.id + ".webp");
+
+  return sources.filter(function(source, index) {
+    return source && sources.indexOf(source) === index;
+  });
 }
 
-function updateActionPreview(action) {
-  const image = document.getElementById("actionPreviewImage");
-  const placeholder = document.getElementById("actionPreviewPlaceholder");
+function addCacheBusterToActionPreview(src) {
+  if (!src) return src;
 
-  if (!image || !placeholder) return;
+  const separator = src.includes("?") ? "&" : "?";
+  return src + separator + "v=" + Date.now();
+}
+
+function openActionManualScreen(action) {
+  const overlay = document.getElementById("actionManualOverlay");
+  const image = document.getElementById("actionManualImage");
+  const placeholder = document.getElementById("actionManualPlaceholder");
+  const title = document.getElementById("actionManualTitle");
+
+  if (!overlay || !image || !placeholder) return;
+
+  if (title) {
+    title.textContent = action ? actionLabel(action) : "Manuel d’escrime";
+  }
 
   if (!action) {
-    image.onload = null;
-    image.onerror = null;
     image.style.display = "none";
     image.src = "";
     placeholder.style.display = "block";
-    placeholder.textContent = "Clique sur une action pour voir sa carte.";
+    placeholder.textContent = "Bientôt dans votre manuel d’escrime";
+    overlay.classList.add("image-overlay-open");
     return;
   }
 
-  const imagePath = getActionPreviewImagePath(action);
+  const sources = getActionPreviewImageSources(action);
 
   image.onload = function() {
     image.style.display = "block";
@@ -2488,17 +2528,92 @@ function updateActionPreview(action) {
   };
 
   image.onerror = function() {
-    image.style.display = "none";
-    placeholder.style.display = "block";
-    placeholder.textContent = "Bientôt dans votre manuel d’escrime";
+    tryNextActionManualImage();
   };
 
   image.style.display = "none";
   placeholder.style.display = "block";
   placeholder.textContent = "Chargement de la carte...";
 
-  image.src = imagePath + "?v=" + Date.now();
+  image.dataset.previewIndex = "0";
+  image.dataset.previewSources = JSON.stringify(sources);
+
+  overlay.classList.add("image-overlay-open");
+
+  if (sources.length === 0) {
+    placeholder.textContent = "Bientôt dans votre manuel d’escrime";
+    return;
+  }
+
+  image.src = addCacheBusterToActionPreview(sources[0]);
 }
+
+function tryNextActionManualImage() {
+  const image = document.getElementById("actionManualImage");
+  const placeholder = document.getElementById("actionManualPlaceholder");
+
+  if (!image || !placeholder) return;
+
+  let sources = [];
+
+  try {
+    sources = JSON.parse(image.dataset.previewSources || "[]");
+  } catch (error) {
+    sources = [];
+  }
+
+  const nextIndex = Number(image.dataset.previewIndex || 0) + 1;
+
+  if (nextIndex < sources.length) {
+    image.dataset.previewIndex = String(nextIndex);
+    image.src = addCacheBusterToActionPreview(sources[nextIndex]);
+    return;
+  }
+
+  image.style.display = "none";
+  placeholder.style.display = "block";
+
+  const tried = sources.length > 0
+    ? "\n\nChemin testé : " + sources[0]
+    : "";
+
+  placeholder.textContent =
+    "Bientôt dans votre manuel d’escrime" + tried;
+}
+
+function closeActionManualScreen() {
+  const overlay = document.getElementById("actionManualOverlay");
+  const image = document.getElementById("actionManualImage");
+  const placeholder = document.getElementById("actionManualPlaceholder");
+
+  if (overlay) {
+    overlay.classList.remove("image-overlay-open");
+  }
+
+  if (image) {
+    image.onload = null;
+    image.onerror = null;
+    image.src = "";
+    image.style.display = "none";
+    image.dataset.previewIndex = "0";
+    image.dataset.previewSources = "[]";
+  }
+
+  if (placeholder) {
+    placeholder.style.display = "none";
+    placeholder.textContent = "";
+  }
+}
+
+// Compatibilité avec l'ancien nom : plus d'affichage sous les actions.
+function updateActionPreview(action) {
+  if (action) {
+    openActionManualScreen(action);
+  } else {
+    closeActionManualScreen();
+  }
+}
+
 function fillActions(actions, restriction) {
   const select = document.getElementById("actionChoice");
   const cardsContainer = document.getElementById("actionCards");
@@ -2553,7 +2668,7 @@ function fillActions(actions, restriction) {
           : "");
 
       card.addEventListener("click", function() {
-        selectActionCard(action.id);
+        selectActionCard(action.id, true);
       });
 
       cardsContainer.appendChild(card);
@@ -2611,12 +2726,12 @@ function fillActions(actions, restriction) {
       hint.textContent = "Aucune action disponible.";
     }
 
-    updateActionPreview(null);
+    closeActionManualScreen();
     return;
   }
 
   select.value = currentActions[0].id;
-  selectActionCard(currentActions[0].id);
+  selectActionCard(currentActions[0].id, false);
 }
 
 
