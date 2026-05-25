@@ -2626,3 +2626,30 @@ body.duel-active .damage-toggle-button .damage-toggle-hint {
     font-size: 0.64rem;
   }
 }
+.action-preview-panel {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #8d6b36;
+  border-radius: 12px;
+  background: rgba(255, 244, 210, 0.06);
+  text-align: center;
+}
+
+.action-preview-image {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  border-radius: 10px;
+  border: 2px solid #c9a45b;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.action-preview-placeholder {
+  padding: 18px 10px;
+  border: 1px dashed #c9a45b;
+  border-radius: 10px;
+  color: #ffe7a6;
+  font-style: italic;
+  background: rgba(0, 0, 0, 0.18);
+}
