@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.8";
+const APP_VERSION = "0.8.9";
 
 let catalog = null;
 
@@ -883,7 +883,7 @@ function getCharacterProfileData(character) {
     };
   }
 
-  profile.victories = Number(profile.victories || character.victories || 0);
+  profile.victories = getVictoriesCompatibleWithStoredLevel(profile);
   profile.level = getPlayerLevelFromVictories(profile.victories);
 
   return {
@@ -1146,11 +1146,16 @@ function loadPlayerProfile(fighterId, playerName) {
 
   try {
     const profile = JSON.parse(raw);
+
     currentExperience = Number(profile.experience || 0);
     currentSpentExperience = Number(profile.spentExperience || 0);
     currentActionBonuses = profile.actionBonuses || {};
+    currentVictories = getVictoriesCompatibleWithStoredLevel(profile);
     currentBodyBonus = Number(profile.bodyBonus || 0);
-    currentVictories = Number(profile.victories || 0);
+
+    if (currentFighter) {
+      recomputeCurrentBodyBonus();
+    }
   } catch (error) {
     currentExperience = 0;
     currentSpentExperience = 0;
@@ -1344,6 +1349,18 @@ function getPlayerLevelFromVictories(victories) {
   }
 
   return Math.min(6, level);
+}
+
+function getVictoriesCompatibleWithStoredLevel(profile) {
+  const victories = Number(profile && profile.victories !== undefined ? profile.victories : 0);
+  const storedLevel = Number(profile && profile.level !== undefined ? profile.level : 0);
+  const computedLevel = getPlayerLevelFromVictories(victories);
+
+  if (storedLevel > computedLevel && playerLevelVictoryThresholds[storedLevel] !== undefined) {
+    return playerLevelVictoryThresholds[storedLevel];
+  }
+
+  return victories;
 }
 
 function getCurrentPlayerLevel() {
@@ -1635,18 +1652,20 @@ function updateEvolutionPanel() {
 
   if (playerLevel <= 0) {
     info.textContent =
-      "Le PJ est niveau 0 : gagne des victoires pour passer niveau 1 avant d’améliorer ses actions.";
-    panel.style.display = "none";
+      "Le PJ est niveau 0 : il doit gagner des victoires pour passer niveau 1 avant d’améliorer ses actions.";
+    panel.style.display = "block";
+    select.style.display = "none";
     return;
   }
 
   if (currentExperience < cost) {
     info.textContent =
       currentExperience +
-      " XP disponibles. Il faut dépasser/atteindre " +
+      " XP disponibles. Il faut au moins " +
       cost +
       " XP (PV max actuels) pour ajouter +1 à une action.";
-    panel.style.display = "none";
+    panel.style.display = "block";
+    select.style.display = "none";
     return;
   }
 
@@ -1670,6 +1689,14 @@ function updateEvolutionPanel() {
     select.appendChild(option);
   });
 
+  if (availableEntries.length === 0) {
+    info.textContent =
+      "Aucune action ne peut être améliorée : les actions débloquées ont déjà atteint le niveau actuel du PJ.";
+    panel.style.display = "block";
+    select.style.display = "none";
+    return;
+  }
+
   info.textContent =
     currentExperience +
     " XP disponibles. Coût : " +
@@ -1678,7 +1705,8 @@ function updateEvolutionPanel() {
     playerLevel +
     ".";
 
-  panel.style.display = availableEntries.length > 0 ? "block" : "none";
+  select.style.display = "block";
+  panel.style.display = "block";
 }
 
 function upgradeSelectedAction() {
@@ -2042,13 +2070,7 @@ function clearCurrentDuelState() {
 function hasAvailableXpUpgrade() {
   if (!currentFighter) return false;
 
-  const cost = getEffectiveBodyStart();
-
-  return (
-    getCurrentPlayerLevel() > 0 &&
-    currentExperience >= cost &&
-    getActionsAvailableForUpgrade().length > 0
-  );
+  return currentExperience > 0;
 }
 
 function focusEvolutionPanel() {
@@ -2056,11 +2078,8 @@ function focusEvolutionPanel() {
 
   const panel = document.getElementById("evolutionPanel");
 
-  if (!panel || panel.style.display === "none") {
-    appAlert(
-      "Aucune amélioration disponible pour l’instant.\n\nRappel : il faut assez d’XP et le bonus EVO de l’action doit rester inférieur ou égal au niveau du PJ.",
-      "Évolution du PJ"
-    );
+  if (!panel) {
+    appAlert("Le panneau d’évolution est introuvable.", "Évolution du PJ");
     return;
   }
 
