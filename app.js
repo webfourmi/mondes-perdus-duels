@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.4";
+const APP_VERSION = "0.8.5";
 
 let catalog = null;
 
@@ -1704,6 +1704,8 @@ async function initApp() {
   const fixedHpBar = document.getElementById("fixedHpBar");
   if (fixedHpBar) fixedHpBar.style.display = "none";
 
+  closeActionManualScreen();
+
   const setupPanel = document.getElementById("setupPanel");
   const duelPanel = document.getElementById("duelPanel");
 
@@ -2507,6 +2509,9 @@ function openActionManualScreen(action) {
 
   if (!overlay || !image || !placeholder) return;
 
+  overlay.style.display = "flex";
+  overlay.classList.add("image-overlay-open");
+
   if (title) {
     title.textContent = action ? actionLabel(action) : "Manuel d’escrime";
   }
@@ -2516,7 +2521,6 @@ function openActionManualScreen(action) {
     image.src = "";
     placeholder.style.display = "block";
     placeholder.textContent = "Bientôt dans votre manuel d’escrime";
-    overlay.classList.add("image-overlay-open");
     return;
   }
 
@@ -2537,8 +2541,6 @@ function openActionManualScreen(action) {
 
   image.dataset.previewIndex = "0";
   image.dataset.previewSources = JSON.stringify(sources);
-
-  overlay.classList.add("image-overlay-open");
 
   if (sources.length === 0) {
     placeholder.textContent = "Bientôt dans votre manuel d’escrime";
@@ -2588,6 +2590,7 @@ function closeActionManualScreen() {
 
   if (overlay) {
     overlay.classList.remove("image-overlay-open");
+    overlay.style.display = "none";
   }
 
   if (image) {
