@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=135">
+  <link rel="stylesheet" href="style.css?v=136">
 </head>
 
 <body>
@@ -203,6 +203,11 @@
           <option value="squelette">Squelette</option>
         </select>
 
+        <p class="small setup-choice-line">
+          Fiche choisie :
+          <strong id="playerSheetDisplay">Chevalier</strong>
+        </p>
+
         <label for="playerName">Nom du PJ</label>
         <input id="playerName" type="text" placeholder="Exemple : Godefroy-la-Tôle" />
 
@@ -259,6 +264,11 @@
       
         <label for="opponentBook">Livret affiché, adversaire</label>
         <select id="opponentBook"></select>
+
+        <p class="small setup-choice-line">
+          Livret affiché :
+          <strong id="opponentBookDisplay">-</strong>
+        </p>
       
         <div id="soloDifficultyBlock" class="solo-difficulty-block" style="display:none;">
           <label for="soloDifficultyLevel">Difficulté de l’adversaire solo</label>
@@ -469,13 +479,13 @@
           <option value="score_plunge_or_lateral">+2 si SCORE avec Coup Plongeant ou Latéral</option>
         </select>
 
-        <label for="actionChoice">Choisis ton Action</label>
+        <label for="actionChoice">Choisis ton action</label>
         <select id="actionChoice" class="action-select hidden-action-select"></select>
 
         <div id="actionCards" class="action-card-grid"></div>
         
         <p id="selectedActionHint" class="selected-action-hint">
-          Choisis une Action.
+          Choisis une action.
         </p>
         <button type="button" onclick="chooseAction()">Annoncer cette action</button>
       </div>
