@@ -1,4 +1,4 @@
-const APP_VERSION = "0.9.6-manual-only";
+const APP_VERSION = "0.9.7-opponent-buttons";
 
 let catalog = null;
 
@@ -1894,6 +1894,7 @@ async function initApp() {
 
   ensureSetupSelectorsVisible();
   refreshSetupSelectionDisplays();
+  updateOpponentBookButtons();
 
   const gameModeSelect = document.getElementById("gameMode");
   const playerSheetSelect = document.getElementById("playerSheet");
@@ -1913,6 +1914,7 @@ async function initApp() {
 
   if (opponentBookSelect) {
     opponentBookSelect.addEventListener("change", function() {
+      updateOpponentBookButtons();
       refreshSoloDifficultyOptions();
       refreshSetupSelectionDisplays();
     });
@@ -3130,6 +3132,37 @@ function updateGameModeButtons() {
   }
 }
 
+function setOpponentBook(fighterId) {
+  const select = document.getElementById("opponentBook");
+
+  if (!select) return;
+
+  select.value = fighterId;
+
+  updateOpponentBookButtons();
+  refreshSoloDifficultyOptions();
+  refreshSoloIntroText();
+  refreshSetupSelectionDisplays();
+}
+
+function updateOpponentBookButtons() {
+  const select = document.getElementById("opponentBook");
+  const chevalierButton = document.getElementById("opponentBookChevalierButton");
+  const squeletteButton = document.getElementById("opponentBookSqueletteButton");
+
+  if (!select) return;
+
+  const value = select.value || "chevalier";
+
+  if (chevalierButton) {
+    chevalierButton.classList.toggle("active", value === "chevalier");
+  }
+
+  if (squeletteButton) {
+    squeletteButton.classList.toggle("active", value === "squelette");
+  }
+}
+
 function refreshSoloDifficultyOptions() {
   const block = document.getElementById("soloDifficultyBlock");
   const select = document.getElementById("soloDifficultyLevel");
@@ -3178,6 +3211,7 @@ function refreshSoloDifficultyOptions() {
   }
 
   refreshSoloIntroText();
+  updateOpponentBookButtons();
   refreshSetupSelectionDisplays();
 }
 
