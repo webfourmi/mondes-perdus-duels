@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.5";
+const APP_VERSION = "0.8.6";
 
 let catalog = null;
 
@@ -58,11 +58,13 @@ const currentDuelSaveKey = "lw_current_duel_state";
 const charactersIndexKey = "lw_saved_characters_index";
 const lastCharacterKey = "lw_last_character_id";
 const resumeDuelAfterSheetKey = "lw_resume_duel_after_sheet";
+const actionManualAutoOpenStorageKey = "lw_action_manual_auto_open";
 
 let duelFinished = false;
 let victoryXpAwarded = false;
 let currentTurnNumber = 1;
 let currentVictories = 0;
+let actionManualAutoOpen = localStorage.getItem(actionManualAutoOpenStorageKey) === "true";
 
 let combatLog = [];
 let lastResolutionLogKey = "";
@@ -1784,6 +1786,7 @@ async function initApp() {
   }
 
   updateAudioButtons();
+  updateActionManualToggleButton();
   resumeDuelAfterSheetIfNeeded();
 }
 
@@ -2455,7 +2458,7 @@ function selectActionCard(actionId, showManual) {
       upgradeText;
   }
 
-  if (showManual) {
+  if (showManual && actionManualAutoOpen) {
     openActionManualScreen(selectedAction);
   }
 }
@@ -2499,6 +2502,34 @@ function addCacheBusterToActionPreview(src) {
 
   const separator = src.includes("?") ? "&" : "?";
   return src + separator + "v=" + Date.now();
+}
+
+function updateActionManualToggleButton() {
+  const button = document.getElementById("actionManualToggleButton");
+
+  if (!button) return;
+
+  button.textContent = actionManualAutoOpen ? "Auto : ON" : "Auto : OFF";
+  button.classList.toggle("active", actionManualAutoOpen);
+}
+
+function toggleActionManualAutoOpen() {
+  actionManualAutoOpen = !actionManualAutoOpen;
+  localStorage.setItem(
+    actionManualAutoOpenStorageKey,
+    actionManualAutoOpen ? "true" : "false"
+  );
+
+  updateActionManualToggleButton();
+}
+
+function openSelectedActionManual() {
+  if (!selectedAction) {
+    appAlert("Choisis d’abord une action.", "Manuel d’escrime");
+    return;
+  }
+
+  openActionManualScreen(selectedAction);
 }
 
 function openActionManualScreen(action) {
@@ -2899,6 +2930,7 @@ async function startDuel() {
 
     initAudioSystem();
     updateAudioButtons();
+    updateActionManualToggleButton();
 
     if (musicEnabled) {
       startCombatMusic();
