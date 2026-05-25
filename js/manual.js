@@ -1,6 +1,6 @@
 /* ============================================================
    MANUEL D'ESCRIME
-   Fichier extrait de app.js - étape 1 du découpage
+   Fichier extrait de app.js - étape 1 corrigée
    ============================================================ */
 
 const actionManualAutoOpenStorageKey = "lw_action_manual_auto_open";
