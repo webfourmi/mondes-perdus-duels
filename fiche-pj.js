@@ -559,6 +559,7 @@ async function initSheetPage() {
     renderColorSummary();
     renderEvolutionTable();
     renderTrophies();
+    renderSheetUpgradePanel();
 
     if (status) {
       status.textContent = "";
@@ -650,7 +651,7 @@ function ensureSheetUpgradePanel() {
 
   panel.innerHTML =
     "<h2>Utiliser les XP</h2>" +
-    '<p id="sheetUpgradeInfo" class="rules-note"></p>' +
+    '<p class="rules-note">XP = PV max des adversaires vaincus. Les niveaux dépendent du nombre de victoires.</p><p id="sheetUpgradeInfo" class="rules-note"></p>' +
     '<label for="sheetUpgradeActionChoice">Action à améliorer</label>' +
     '<select id="sheetUpgradeActionChoice" class="compact-select"></select>' +
     '<button type="button" onclick="upgradeSheetSelectedAction()">Améliorer cette action</button>';
