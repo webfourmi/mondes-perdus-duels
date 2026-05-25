@@ -91,6 +91,35 @@
     <button type="button" onclick="closeImageOverlay()">Fermer</button>
   </div>
 </div>
+
+<!-- Écran carte du manuel d’escrime -->
+<div id="actionManualOverlay" class="image-overlay">
+  <div class="image-overlay-scroll">
+    <div class="action-manual-title" id="actionManualTitle">
+      Manuel d’escrime
+    </div>
+
+    <img
+      id="actionManualImage"
+      src=""
+      alt="Carte du manuel d’escrime"
+      style="display:none;"
+    />
+
+    <div
+      id="actionManualPlaceholder"
+      class="action-preview-placeholder"
+      style="display:none; max-width:420px; margin:40px auto; white-space:pre-line;"
+    >
+      Bientôt dans votre manuel d’escrime
+    </div>
+  </div>
+
+  <div class="image-overlay-toolbar">
+    <button type="button" onclick="closeActionManualScreen()">Retour</button>
+  </div>
+</div>
+
     
 
   <!-- Fenêtre modale pour messages et confirmations -->
@@ -489,22 +518,7 @@
         </p>
         <button type="button" onclick="chooseAction()">Annoncer cette action</button>
       </div>
-
-      <div id="actionPreviewPanel" class="action-preview-panel">
-        <img
-          id="actionPreviewImage"
-          class="action-preview-image"
-          src=""
-          alt="Carte d'action"
-          style="display: none;"
-        />
-      
-        <div id="actionPreviewPlaceholder" class="action-preview-placeholder">
-          Clique sur une action pour voir sa carte.
-        </div>
-      </div>
-
-      <!-- PG annoncé / reçu -->
+<!-- PG annoncé / reçu -->
       <div id="pgPanel" class="action-screen" style="display:none;">
         <div id="soloOpponentPanel" class="solo-opponent-panel" style="display:none;">
           <span>Action adverse</span>
@@ -537,6 +551,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=82"></script>
+  <script src="app.js?v=84"></script>
 </body>
 </html>
