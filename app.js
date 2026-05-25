@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.6";
+const APP_VERSION = "0.8.7";
 
 let catalog = null;
 
@@ -1477,16 +1477,14 @@ function getNextUpgradeLevel() {
 
 function getActionsAvailableForUpgrade() {
   const actions = getAllUpgradeableActions();
-  const nextLevel = getNextUpgradeLevel();
   const playerLevel = getCurrentPlayerLevel();
 
   if (playerLevel <= 0) return [];
 
   return actions.filter(function(action) {
     return (
-      getActionUpgradeBonus(action.id) < nextLevel &&
-      getActionUpgradeBonus(action.id) < playerLevel &&
-      isActionUnlockedByLevel(action)
+      isActionUnlockedByLevel(action) &&
+      getActionUpgradeBonus(action.id) < playerLevel
     );
   });
 }
@@ -1532,19 +1530,31 @@ function updateEvolutionPanel() {
   if (!panel || !info || !select || !currentFighter) return;
 
   const cost = getEffectiveBodyStart();
-
-  if (currentExperience < cost) {
-    panel.style.display = "none";
-    return;
-  }
-
-  const nextLevel = getNextUpgradeLevel();
+  const playerLevel = getCurrentPlayerLevel();
   const availableActions = getActionsAvailableForUpgrade();
 
   select.innerHTML = "";
 
+  if (playerLevel <= 0) {
+    info.textContent =
+      "Le PJ est niveau 0 : gagne des victoires pour passer niveau 1 avant d’améliorer ses actions.";
+    panel.style.display = "none";
+    return;
+  }
+
+  if (currentExperience < cost) {
+    info.textContent =
+      currentExperience +
+      " XP disponibles. Il faut au moins " +
+      cost +
+      " XP (PV de départ actuels) pour ajouter +1 à une action.";
+    panel.style.display = "none";
+    return;
+  }
+
   availableActions.forEach(function(action) {
     const currentBonus = getActionUpgradeBonus(action.id);
+    const nextBonus = currentBonus + 1;
 
     const option = document.createElement("option");
     option.value = action.id;
@@ -1552,10 +1562,10 @@ function updateEvolutionPanel() {
       actionLabel(action) +
       " (" +
       action.color +
-      ") : +" +
+      ") : EVO +" +
       currentBonus +
       " → +" +
-      nextLevel;
+      nextBonus;
 
     select.appendChild(option);
   });
@@ -1564,8 +1574,8 @@ function updateEvolutionPanel() {
     currentExperience +
     " XP disponibles. Coût : " +
     cost +
-    " XP. Niveau d’amélioration proposé : +" +
-    nextLevel +
+    " XP. Le bonus EVO d’une action doit rester inférieur ou égal au niveau du PJ. Niveau actuel : " +
+    playerLevel +
     ".";
 
   panel.style.display = availableActions.length > 0 ? "block" : "none";
@@ -1578,16 +1588,29 @@ function upgradeSelectedAction() {
   const cost = getEffectiveBodyStart();
 
   if (currentExperience < cost) {
-    appAlert("Pas assez d’expérience.", "Évolution impossible");
+    appAlert("Pas assez d’expérience. Il faut au moins " + cost + " XP.", "Évolution impossible");
     return;
   }
 
   const actionId = select.value;
-  const nextLevel = getNextUpgradeLevel();
+  const currentBonus = getActionUpgradeBonus(actionId);
+  const nextLevel = currentBonus + 1;
+  const playerLevel = getCurrentPlayerLevel();
 
-  if (nextLevel > getCurrentPlayerLevel()) {
+  if (playerLevel <= 0) {
     appAlert(
-      "Cette action ne peut pas dépasser le niveau actuel du PJ.",
+      "Le PJ est niveau 0 : il doit gagner des victoires pour passer niveau 1 avant d’améliorer ses actions.",
+      "Évolution impossible"
+    );
+    return;
+  }
+
+  if (currentBonus >= playerLevel || nextLevel > playerLevel) {
+    appAlert(
+      "Cette action ne peut pas dépasser le niveau actuel du PJ.\n\nNiveau PJ : " +
+        playerLevel +
+        "\nEVO actuelle : +" +
+        currentBonus,
       "Évolution impossible"
     );
     return;
@@ -1606,7 +1629,12 @@ function upgradeSelectedAction() {
   savePlayerProfile();
   updateEvolutionPanel();
 
-  let message = "Action améliorée à +" + nextLevel + ".";
+  let message =
+    "Action améliorée : EVO +" +
+    nextLevel +
+    ".\n\nXP dépensée : " +
+    cost +
+    ".";
 
   if (bodyIncrease > 0) {
     message +=
@@ -1886,12 +1914,65 @@ function clearCurrentDuelState() {
    FIN DE COMBAT
    ============================================================ */
 
+function hasAvailableXpUpgrade() {
+  if (!currentFighter) return false;
+
+  const cost = getEffectiveBodyStart();
+
+  return (
+    getCurrentPlayerLevel() > 0 &&
+    currentExperience >= cost &&
+    getActionsAvailableForUpgrade().length > 0
+  );
+}
+
+function focusEvolutionPanel() {
+  updateEvolutionPanel();
+
+  const panel = document.getElementById("evolutionPanel");
+
+  if (!panel || panel.style.display === "none") {
+    appAlert(
+      "Aucune amélioration disponible pour l’instant.\n\nRappel : il faut assez d’XP et le bonus EVO de l’action doit rester inférieur ou égal au niveau du PJ.",
+      "Évolution du PJ"
+    );
+    return;
+  }
+
+  panel.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+}
+
+function showEvolutionButtonInCombatEnd() {
+  const panel = document.getElementById("combatEndPanel");
+  if (!panel) return;
+
+  const oldButton = document.getElementById("combatEndUpgradeButton");
+  if (oldButton) oldButton.remove();
+
+  if (!hasAvailableXpUpgrade()) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.id = "combatEndUpgradeButton";
+  button.className = "secondary-button combat-end-upgrade-button";
+  button.textContent = "Utiliser mes XP";
+  button.onclick = focusEvolutionPanel;
+
+  panel.appendChild(button);
+}
+
 function showCombatEnd(title, text, cssClass) {
   const panel = document.getElementById("combatEndPanel");
   const titleElement = document.getElementById("combatEndTitle");
   const textElement = document.getElementById("combatEndText");
 
   if (!panel || !titleElement || !textElement) return;
+
+  const oldUpgradeButton = document.getElementById("combatEndUpgradeButton");
+  if (oldUpgradeButton) oldUpgradeButton.remove();
 
   panel.className = "combat-end-panel " + cssClass;
   titleElement.textContent = title;
@@ -2013,6 +2094,9 @@ function checkCombatEnd() {
       "Victoire ! " + xpGain + " XP ajoutée(s) à " + currentPlayerName + ".",
       "combat-end-victory"
     );
+
+    updateEvolutionPanel();
+    showEvolutionButtonInCombatEnd();
 
     return;
   }
