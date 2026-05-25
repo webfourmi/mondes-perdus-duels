@@ -589,13 +589,17 @@ function getSheetEffectiveBodyStart() {
   return bodyBase + Number(currentSheetProfile.bodyBonus || 0);
 }
 
-function getSheetAvailableUpgradeActions() {
-  const playerLevel = currentSheetLevel;
+function getSheetMaxActionEvolutionLevel() {
+  // Exception de confort : au niveau 0, le joueur peut déjà monter
+  // ses actions débloquées jusqu’à EVO +1.
+  return Math.max(1, currentSheetLevel);
+}
 
-  if (playerLevel <= 0) return [];
+function getSheetAvailableUpgradeActions() {
+  const maxEvolutionLevel = getSheetMaxActionEvolutionLevel();
 
   return getUnlockedUniqueSheetActions().filter(function(entry) {
-    return getActionUpgradeBonus(entry.action) < playerLevel;
+    return getActionUpgradeBonus(entry.action) < maxEvolutionLevel;
   });
 }
 
@@ -651,7 +655,7 @@ function ensureSheetUpgradePanel() {
 
   panel.innerHTML =
     "<h2>Utiliser les XP</h2>" +
-    '<p class="rules-note">XP = PV max des adversaires vaincus. Les niveaux dépendent du nombre de victoires.</p><p id="sheetUpgradeInfo" class="rules-note"></p>' +
+    '<p class="rules-note">XP = PV max des adversaires vaincus. Les niveaux dépendent du nombre de victoires. Au niveau 0, exception débutant : EVO max +1.</p><p id="sheetUpgradeInfo" class="rules-note"></p>' +
     '<label for="sheetUpgradeActionChoice">Action à améliorer</label>' +
     '<select id="sheetUpgradeActionChoice" class="compact-select"></select>' +
     '<button type="button" onclick="upgradeSheetSelectedAction()">Améliorer cette action</button>';
@@ -679,18 +683,10 @@ function renderSheetUpgradePanel() {
   const xp = Number(currentSheetProfile.experience || 0);
   const cost = getSheetEffectiveBodyStart();
   const playerLevel = currentSheetLevel;
+  const maxEvolutionLevel = getSheetMaxActionEvolutionLevel();
   const availableEntries = getSheetAvailableUpgradeActions();
 
   select.innerHTML = "";
-
-  if (playerLevel <= 0) {
-    info.textContent =
-      "Le PJ est niveau 0 : il doit gagner des victoires pour passer niveau 1 avant d’améliorer ses actions.";
-    panel.style.display = "block";
-    select.style.display = "none";
-    if (button) button.style.display = "none";
-    return;
-  }
 
   if (xp < cost) {
     info.textContent =
@@ -726,7 +722,11 @@ function renderSheetUpgradePanel() {
 
   if (availableEntries.length === 0) {
     info.textContent =
-      "Aucune action ne peut être améliorée : les EVO des actions débloquées ont déjà atteint le niveau actuel du PJ.";
+      "Aucune action ne peut être améliorée : les EVO des actions débloquées ont déjà atteint l’EVO max autorisée. Niveau PJ : " +
+      playerLevel +
+      " | EVO max actuelle : +" +
+      maxEvolutionLevel +
+      ".";
     panel.style.display = "block";
     select.style.display = "none";
     if (button) button.style.display = "none";
@@ -737,9 +737,11 @@ function renderSheetUpgradePanel() {
     xp +
     " XP disponibles. Coût : " +
     cost +
-    " XP. Une action peut monter jusqu’au niveau actuel du PJ. Niveau actuel : " +
+    " XP. Niveau PJ : " +
     playerLevel +
-    ".";
+    " | EVO max actuelle : +" +
+    maxEvolutionLevel +
+    (playerLevel === 0 ? " (exception débutant)." : ".");
 
   select.style.display = "block";
   if (button) button.style.display = "block";
@@ -766,19 +768,15 @@ function upgradeSheetSelectedAction() {
 
   const currentBonus = getActionUpgradeBonus(entry.action);
   const nextBonus = currentBonus + 1;
+  const maxEvolutionLevel = getSheetMaxActionEvolutionLevel();
 
   if (xp < cost) {
     alert("Pas assez d’expérience. Il faut au moins " + cost + " XP.");
     return;
   }
 
-  if (currentSheetLevel <= 0) {
-    alert("Le PJ est niveau 0 : il doit passer niveau 1 avant d’améliorer ses actions.");
-    return;
-  }
-
-  if (nextBonus > currentSheetLevel) {
-    alert("Cette action ne peut pas dépasser le niveau actuel du PJ.");
+  if (nextBonus > maxEvolutionLevel) {
+    alert("Cette action ne peut pas dépasser l’EVO max actuelle.");
     return;
   }
 
