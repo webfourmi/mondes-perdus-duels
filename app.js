@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.7";
+const APP_VERSION = "0.8.8";
 
 let catalog = null;
 
@@ -1177,6 +1177,10 @@ function savePlayerProfile() {
 
   const fighterEntry = findCatalogEntry(fighterId);
 
+  if (currentFighter) {
+    recomputeCurrentBodyBonus();
+  }
+
   const profile = {
     fighterId: fighterId,
     name: currentPlayerName,
@@ -1432,6 +1436,63 @@ function actionLabel(action) {
   return action.name;
 }
 
+function getActionUpgradeKey(actionOrId) {
+  if (!actionOrId) return "";
+
+  if (typeof actionOrId === "string") {
+    return actionOrId;
+  }
+
+  // Les actions de Distance Accrue peuvent être liées à une action normale
+  // par unlockName. Exemple : Coup latéral haut en mêlée et en DA.
+  const sourceName =
+    actionOrId.unlockName ||
+    actionLabel(actionOrId) ||
+    actionOrId.id ||
+    "";
+
+  return normalizeActionUnlockName(sourceName).replace(/\s+/g, "_");
+}
+
+function getUniqueActionsByUpgradeKey(actions) {
+  const map = {};
+
+  (actions || []).forEach(function(action) {
+    if (!action || !action.id) return;
+
+    const key = getActionUpgradeKey(action);
+    if (!key) return;
+
+    if (!map[key]) {
+      map[key] = {
+        key: key,
+        action: action,
+        variants: [action]
+      };
+      return;
+    }
+
+    map[key].variants.push(action);
+
+    // Si possible, on garde comme action principale celle de mêlée.
+    if (
+      map[key].action &&
+      map[key].action.color === "marron" &&
+      action.color !== "marron"
+    ) {
+      map[key].action = action;
+    }
+  });
+
+  return Object.keys(map).map(function(key) {
+    return map[key];
+  });
+}
+
+function getAllUnlockedUniqueActions() {
+  return getUniqueActionsByUpgradeKey(getAllUpgradeableActions());
+}
+
 function getAllUpgradeableActions() {
   if (!currentFighter) return [];
 
@@ -1448,8 +1509,27 @@ function getAllUpgradeableActions() {
   });
 }
 
-function getActionUpgradeBonus(actionId) {
-  return Number(currentActionBonuses[actionId] || 0);
+function getActionUpgradeBonus(actionOrId) {
+  const key = getActionUpgradeKey(actionOrId);
+
+  if (!key) return 0;
+
+  // Nouvelle sauvegarde par clé canonique.
+  if (currentActionBonuses[key] !== undefined) {
+    return Number(currentActionBonuses[key] || 0);
+  }
+
+  // Compatibilité avec les anciennes sauvegardes par id.
+  if (
+    actionOrId &&
+    typeof actionOrId !== "string" &&
+    actionOrId.id &&
+    currentActionBonuses[actionOrId.id] !== undefined
+  ) {
+    return Number(currentActionBonuses[actionOrId.id] || 0);
+  }
+
+  return 0;
 }
 
 function getEffectiveBodyStart() {
@@ -1460,14 +1540,14 @@ function getEffectiveBodyStart() {
 }
 
 function getNextUpgradeLevel() {
-  const actions = getAllUpgradeableActions();
+  const uniqueActions = getAllUnlockedUniqueActions();
 
-  if (actions.length === 0) return 1;
+  if (uniqueActions.length === 0) return 1;
 
   let minBonus = Infinity;
 
-  actions.forEach(function(action) {
-    minBonus = Math.min(minBonus, getActionUpgradeBonus(action.id));
+  uniqueActions.forEach(function(entry) {
+    minBonus = Math.min(minBonus, getActionUpgradeBonus(entry.action));
   });
 
   if (minBonus === Infinity) return 1;
@@ -1476,24 +1556,29 @@ function getNextUpgradeLevel() {
 }
 
 function getActionsAvailableForUpgrade() {
-  const actions = getAllUpgradeableActions();
+  const uniqueActions = getAllUnlockedUniqueActions();
   const playerLevel = getCurrentPlayerLevel();
 
   if (playerLevel <= 0) return [];
 
-  return actions.filter(function(action) {
+  return uniqueActions.filter(function(entry) {
+    const action = entry.action;
+
     return (
       isActionUnlockedByLevel(action) &&
-      getActionUpgradeBonus(action.id) < playerLevel
+      getActionUpgradeBonus(action) < playerLevel
     );
   });
 }
 
 function computeBodyBonusFromColors() {
-  const actions = getAllUpgradeableActions();
+  const uniqueActions = getAllUnlockedUniqueActions();
   const byColor = {};
 
-  actions.forEach(function(action) {
+  uniqueActions.forEach(function(entry) {
+    const action = entry.action;
+    if (!action || !action.color) return;
+
     if (!byColor[action.color]) {
       byColor[action.color] = [];
     }
@@ -1511,7 +1596,7 @@ function computeBodyBonusFromColors() {
     let minColorBonus = Infinity;
 
     colorActions.forEach(function(action) {
-      minColorBonus = Math.min(minColorBonus, getActionUpgradeBonus(action.id));
+      minColorBonus = Math.min(minColorBonus, getActionUpgradeBonus(action));
     });
 
     if (minColorBonus !== Infinity) {
@@ -1522,6 +1607,17 @@ function computeBodyBonusFromColors() {
   return bonus;
 }
 
+function computeTotalBodyBonus() {
+  // +1 PV automatique par niveau gagné,
+  // puis bonus de couleur selon les actions débloquées et évoluées.
+  return getCurrentPlayerLevel() + computeBodyBonusFromColors();
+}
+
+function recomputeCurrentBodyBonus() {
+  currentBodyBonus = computeTotalBodyBonus();
+  return currentBodyBonus;
+}
+
 function updateEvolutionPanel() {
   const panel = document.getElementById("evolutionPanel");
   const info = document.getElementById("evolutionInfo");
@@ -1529,9 +1625,11 @@ function updateEvolutionPanel() {
 
   if (!panel || !info || !select || !currentFighter) return;
 
+  recomputeCurrentBodyBonus();
+
   const cost = getEffectiveBodyStart();
   const playerLevel = getCurrentPlayerLevel();
-  const availableActions = getActionsAvailableForUpgrade();
+  const availableEntries = getActionsAvailableForUpgrade();
 
   select.innerHTML = "";
 
@@ -1545,19 +1643,20 @@ function updateEvolutionPanel() {
   if (currentExperience < cost) {
     info.textContent =
       currentExperience +
-      " XP disponibles. Il faut au moins " +
+      " XP disponibles. Il faut dépasser/atteindre " +
       cost +
-      " XP (PV de départ actuels) pour ajouter +1 à une action.";
+      " XP (PV max actuels) pour ajouter +1 à une action.";
     panel.style.display = "none";
     return;
   }
 
-  availableActions.forEach(function(action) {
-    const currentBonus = getActionUpgradeBonus(action.id);
+  availableEntries.forEach(function(entry) {
+    const action = entry.action;
+    const currentBonus = getActionUpgradeBonus(action);
     const nextBonus = currentBonus + 1;
 
     const option = document.createElement("option");
-    option.value = action.id;
+    option.value = entry.key;
     option.textContent =
       actionLabel(action) +
       " (" +
@@ -1565,7 +1664,8 @@ function updateEvolutionPanel() {
       ") : EVO +" +
       currentBonus +
       " → +" +
-      nextBonus;
+      nextBonus +
+      (entry.variants.length > 1 ? " [mêlée + DA]" : "");
 
     select.appendChild(option);
   });
@@ -1574,16 +1674,18 @@ function updateEvolutionPanel() {
     currentExperience +
     " XP disponibles. Coût : " +
     cost +
-    " XP. Le bonus EVO d’une action doit rester inférieur ou égal au niveau du PJ. Niveau actuel : " +
+    " XP. Une action peut monter jusqu’au niveau actuel du PJ. Niveau actuel : " +
     playerLevel +
     ".";
 
-  panel.style.display = availableActions.length > 0 ? "block" : "none";
+  panel.style.display = availableEntries.length > 0 ? "block" : "none";
 }
 
 function upgradeSelectedAction() {
   const select = document.getElementById("upgradeActionChoice");
   if (!select || !select.value) return;
+
+  recomputeCurrentBodyBonus();
 
   const cost = getEffectiveBodyStart();
 
@@ -1592,8 +1694,17 @@ function upgradeSelectedAction() {
     return;
   }
 
-  const actionId = select.value;
-  const currentBonus = getActionUpgradeBonus(actionId);
+  const actionKey = select.value;
+  const entry = getActionsAvailableForUpgrade().find(function(item) {
+    return item.key === actionKey;
+  });
+
+  if (!entry) {
+    appAlert("Cette action ne peut pas être améliorée pour le moment.", "Évolution impossible");
+    return;
+  }
+
+  const currentBonus = getActionUpgradeBonus(entry.action);
   const nextLevel = currentBonus + 1;
   const playerLevel = getCurrentPlayerLevel();
 
@@ -1605,7 +1716,7 @@ function upgradeSelectedAction() {
     return;
   }
 
-  if (currentBonus >= playerLevel || nextLevel > playerLevel) {
+  if (nextLevel > playerLevel) {
     appAlert(
       "Cette action ne peut pas dépasser le niveau actuel du PJ.\n\nNiveau PJ : " +
         playerLevel +
@@ -1616,12 +1727,21 @@ function upgradeSelectedAction() {
     return;
   }
 
-  currentActionBonuses[actionId] = nextLevel;
+  const oldBodyBonus = currentBodyBonus;
+
+  currentActionBonuses[actionKey] = nextLevel;
+
+  // Nettoyage doux des anciennes sauvegardes par id pour les variantes liées.
+  entry.variants.forEach(function(variant) {
+    if (variant && variant.id && variant.id !== actionKey) {
+      delete currentActionBonuses[variant.id];
+    }
+  });
+
   currentExperience -= cost;
   currentSpentExperience += cost;
 
-  const oldBodyBonus = currentBodyBonus;
-  currentBodyBonus = computeBodyBonusFromColors();
+  recomputeCurrentBodyBonus();
 
   const bodyIncrease = currentBodyBonus - oldBodyBonus;
 
@@ -1636,11 +1756,16 @@ function upgradeSelectedAction() {
     cost +
     ".";
 
+  if (entry.variants.length > 1) {
+    message +=
+      "\n\nCette amélioration s’applique à la version mêlée et à la version Distance Accrue.";
+  }
+
   if (bodyIncrease > 0) {
     message +=
-      "\n\nToutes les actions d’une couleur ont progressé : +" +
+      "\n\nBonus de PV gagné : +" +
       bodyIncrease +
-      " PV de départ au prochain combat.";
+      " PV.";
   }
 
   appAlert(message, "Évolution du PJ");
@@ -2057,6 +2182,10 @@ function checkCombatEnd() {
       currentVictories += 1;
 
       const newLevel = getCurrentPlayerLevel();
+
+      if (newLevel > oldLevel) {
+        recomputeCurrentBodyBonus();
+      }
 
       victoryXpAwarded = true;
 
@@ -2528,7 +2657,7 @@ function selectActionCard(actionId, showManual) {
     card.classList.toggle("active", card.dataset.actionId === actionId);
   });
 
-  const upgradeBonus = getActionUpgradeBonus(selectedAction.id);
+  const upgradeBonus = getActionUpgradeBonus(selectedAction);
   const upgradeText = upgradeBonus > 0 ? " / EVO +" + upgradeBonus : "";
 
   if (hint) {
@@ -2753,7 +2882,7 @@ function fillActions(actions, restriction) {
 
     currentActions.push(action);
 
-    const upgradeBonus = getActionUpgradeBonus(action.id);
+    const upgradeBonus = getActionUpgradeBonus(action);
     const upgradeText = upgradeBonus > 0 ? " / EVO +" + upgradeBonus : "";
 
     const option = document.createElement("option");
@@ -2916,7 +3045,7 @@ async function startDuel() {
     currentBook = await loadJson(bookEntry.bookFile);
     currentPlayerBook = await loadJson(sheetEntry.bookFile);
 
-    currentBodyBonus = computeBodyBonusFromColors();
+    recomputeCurrentBodyBonus();
     sizeModifier = Number(currentFighter.size) - Number(currentOpponentFighter.size);
 
     const loadedExistingDuel = loadCurrentDuelStateIfMatching(
@@ -3785,7 +3914,7 @@ function getPlayerDamageDetail(page, action) {
   const score = Number(page.score || 0);
   const mod = Number(action.mod || 0);
   const actionBonus = Number(action.bonus || 0);
-  const evolutionBonus = getActionUpgradeBonus(action.id);
+  const evolutionBonus = getActionUpgradeBonus(action);
   const temporaryBonus = calculateTemporaryBonus(page, action);
   const sizeBonus = getSizeDamageModifierForAction(action, "player");
 
