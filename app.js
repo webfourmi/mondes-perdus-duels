@@ -1,4 +1,4 @@
-const APP_VERSION = "0.9.0";
+const APP_VERSION = "0.9.1";
 
 let catalog = null;
 
@@ -1655,13 +1655,9 @@ function updateEvolutionPanel() {
 
   select.innerHTML = "";
 
-  if (currentExperience < cost) {
-    info.textContent =
-      currentExperience +
-      " XP disponibles. Il faut au moins " +
-      cost +
-      " XP (PV max actuels) pour ajouter +1 à une action.";
-    panel.style.display = "block";
+  // Le panneau n’apparaît que si le joueur peut vraiment dépenser des XP.
+  if (currentExperience < cost || availableEntries.length === 0) {
+    panel.style.display = "none";
     select.style.display = "none";
     return;
   }
@@ -1686,18 +1682,6 @@ function updateEvolutionPanel() {
     select.appendChild(option);
   });
 
-  if (availableEntries.length === 0) {
-    info.textContent =
-      "Aucune action ne peut être améliorée : les actions débloquées ont déjà atteint l’EVO max autorisée. Niveau PJ : " +
-      playerLevel +
-      " | EVO max actuelle : +" +
-      maxEvolutionLevel +
-      ".";
-    panel.style.display = "block";
-    select.style.display = "none";
-    return;
-  }
-
   info.textContent =
     currentExperience +
     " XP disponibles. Coût : " +
@@ -1706,7 +1690,7 @@ function updateEvolutionPanel() {
     playerLevel +
     " | EVO max actuelle : +" +
     maxEvolutionLevel +
-    (playerLevel === 0 ? " (exception débutant)." : ".") ;
+    (playerLevel === 0 ? " (exception débutant)." : ".");
 
   select.style.display = "block";
   panel.style.display = "block";
@@ -2068,7 +2052,14 @@ function clearCurrentDuelState() {
 function hasAvailableXpUpgrade() {
   if (!currentFighter) return false;
 
-  return currentExperience > 0;
+  recomputeCurrentBodyBonus();
+
+  const cost = getEffectiveBodyStart();
+
+  return (
+    currentExperience >= cost &&
+    getActionsAvailableForUpgrade().length > 0
+  );
 }
 
 function focusEvolutionPanel() {
@@ -2076,8 +2067,11 @@ function focusEvolutionPanel() {
 
   const panel = document.getElementById("evolutionPanel");
 
-  if (!panel) {
-    appAlert("Le panneau d’évolution est introuvable.", "Évolution du PJ");
+  if (!panel || panel.style.display === "none") {
+    appAlert(
+      "Aucune dépense d’XP disponible pour l’instant.",
+      "Évolution du PJ"
+    );
     return;
   }
 
