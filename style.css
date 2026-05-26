@@ -2660,3 +2660,113 @@ body.duel-active .damage-toggle-button .damage-toggle-hint {
   display: block;
   flex-shrink: 0;
 }
+.hidden-opponent-select {
+  display: none !important;
+}
+
+.opponent-choice-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.opponent-choice-button {
+  min-height: 86px;
+  padding: 10px 8px;
+  border: 1px solid rgba(213, 180, 72, 0.85);
+  border-radius: 16px;
+
+  background:
+    radial-gradient(circle at top, rgba(255, 226, 143, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(55, 45, 25, 0.96), rgba(18, 13, 8, 0.98));
+
+  color: #ffe7a6;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 229, 150, 0.12),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 0.12s ease,
+    filter 0.12s ease,
+    box-shadow 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.opponent-choice-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  border-color: #fff1a8;
+}
+
+.opponent-choice-button.active {
+  background:
+    radial-gradient(circle at top, rgba(255, 245, 180, 0.35), transparent 58%),
+    linear-gradient(180deg, rgba(218, 181, 64, 0.98), rgba(132, 87, 22, 0.98));
+
+  color: #120d08;
+  border-color: #fff1a8;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 252, 190, 0.65),
+    0 0 0 2px rgba(255, 217, 108, 0.18),
+    0 6px 14px rgba(0, 0, 0, 0.45);
+}
+
+.opponent-choice-image {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+
+  padding: 4px;
+  border-radius: 50%;
+  background: rgba(10, 8, 5, 0.45);
+  border: 1px solid rgba(255, 231, 166, 0.28);
+
+  box-shadow:
+    inset 0 0 8px rgba(0, 0, 0, 0.45),
+    0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.opponent-choice-button.active .opponent-choice-image {
+  background: rgba(255, 242, 184, 0.35);
+  border-color: rgba(20, 12, 4, 0.35);
+}
+
+.opponent-choice-button strong {
+  font-size: 1rem;
+  line-height: 1.1;
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .opponent-choice-buttons {
+    gap: 8px;
+  }
+
+  .opponent-choice-button {
+    min-height: 76px;
+    padding: 8px 5px;
+  }
+
+  .opponent-choice-image {
+    width: 38px;
+    height: 38px;
+  }
+
+  .opponent-choice-button strong {
+    font-size: 0.92rem;
+  }
+}
