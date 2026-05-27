@@ -2764,13 +2764,32 @@ function fillActions(actions, restriction) {
     addActionChoice(action);
   });
 
-  if (currentActions.length === 0 && !isDistanceModeActive()) {
-    const safetyNames = [
+if (currentActions.length === 0) {
+  let safetyNames = [];
+
+  if (
+    activeRestriction === "only_brown" ||
+    activeRestriction === "only_distance"
+  ) {
+    safetyNames = [
+      "Bond en arrière",
+      "Esquive",
+      "Bloque et approche"
+    ];
+  } else if (
+    activeRestriction === "none" ||
+    activeRestriction === "only_green" ||
+    activeRestriction === "only_green_yellow" ||
+    activeRestriction === "only_yellow"
+  ) {
+    safetyNames = [
       "Bond en arrière",
       "Coup de bouclier haut",
       "Coup de bouclier bas"
     ];
+  }
 
+  if (safetyNames.length > 0) {
     actions.forEach(function(action) {
       if (!actionAllowedByRestriction(action, activeRestriction)) return;
 
@@ -2780,9 +2799,12 @@ function fillActions(actions, restriction) {
 
       if (!isSafetyAction) return;
 
+      // Ici, on ignore volontairement le niveau.
+      // C'est une action de secours pour éviter un tour impossible.
       addActionChoice(action);
     });
   }
+}
 
   if (currentActions.length === 0) {
     const option = document.createElement("option");
