@@ -1,4 +1,4 @@
-const APP_VERSION = "0.9.9-xp-level-cap";
+const APP_VERSION = "1.0.0-solo-brown-fallback";
 
 let catalog = null;
 
@@ -3309,22 +3309,65 @@ function getSoloOpponentActions() {
   const opponentLevel = Number(soloDifficultyLevel || 0);
   const opponentId = currentOpponentFighter.id;
 
-  return actions.filter(function(action) {
-    if (
-      !action ||
-      !action.available ||
-      action.pg === undefined ||
-      action.pg === null
-    ) {
-      return false;
-    }
+  function isUsableAction(action) {
+    return (
+      action &&
+      action.available &&
+      action.pg !== undefined &&
+      action.pg !== null &&
+      actionAllowedByRestriction(action, soloOpponentRestriction)
+    );
+  }
 
-    if (!actionAllowedByRestriction(action, soloOpponentRestriction)) {
-      return false;
-    }
-
-    return isActionUnlockedForFighter(action, opponentId, opponentLevel);
+  let availableActions = actions.filter(function(action) {
+    return (
+      isUsableAction(action) &&
+      isActionUnlockedForFighter(action, opponentId, opponentLevel)
+    );
   });
+
+  if (availableActions.length > 0) {
+    return availableActions;
+  }
+
+  // Sécurité anti-blocage solo :
+  // si l’adversaire est forcé en marron / distance et n’a aucune action
+  // débloquée, on lui donne une action de survie pour éviter le tour impossible.
+  if (
+    soloOpponentRestriction === "only_brown" ||
+    soloOpponentRestriction === "only_distance" ||
+    distanceMode === "distance"
+  ) {
+    const safetyNames = [
+      "Bond en arrière",
+      "Bond esquive",
+      "Esquive",
+      "Bloque et approche"
+    ];
+
+    availableActions = actions.filter(function(action) {
+      if (!isUsableAction(action)) return false;
+
+      return safetyNames.some(function(name) {
+        return actionMatchesUnlockName(action, name);
+      });
+    });
+
+    if (availableActions.length > 0) {
+      return availableActions;
+    }
+
+    // Dernier filet : toute action marron légale du livret adverse.
+    availableActions = actions.filter(function(action) {
+      return isUsableAction(action) && action.color === "marron";
+    });
+
+    if (availableActions.length > 0) {
+      return availableActions;
+    }
+  }
+
+  return [];
 }
 
 /* ============================================================
