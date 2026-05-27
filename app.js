@@ -1,4 +1,4 @@
-const APP_VERSION = "0.9.7-opponent-buttons";
+const APP_VERSION = "0.9.9-xp-level-cap";
 
 let catalog = null;
 
@@ -2129,6 +2129,49 @@ function showCombatEnd(title, text, cssClass) {
   saveCurrentDuelState();
 }
 
+function getOpponentLevelForXpReward() {
+  // En solo, le niveau de l’adversaire correspond à la difficulté choisie.
+  if (gameMode === "solo") {
+    return Number(soloDifficultyLevel || 0);
+  }
+
+  // En duel à deux joueurs, on n’a pas encore de vrai niveau adverse chargé.
+  // On considère donc le niveau comme équivalent pour ne pas pénaliser.
+  return getCurrentPlayerLevel();
+}
+
+function getVictoryXpGain() {
+  const fullXpGain = Math.max(0, Number(opponentMaxBody || 0));
+  const playerLevel = getCurrentPlayerLevel();
+  const opponentLevel = getOpponentLevelForXpReward();
+
+  if (opponentLevel < playerLevel) {
+    return 1;
+  }
+
+  return fullXpGain;
+}
+
+function getVictoryXpRewardText() {
+  const fullXpGain = Math.max(0, Number(opponentMaxBody || 0));
+  const playerLevel = getCurrentPlayerLevel();
+  const opponentLevel = getOpponentLevelForXpReward();
+
+  if (opponentLevel < playerLevel) {
+    return (
+      "Adversaire niveau " +
+      opponentLevel +
+      " inférieur au PJ niveau " +
+      playerLevel +
+      " : gain réduit à 1 XP au lieu de " +
+      fullXpGain +
+      "."
+    );
+  }
+
+  return "XP gagnée : " + fullXpGain + ".";
+}
+
 function checkCombatEnd() {
   if (duelFinished) return;
 
@@ -2184,7 +2227,8 @@ function checkCombatEnd() {
   if (opponentOut && !playerOut) {
     duelFinished = true;
 
-    const xpGain = Math.max(0, Number(opponentMaxBody || 0));
+    const xpGain = getVictoryXpGain();
+    const xpRewardText = getVictoryXpRewardText();
 
     if (!victoryXpAwarded) {
       const oldLevel = getCurrentPlayerLevel();
@@ -2221,6 +2265,7 @@ function checkCombatEnd() {
       [
         "L’adversaire est hors combat.",
         currentPlayerName + " gagne " + xpGain + " XP.",
+        xpRewardText,
         "XP disponibles : " + currentExperience + ".",
         "Victoires : " + currentVictories + " | Niveau " + getCurrentPlayerLevel() + " - " + getCurrentPlayerLevelTitle() + "."
       ],
@@ -2231,7 +2276,7 @@ function checkCombatEnd() {
 
     showCombatEnd(
       "Combat gagné",
-      "Victoire ! " + xpGain + " XP ajoutée(s) à " + currentPlayerName + ".",
+      "Victoire ! " + xpGain + " XP ajoutée(s) à " + currentPlayerName + ".\n" + xpRewardText,
       "combat-end-victory"
     );
 
@@ -2764,47 +2809,53 @@ function fillActions(actions, restriction) {
     addActionChoice(action);
   });
 
-if (currentActions.length === 0) {
-  let safetyNames = [];
+  /*
+    Sécurité anti-blocage :
+    certaines restrictions peuvent ne laisser aucune action connue,
+    surtout "seulement marron" en début de progression.
+    Dans ce cas, on autorise une action de survie.
+  */
+  if (currentActions.length === 0) {
+    let safetyNames = [];
 
-  if (
-    activeRestriction === "only_brown" ||
-    activeRestriction === "only_distance"
-  ) {
-    safetyNames = [
-      "Bond en arrière",
-      "Esquive",
-      "Bloque et approche"
-    ];
-  } else if (
-    activeRestriction === "none" ||
-    activeRestriction === "only_green" ||
-    activeRestriction === "only_green_yellow" ||
-    activeRestriction === "only_yellow"
-  ) {
-    safetyNames = [
-      "Bond en arrière",
-      "Coup de bouclier haut",
-      "Coup de bouclier bas"
-    ];
-  }
+    if (
+      activeRestriction === "only_brown" ||
+      activeRestriction === "only_distance"
+    ) {
+      safetyNames = [
+        "Bond en arrière",
+        "Esquive",
+        "Bloque et approche"
+      ];
+    } else if (
+      activeRestriction === "none" ||
+      activeRestriction === "only_green" ||
+      activeRestriction === "only_green_yellow" ||
+      activeRestriction === "only_yellow"
+    ) {
+      safetyNames = [
+        "Bond en arrière",
+        "Coup de bouclier haut",
+        "Coup de bouclier bas"
+      ];
+    }
 
-  if (safetyNames.length > 0) {
-    actions.forEach(function(action) {
-      if (!actionAllowedByRestriction(action, activeRestriction)) return;
+    if (safetyNames.length > 0) {
+      actions.forEach(function(action) {
+        if (!actionAllowedByRestriction(action, activeRestriction)) return;
 
-      const isSafetyAction = safetyNames.some(function(name) {
-        return actionMatchesUnlockName(action, name);
+        const isSafetyAction = safetyNames.some(function(name) {
+          return actionMatchesUnlockName(action, name);
+        });
+
+        if (!isSafetyAction) return;
+
+        // Ici, on ignore volontairement le niveau.
+        // C'est une action de secours pour éviter un tour impossible.
+        addActionChoice(action);
       });
-
-      if (!isSafetyAction) return;
-
-      // Ici, on ignore volontairement le niveau.
-      // C'est une action de secours pour éviter un tour impossible.
-      addActionChoice(action);
-    });
+    }
   }
-}
 
   if (currentActions.length === 0) {
     const option = document.createElement("option");
