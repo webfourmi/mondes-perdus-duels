@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.4-audio-modal-icons";
+const APP_VERSION = "1.0.5-setup-wizard";
 
 let catalog = null;
 
@@ -347,6 +347,8 @@ function refreshSetupSelectionDisplays() {
     if (!element || !opponentEntry) return;
     element.textContent = opponentEntry.fullName || opponentEntry.shortName || opponentEntry.id;
   });
+
+  updateSetupWizardSummary();
 }
 
 /* ============================================================
@@ -1875,6 +1877,134 @@ function resumeDuelAfterSheetIfNeeded() {
 }
 
 /* ============================================================
+   ASSISTANT DE PRÉPARATION DU DUEL
+   ============================================================ */
+
+let setupStepIndex = 0;
+
+const setupStepIds = [
+  "setupWelcomeStep",
+  "setupPlayerStep",
+  "setupModeStep",
+  "setupOpponentStep",
+  "setupSummaryStep"
+];
+
+function showSetupStep(index) {
+  const maxIndex = setupStepIds.length - 1;
+  setupStepIndex = Math.max(0, Math.min(Number(index || 0), maxIndex));
+
+  setupStepIds.forEach(function(id, stepIndex) {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    element.classList.toggle("setup-step-active", stepIndex === setupStepIndex);
+    element.style.display = stepIndex === setupStepIndex ? "block" : "none";
+  });
+
+  const dots = document.querySelectorAll("[data-step-dot]");
+  dots.forEach(function(dot) {
+    const dotIndex = Number(dot.getAttribute("data-step-dot") || 0);
+    dot.classList.toggle("active", dotIndex === setupStepIndex);
+    dot.classList.toggle("done", dotIndex < setupStepIndex);
+  });
+
+  updateSetupWizardSummary();
+
+  const setupPanel = document.getElementById("setupPanel");
+  if (setupPanel) {
+    setupPanel.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function nextSetupStep() {
+  showSetupStep(setupStepIndex + 1);
+}
+
+function previousSetupStep() {
+  showSetupStep(setupStepIndex - 1);
+}
+
+function getSelectedFighterLabel(selectId) {
+  const select = document.getElementById(selectId);
+  const entry = select ? findCatalogEntry(select.value) : null;
+
+  if (!entry) return "-";
+
+  return entry.fullName || entry.shortName || entry.id || "-";
+}
+
+function updateSetupWizardSummary() {
+  const playerElement = document.getElementById("setupSummaryPlayer");
+  const modeElement = document.getElementById("setupSummaryMode");
+  const opponentElement = document.getElementById("setupSummaryOpponent");
+  const difficultyElement = document.getElementById("setupSummaryDifficulty");
+  const soloIntro = document.getElementById("setupSummarySoloIntro");
+  const soloTitle = document.getElementById("setupSummarySoloTitle");
+  const soloText = document.getElementById("setupSummarySoloText");
+
+  const modeSelect = document.getElementById("gameMode");
+  const difficultySelect = document.getElementById("soloDifficultyLevel");
+  const opponentSelect = document.getElementById("opponentBook");
+
+  const mode = modeSelect ? modeSelect.value : "duel";
+  const opponentId = opponentSelect ? opponentSelect.value : "default";
+  const level = difficultySelect ? Number(difficultySelect.value || 0) : 0;
+
+  if (playerElement) {
+    const characterSelect = document.getElementById("savedCharacterSelect");
+    const playerNameInput = document.getElementById("playerName");
+    const selectedOption =
+      characterSelect && characterSelect.selectedIndex >= 0
+        ? characterSelect.options[characterSelect.selectedIndex]
+        : null;
+
+    const savedName =
+      selectedOption && selectedOption.value
+        ? selectedOption.textContent
+        : "";
+
+    const typedName = playerNameInput ? playerNameInput.value.trim() : "";
+    const fighterLabel = getSelectedFighterLabel("playerSheet");
+
+    playerElement.textContent =
+      savedName ||
+      (typedName ? typedName + " - " + fighterLabel : fighterLabel);
+  }
+
+  if (modeElement) {
+    modeElement.textContent =
+      mode === "solo" ? "Solo contre l’IA" : "Duel à deux joueurs";
+  }
+
+  if (opponentElement) {
+    opponentElement.textContent = getSelectedFighterLabel("opponentBook");
+  }
+
+  if (difficultyElement) {
+    difficultyElement.textContent =
+      mode === "solo"
+        ? getSoloDifficultyTitle(opponentId, level)
+        : "Non utilisée";
+  }
+
+  if (soloIntro) {
+    soloIntro.style.display = mode === "solo" ? "block" : "none";
+  }
+
+  if (soloTitle) {
+    soloTitle.textContent = getSoloDifficultyTitle(opponentId, level);
+  }
+
+  if (soloText) {
+    soloText.textContent = getSoloIntroText(opponentId, level);
+  }
+}
+
+/* ============================================================
    INITIALISATION
    ============================================================ */
 
@@ -1969,6 +2099,7 @@ async function initApp() {
 
   updateAudioButtons();
   updateActionManualToggleButton();
+  showSetupStep(0);
   resumeDuelAfterSheetIfNeeded();
 }
 
@@ -4794,6 +4925,7 @@ async function newDuel() {
   refreshSoloIntroText();
   updateGameModeButtons();
   refreshSetupSelectionDisplays();
+  showSetupStep(0);
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -4819,6 +4951,10 @@ function openRulesPage() {
   "openRulesPage",
   "openSelectedActionManual",
   "openAudioSettingsPanel",
+  "updateSetupWizardSummary",
+  "previousSetupStep",
+  "nextSetupStep",
+  "showSetupStep",
   "closeAudioSettingsPanel",
   "toggleActionManualAutoOpen",
   "closeActionManualScreen",
