@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=142">
+  <link rel="stylesheet" href="style.css?v=143">
 </head>
 
 <body>
@@ -264,7 +264,7 @@
   </div>
 
   <div class="home-card">
-        <h3>1. Choisir le combattant</h3>
+        <h3>Ton combattant</h3>
         
       <div class="character-title-row">
         <label for="savedCharacterSelect">Ma fiche personnage</label>
@@ -306,9 +306,11 @@
         </div>
       </div>
 
-      <select id="savedCharacterSelect" onchange="loadSavedCharacterFromSelect()">
+      <select id="savedCharacterSelect" class="hidden-character-select" onchange="loadSavedCharacterFromSelect()">
         <option value="">Nouveau PJ / aucun PJ sauvegardé</option>
       </select>
+
+      <div id="characterCardList" class="character-card-list"></div>
 
       <div class="character-buttons character-management-buttons">
         <button
@@ -765,6 +767,6 @@
   </main>
 
   <script src="js/manual.js?v=3"></script>
-  <script src="app.js?v=105"></script>
+  <script src="app.js?v=106"></script>
 </body>
 </html>
