@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.6-player-cards";
+const APP_VERSION = "1.0.7-player-carousel";
 
 let catalog = null;
 
@@ -546,6 +546,32 @@ function getCharacterCardData(character) {
   };
 }
 
+function centerSelectedCharacterCard() {
+  const container = document.getElementById("characterCardList");
+  if (!container) return;
+
+  const activeCard = container.querySelector(".character-pick-card.active");
+  if (!activeCard) return;
+
+  activeCard.scrollIntoView({
+    behavior: "smooth",
+    inline: "center",
+    block: "nearest"
+  });
+}
+
+function scrollCharacterCarousel(direction) {
+  const container = document.getElementById("characterCardList");
+  if (!container) return;
+
+  const amount = Math.max(220, Math.round(container.clientWidth * 0.82));
+
+  container.scrollBy({
+    left: amount * Number(direction || 1),
+    behavior: "smooth"
+  });
+}
+
 function renderSavedCharacterCards() {
   const container = document.getElementById("characterCardList");
   const select = document.getElementById("savedCharacterSelect");
@@ -615,6 +641,8 @@ function renderSavedCharacterCards() {
       selectCharacterCard(characterId);
     });
   });
+
+  window.requestAnimationFrame(centerSelectedCharacterCard);
 }
 
 function selectCharacterCard(characterId) {
@@ -5087,6 +5115,8 @@ function openRulesPage() {
   "nextSetupStep",
   "updatePlayerCardPreview",
   "renderSavedCharacterCards",
+  "centerSelectedCharacterCard",
+  "scrollCharacterCarousel",
   "selectCharacterCard",
   "showSetupStep",
   "closeAudioSettingsPanel",
