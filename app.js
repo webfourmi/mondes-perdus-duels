@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.5-setup-wizard";
+const APP_VERSION = "1.0.6-player-cards";
 
 let catalog = null;
 
@@ -519,6 +519,120 @@ function saveSavedCharacters(characters) {
   localStorage.setItem(charactersIndexKey, JSON.stringify(characters));
 }
 
+function getCharacterCardIcon(fighterId) {
+  if (fighterId === "chevalier") return "🛡️";
+  if (fighterId === "squelette") return "💀";
+  return "⚔️";
+}
+
+function getCharacterCardData(character) {
+  const payload = getCharacterProfileData(character);
+  const profile = payload.profile || {};
+  const victories = Number(profile.victories || character.victories || 0);
+  const level = getPlayerLevelFromVictories(victories);
+  const bodyBonus = Number(profile.bodyBonus || 0);
+
+  return {
+    id: character.id,
+    name: character.name || "Sans nom",
+    fighterId: character.fighterId || "",
+    fighterName: character.fighterName || character.fighterId || "Combattant",
+    experience: Number(profile.experience || character.experience || 0),
+    spentExperience: Number(profile.spentExperience || character.spentExperience || 0),
+    victories: victories,
+    level: level,
+    levelTitle: playerLevelTitles[level] || "Novice",
+    bodyBonus: bodyBonus
+  };
+}
+
+function renderSavedCharacterCards() {
+  const container = document.getElementById("characterCardList");
+  const select = document.getElementById("savedCharacterSelect");
+
+  if (!container) return;
+
+  const characters = getSavedCharacters();
+
+  if (characters.length === 0) {
+    container.innerHTML =
+      '<div class="character-empty-card">' +
+      '<span class="character-empty-icon">✍️</span>' +
+      '<strong>Aucun PJ sauvegardé</strong>' +
+      '<p>Crée ton premier combattant avant d’entrer dans l’arène.</p>' +
+      '</div>';
+    return;
+  }
+
+  const selectedId = select ? select.value : "";
+
+  container.innerHTML = characters
+    .map(function(character) {
+      const data = getCharacterCardData(character);
+      const isActive = data.id === selectedId;
+      const icon = getCharacterCardIcon(data.fighterId);
+
+      return (
+        '<button type="button" class="character-pick-card ' +
+        (isActive ? "active" : "") +
+        '" data-character-id="' +
+        escapeHtml(data.id) +
+        '">' +
+        '<span class="character-pick-icon">' +
+        icon +
+        "</span>" +
+        '<span class="character-pick-main">' +
+        '<strong>' +
+        escapeHtml(data.name) +
+        "</strong>" +
+        '<small>' +
+        escapeHtml(data.fighterName) +
+        " · Niveau " +
+        data.level +
+        " - " +
+        escapeHtml(data.levelTitle) +
+        "</small>" +
+        "</span>" +
+        '<span class="character-pick-stats">' +
+        '<em>' +
+        data.experience +
+        " XP</em>" +
+        '<em>' +
+        data.victories +
+        " victoire(s)</em>" +
+        '<em>PV +' +
+        data.bodyBonus +
+        "</em>" +
+        "</span>" +
+        "</button>"
+      );
+    })
+    .join("");
+
+  container.querySelectorAll(".character-pick-card").forEach(function(card) {
+    card.addEventListener("click", function() {
+      const characterId = card.getAttribute("data-character-id");
+      selectCharacterCard(characterId);
+    });
+  });
+}
+
+function selectCharacterCard(characterId) {
+  const select = document.getElementById("savedCharacterSelect");
+
+  if (!select || !characterId) return;
+
+  select.value = characterId;
+  loadSavedCharacterFromSelect();
+  renderSavedCharacterCards();
+  updateSetupWizardSummary();
+}
+
+function updatePlayerCardPreview() {
+  renderSavedCharacterCards();
+  updateSetupWizardSummary();
+}
+
 function refreshSavedCharactersSelect() {
   const select = document.getElementById("savedCharacterSelect");
   const newButton = document.getElementById("newCharacterButton");
@@ -555,6 +669,8 @@ function refreshSavedCharactersSelect() {
     currentProfileKey = "";
 
     updateExperienceDisplay();
+    renderSavedCharacterCards();
+    updateSetupWizardSummary();
 
     return;
   }
@@ -596,6 +712,8 @@ function refreshSavedCharactersSelect() {
   }
 
   loadSavedCharacterFromSelect();
+  renderSavedCharacterCards();
+  updateSetupWizardSummary();
 }
 
 function getCurrentSetupCharacterData() {
@@ -700,6 +818,8 @@ function loadSavedCharacterFromSelect() {
   currentPlayerName = character.name;
   loadPlayerProfile(character.fighterId, character.name);
   updateEvolutionPanel();
+  renderSavedCharacterCards();
+  updateSetupWizardSummary();
 }
 
 function openCharacterSheetPage() {
@@ -760,6 +880,9 @@ function showNewCharacterForm() {
   if (cancelButton) {
     cancelButton.style.display = getSavedCharacters().length > 0 ? "block" : "none";
   }
+
+  renderSavedCharacterCards();
+  updateSetupWizardSummary();
 }
 
 function cancelNewCharacterForm() {
@@ -2049,6 +2172,7 @@ async function initApp() {
   const playerSheetSelect = document.getElementById("playerSheet");
   const opponentBookSelect = document.getElementById("opponentBook");
   const soloDifficultySelect = document.getElementById("soloDifficultyLevel");
+  const playerNameInput = document.getElementById("playerName");
 
   if (gameModeSelect) {
     gameModeSelect.addEventListener("change", function() {
@@ -2058,7 +2182,14 @@ async function initApp() {
   }
 
   if (playerSheetSelect) {
-    playerSheetSelect.addEventListener("change", refreshSetupSelectionDisplays);
+    playerSheetSelect.addEventListener("change", function() {
+      refreshSetupSelectionDisplays();
+      updatePlayerCardPreview();
+    });
+  }
+
+  if (playerNameInput) {
+    playerNameInput.addEventListener("input", updatePlayerCardPreview);
   }
 
   if (opponentBookSelect) {
@@ -4954,6 +5085,9 @@ function openRulesPage() {
   "updateSetupWizardSummary",
   "previousSetupStep",
   "nextSetupStep",
+  "updatePlayerCardPreview",
+  "renderSavedCharacterCards",
+  "selectCharacterCard",
   "showSetupStep",
   "closeAudioSettingsPanel",
   "toggleActionManualAutoOpen",
