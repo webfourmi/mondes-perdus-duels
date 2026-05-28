@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=143">
+  <link rel="stylesheet" href="style.css?v=144">
 </head>
 
 <body>
@@ -264,11 +264,7 @@
   </div>
 
   <div class="home-card">
-        <h3>Ton combattant</h3>
-        
       <div class="character-title-row">
-        <label for="savedCharacterSelect">Ma fiche personnage</label>
-      
         <div class="character-title-actions">
           <button
             type="button"
@@ -310,7 +306,29 @@
         <option value="">Nouveau PJ / aucun PJ sauvegardé</option>
       </select>
 
-      <div id="characterCardList" class="character-card-list"></div>
+      <div class="character-carousel-shell">
+        <button
+          type="button"
+          class="character-carousel-arrow"
+          onclick="scrollCharacterCarousel(-1)"
+          aria-label="PJ précédent"
+          title="PJ précédent"
+        >
+          ‹
+        </button>
+
+        <div id="characterCardList" class="character-card-list character-card-carousel"></div>
+
+        <button
+          type="button"
+          class="character-carousel-arrow"
+          onclick="scrollCharacterCarousel(1)"
+          aria-label="PJ suivant"
+          title="PJ suivant"
+        >
+          ›
+        </button>
+      </div>
 
       <div class="character-buttons character-management-buttons">
         <button
@@ -767,6 +785,6 @@
   </main>
 
   <script src="js/manual.js?v=3"></script>
-  <script src="app.js?v=106"></script>
+  <script src="app.js?v=107"></script>
 </body>
 </html>
