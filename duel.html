@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=141">
+  <link rel="stylesheet" href="style.css?v=142">
 </head>
 
 <body>
@@ -208,8 +208,62 @@
 
     <!-- Écran de départ -->
     <section id="setupPanel">
-            
-      <div class="home-card">
+<div class="setup-wizard">
+
+<div class="setup-progress" aria-hidden="true">
+
+  <span class="setup-progress-dot active" data-step-dot="0"></span>
+
+  <span class="setup-progress-dot" data-step-dot="1"></span>
+
+  <span class="setup-progress-dot" data-step-dot="2"></span>
+
+  <span class="setup-progress-dot" data-step-dot="3"></span>
+
+  <span class="setup-progress-dot" data-step-dot="4"></span>
+
+</div>
+
+<div class="setup-step setup-step-active" id="setupWelcomeStep" data-step="0">
+  <div class="home-card setup-welcome-card">
+    <div class="setup-welcome-emblem">⚔️</div>
+    <h2>Entrer dans l’arène</h2>
+    <p class="setup-welcome-text">
+      Prépare ton duel en quelques choix simples : combattant, mode, adversaire, puis résumé avant le choc.
+    </p>
+
+    <div class="setup-welcome-actions">
+      <button type="button" class="primary-button setup-next-main" onclick="nextSetupStep()">
+        Jouer →
+      </button>
+
+      <button type="button" class="secondary-button" onclick="openRulesPage()">
+        Règles
+      </button>
+
+      <button
+        type="button"
+        id="audioSettingsButton"
+        class="secondary-button audio-settings-icon-button"
+        onclick="openAudioSettingsPanel()"
+        title="Son et musique"
+        aria-label="Ouvrir les réglages son et musique"
+      >
+        🎵
+      </button>
+    </div>
+
+    <p id="loadMessage" class="small setup-load-message"></p>
+  </div>
+</div>
+
+<div class="setup-step" id="setupPlayerStep" data-step="1">
+  <div class="setup-step-header">
+    <span>Étape 1</span>
+    <strong>Choisir le combattant</strong>
+  </div>
+
+  <div class="home-card">
         <h3>1. Choisir le combattant</h3>
         
       <div class="character-title-row">
@@ -313,7 +367,21 @@
       </div>
       </div>
 
-     <div class="home-card">
+  <div class="setup-nav-row">
+    <button type="button" class="secondary-button setup-nav-back" onclick="previousSetupStep()">← Retour</button>
+    <button type="button" class="primary-button setup-nav-next" onclick="nextSetupStep()">
+      Suivant →
+    </button>
+  </div>
+</div>
+
+<div class="setup-step" id="setupModeStep" data-step="2">
+  <div class="setup-step-header">
+    <span>Étape 2</span>
+    <strong>Choisir le mode</strong>
+  </div>
+
+  <div class="home-card">
   <h3>2. Choisir le mode de jeu</h3>
 
   <select id="gameMode" class="hidden-game-mode-select">
@@ -346,7 +414,21 @@
   </div>
 </div>
 
-      <div class="home-card">
+  <div class="setup-nav-row">
+    <button type="button" class="secondary-button setup-nav-back" onclick="previousSetupStep()">← Retour</button>
+    <button type="button" class="primary-button setup-nav-next" onclick="nextSetupStep()">
+      Suivant →
+    </button>
+  </div>
+</div>
+
+<div class="setup-step" id="setupOpponentStep" data-step="3">
+  <div class="setup-step-header">
+    <span>Étape 3</span>
+    <strong>Choisir l’adversaire</strong>
+  </div>
+
+  <div class="home-card">
         <h3>3. Choisir l’adversaire</h3>
 
         <select
@@ -394,7 +476,7 @@
         </div>
       </div>
 
-    <div id="soloIntroBlock" class="solo-intro-block" style="display:none;">
+<div id="soloIntroBlock" class="solo-intro-block" style="display:none;">
       <div class="solo-intro-badge">Adversaire solo</div>
     
       <strong id="soloIntroTitle">Un adversaire entre dans l’arène</strong>
@@ -403,25 +485,64 @@
         L’air devient lourd. Quelque chose approche.
       </p>
     </div>
-     <div class="home-start-card">
-        <button type="button" onclick="startDuel()">Commencer le duel</button>
+
+  <div class="setup-nav-row">
+    <button type="button" class="secondary-button setup-nav-back" onclick="previousSetupStep()">← Retour</button>
+    <button type="button" class="primary-button setup-nav-next" onclick="nextSetupStep()">
+      Suivant →
+    </button>
+  </div>
+</div>
+
+<div class="setup-step" id="setupSummaryStep" data-step="4">
+  <div class="setup-step-header">
+    <span>Étape 4</span>
+    <strong>Résumé du duel</strong>
+  </div>
+
+  <div class="home-card setup-summary-card">
+    <h3>Avant de croiser le fer</h3>
+
+    <div class="setup-summary-grid">
+      <div>
+        <span>Combattant</span>
+        <strong id="setupSummaryPlayer">-</strong>
       </div>
-      
-    <div class="audio-control-row audio-control-row-compact">
-      <button
-        type="button"
-        id="audioSettingsButton"
-        class="secondary-button audio-settings-icon-button"
-        onclick="openAudioSettingsPanel()"
-        title="Son et musique"
-        aria-label="Ouvrir les réglages son et musique"
-      >
-        🎵
-      </button>
+
+      <div>
+        <span>Mode</span>
+        <strong id="setupSummaryMode">-</strong>
+      </div>
+
+      <div>
+        <span>Adversaire</span>
+        <strong id="setupSummaryOpponent">-</strong>
+      </div>
+
+      <div>
+        <span>Difficulté</span>
+        <strong id="setupSummaryDifficulty">-</strong>
+      </div>
     </div>
-     
-      <p id="loadMessage" class="small"></p>
-    </section>
+
+    <div id="setupSummarySoloIntro" class="setup-summary-intro" style="display:none;">
+      <strong id="setupSummarySoloTitle">Un adversaire entre dans l’arène</strong>
+      <p id="setupSummarySoloText">L’air devient lourd. Quelque chose approche.</p>
+    </div>
+
+    <button type="button" class="primary-button setup-start-duel-button" onclick="startDuel()">
+      Commencer le duel →
+    </button>
+  </div>
+
+  <div class="setup-nav-row">
+    <button type="button" class="secondary-button setup-nav-back" onclick="previousSetupStep()">← Retour</button>
+    <button type="button" class="secondary-button" onclick="showSetupStep(0)">Accueil</button>
+  </div>
+</div>
+
+</div>
+</section>
 
     <!-- Écran de duel -->
     <section id="duelPanel" class="panel" style="display:none;">
@@ -644,6 +765,6 @@
   </main>
 
   <script src="js/manual.js?v=3"></script>
-  <script src="app.js?v=104"></script>
+  <script src="app.js?v=105"></script>
 </body>
 </html>
