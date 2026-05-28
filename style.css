@@ -3387,3 +3387,136 @@ body.duel-active .damage-toggle-button .damage-toggle-hint {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   CARROUSEL DE CHOIX PJ - v107
+   ============================================================ */
+
+#setupPlayerStep .home-card > h3 {
+  display: none;
+}
+
+#setupPlayerStep .character-title-row {
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+#setupPlayerStep .character-title-row > label {
+  display: none;
+}
+
+.character-carousel-shell {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.character-carousel-arrow {
+  width: 38px;
+  min-height: 82px;
+  border: 1px solid rgba(213, 180, 72, 0.58);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at top, rgba(255, 231, 166, 0.14), transparent 55%),
+    linear-gradient(180deg, rgba(45, 36, 20, 0.96), rgba(15, 11, 8, 0.98));
+  color: #ffe7a6;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 231, 166, 0.08),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.character-carousel-arrow:hover {
+  filter: brightness(1.08);
+  border-color: rgba(255, 231, 166, 0.9);
+}
+
+.character-card-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 6px 2px 12px;
+  margin: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.character-card-carousel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.character-card-carousel::-webkit-scrollbar-track {
+  background: rgba(10, 8, 5, 0.55);
+  border-radius: 999px;
+}
+
+.character-card-carousel::-webkit-scrollbar-thumb {
+  background: rgba(213, 180, 72, 0.75);
+  border-radius: 999px;
+}
+
+.character-card-carousel .character-pick-card {
+  flex: 0 0 min(78vw, 360px);
+  min-height: 188px;
+  scroll-snap-align: center;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+  padding: 16px 14px;
+}
+
+.character-card-carousel .character-pick-icon {
+  width: 62px;
+  height: 62px;
+  font-size: 2rem;
+}
+
+.character-card-carousel .character-pick-main strong {
+  font-size: 1.18rem;
+  white-space: normal;
+}
+
+.character-card-carousel .character-pick-main small {
+  font-size: 0.86rem;
+}
+
+.character-card-carousel .character-pick-stats {
+  width: 100%;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.character-card-carousel .character-empty-card {
+  flex: 0 0 min(78vw, 360px);
+  scroll-snap-align: center;
+}
+
+@media (max-width: 520px) {
+  .character-carousel-shell {
+    grid-template-columns: 32px minmax(0, 1fr) 32px;
+    gap: 6px;
+  }
+
+  .character-carousel-arrow {
+    width: 32px;
+    min-height: 74px;
+    font-size: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .character-card-carousel .character-pick-card {
+    flex-basis: min(76vw, 310px);
+    min-height: 178px;
+    padding: 14px 12px;
+  }
+
+  .character-card-carousel .character-pick-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
