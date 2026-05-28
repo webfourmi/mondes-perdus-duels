@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.3-solo-balance-safe";
+const APP_VERSION = "1.0.4-audio-modal-icons";
 
 let catalog = null;
 
@@ -131,6 +131,25 @@ function updateAudioButtons() {
     button.textContent = musicEnabled ? "Musique : ON" : "Musique : OFF";
     button.classList.toggle("active", musicEnabled);
   });
+}
+
+function openAudioSettingsPanel() {
+  const modal = document.getElementById("audioSettingsModal");
+
+  if (!modal) return;
+
+  updateAudioButtons();
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeAudioSettingsPanel() {
+  const modal = document.getElementById("audioSettingsModal");
+
+  if (!modal) return;
+
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
 }
 
 function toggleAudio() {
@@ -4799,6 +4818,8 @@ function openRulesPage() {
   "nextTurn",
   "openRulesPage",
   "openSelectedActionManual",
+  "openAudioSettingsPanel",
+  "closeAudioSettingsPanel",
   "toggleActionManualAutoOpen",
   "closeActionManualScreen",
   "setDistanceMode",
