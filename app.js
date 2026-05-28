@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.0-solo-brown-fallback";
+const APP_VERSION = "1.0.1-auto-distance-brown";
 
 let catalog = null;
 
@@ -2675,6 +2675,26 @@ function updateRestrictionBanner(restriction) {
   banner.textContent = info.label;
 }
 
+function hasPlayerActionAvailableInList(actions, restriction) {
+  const activeRestriction = restriction || "none";
+
+  return (actions || []).some(function(action) {
+    if (!actionAllowedByRestriction(action, activeRestriction)) return false;
+
+    const isAlwaysAllowedRecover =
+      activeRestriction === "disarmed" && isRecoverWeaponAction(action);
+
+    if (
+      !isAlwaysAllowedRecover &&
+      !isActionUnlockedByLevel(action)
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
 function refreshActionList() {
   if (!currentFighter) return;
 
@@ -2687,7 +2707,31 @@ function refreshActionList() {
     distanceModeElement.value = "distance";
   }
 
-  const actions = getActionsForCurrentMode();
+  let actions = getActionsForCurrentMode();
+
+  /*
+    Sécurité de rythme :
+    si le joueur est au contact, avec une restriction "seulement marron",
+    et qu'il n'a aucune action marron connue disponible, on bascule
+    automatiquement en Distance Accrue avant de proposer les actions.
+
+    Cela évite de lui infliger une action de secours trop punitive au corps à corps.
+  */
+  if (
+    restriction === "only_brown" &&
+    distanceModeElement &&
+    distanceModeElement.value !== "distance" &&
+    !hasPlayerActionAvailableInList(actions, restriction)
+  ) {
+    distanceModeElement.value = "distance";
+    actions = getActionsForCurrentMode();
+
+    const hint = document.getElementById("selectedActionHint");
+    if (hint) {
+      hint.textContent =
+        "Aucune action marron disponible au contact : passage automatique en Distance Accrue.";
+    }
+  }
 
   updateDistanceButtons();
   updateRestrictionBanner(restriction);
