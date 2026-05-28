@@ -6,7 +6,7 @@
 
   <title>Mondes Perdus - Duels</title>
 
-  <link rel="stylesheet" href="style.css?v=140">
+  <link rel="stylesheet" href="style.css?v=141">
 </head>
 
 <body>
@@ -62,6 +62,17 @@
   </button>
 
   <button
+    id="duelAudioSettingsButton"
+    class="hp-mini-button hp-audio-button"
+    type="button"
+    onclick="openAudioSettingsPanel()"
+    title="Son et musique"
+    aria-label="Ouvrir les réglages son et musique"
+  >
+    🎵
+  </button>
+
+  <button
     id="duelRulesButton"
     class="hp-mini-button hp-rules-button"
     type="button"
@@ -89,6 +100,53 @@
     <button type="button" onclick="resetOverlayZoom()">100%</button>
     <button type="button" onclick="changeOverlayZoom(0.25)">+</button>
     <button type="button" onclick="closeImageOverlay()">Fermer</button>
+  </div>
+</div>
+
+
+<!-- Fenêtre réglages audio -->
+<div
+  id="audioSettingsModal"
+  class="audio-settings-modal"
+  style="display:none;"
+  aria-hidden="true"
+>
+  <div class="audio-settings-backdrop" onclick="closeAudioSettingsPanel()"></div>
+
+  <div class="audio-settings-card" role="dialog" aria-modal="true" aria-labelledby="audioSettingsTitle">
+    <h3 id="audioSettingsTitle">Son et musique</h3>
+
+    <p class="audio-settings-note">
+      Active ou coupe les effets sonores et la musique du duel.
+    </p>
+
+    <div class="audio-settings-actions">
+      <button
+        type="button"
+        id="audioToggleButton"
+        class="secondary-button audio-toggle-setting"
+        onclick="toggleAudio()"
+      >
+        Son : OFF
+      </button>
+
+      <button
+        type="button"
+        id="musicToggleButton"
+        class="secondary-button audio-toggle-setting"
+        onclick="toggleMusic()"
+      >
+        Musique : OFF
+      </button>
+    </div>
+
+    <button
+      type="button"
+      class="secondary-button audio-settings-close"
+      onclick="closeAudioSettingsPanel()"
+    >
+      Fermer
+    </button>
   </div>
 </div>
 
@@ -281,7 +339,7 @@
       class="game-mode-button"
       onclick="setGameMode('solo')"
     >
-      <span class="game-mode-icon">💀</span>
+      <span class="game-mode-icon">🗡️</span>
       <strong>Solo</strong>
       <small>Contre l’IA</small>
     </button>
@@ -305,11 +363,7 @@
             class="opponent-choice-button active"
             onclick="setOpponentBook('chevalier')"
           >
-            <img
-              src="images/ui/chevalier.png"
-              alt="Chevalier"
-              class="opponent-choice-image"
-            />
+            <span class="opponent-choice-image opponent-choice-emoji" aria-hidden="true">🪖</span>
             <strong>Chevalier</strong>
           </button>
 
@@ -319,11 +373,7 @@
             class="opponent-choice-button"
             onclick="setOpponentBook('squelette')"
           >
-            <img
-              src="images/ui/squelette.png"
-              alt="Squelette"
-              class="opponent-choice-image"
-            />
+            <span class="opponent-choice-image opponent-choice-emoji" aria-hidden="true">💀</span>
             <strong>Squelette</strong>
           </button>
         </div>
@@ -357,23 +407,16 @@
         <button type="button" onclick="startDuel()">Commencer le duel</button>
       </div>
       
-    <div class="audio-control-row">
+    <div class="audio-control-row audio-control-row-compact">
       <button
         type="button"
-        id="audioToggleButton"
-        class="secondary-button"
-        onclick="toggleAudio()"
+        id="audioSettingsButton"
+        class="secondary-button audio-settings-icon-button"
+        onclick="openAudioSettingsPanel()"
+        title="Son et musique"
+        aria-label="Ouvrir les réglages son et musique"
       >
-        Son : OFF
-      </button>
-    
-      <button
-        type="button"
-        id="musicToggleButton"
-        class="secondary-button"
-        onclick="toggleMusic()"
-      >
-        Musique : OFF
+        🎵
       </button>
     </div>
      
@@ -601,6 +644,6 @@
   </main>
 
   <script src="js/manual.js?v=3"></script>
-  <script src="app.js?v=103"></script>
+  <script src="app.js?v=104"></script>
 </body>
 </html>
