@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.7-player-carousel";
+const APP_VERSION = "1.0.8-skeleton-level0-attack";
 
 let catalog = null;
 
@@ -1465,6 +1465,7 @@ const actionUnlocksByFighter = {
 
   squelette: {
     0: [
+      "Coup latéral haut",
       "Coup latéral bas",
       "Coup de bouclier bas",
       "Bond esquive",
@@ -1472,7 +1473,6 @@ const actionUnlocksByFighter = {
     ],
     1: [
       "Coup plongeant violent",
-      "Coup latéral haut",
       "Estoc bas",
       "Coup de bouclier haut",
       "Bond en arrière"
